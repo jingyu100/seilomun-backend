@@ -1,9 +1,17 @@
-HELP.md
-.gradle
+# 빌드 폴더 무시 (resources 폴더 제외)
 build/
+
+# resources 폴더 자체는 포함 (내부 properties 파일은 제외)
+!**/src/main/resources/
+!**/src/test/resources/
+
+# Gradle 파일 무시
+.gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+# Properties 파일 무시
 *.properties
 .properties
 
