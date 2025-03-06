@@ -11,17 +11,20 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "seller_photos")
-public class SellerPhoto {
+@Table(name = "favorites")
+public class Favorite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "sp_id")
+    @Column(name = "fa_id")
     private Long id;
 
-    @Column(name = "photo_url", nullable = false, length = 100,unique = trued)
-    private String photoUrl;
+    @ManyToOne
+    @JoinColumn(name = "cu_id")
+    private Customer customers;
 
     @ManyToOne
-    @JoinColumn(name="se_id")
-    private Seller seller;
+    @JoinColumn(name = "se_id")
+    private Seller sellers;
+
+
 }
