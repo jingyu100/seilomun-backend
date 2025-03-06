@@ -37,4 +37,8 @@ public class ChatMessage {
 
     @Column(name = "is_read",nullable = false , length = 1)
     private Character isRead;
+
+    @ManyToOne
+    @JoinColumn(name = "cr_id")
+    private ChatRoom chatRoom;
 }

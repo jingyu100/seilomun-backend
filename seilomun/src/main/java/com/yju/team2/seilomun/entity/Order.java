@@ -56,5 +56,5 @@ public class Order {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "se_id")
-    private Seller sellers;
+    private Seller seller;
 }

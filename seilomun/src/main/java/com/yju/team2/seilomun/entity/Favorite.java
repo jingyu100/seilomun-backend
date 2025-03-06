@@ -20,11 +20,11 @@ public class Favorite {
 
     @ManyToOne
     @JoinColumn(name = "cu_id")
-    private Customer customers;
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "se_id")
-    private Seller sellers;
+    private Seller seller;
 
 
 }

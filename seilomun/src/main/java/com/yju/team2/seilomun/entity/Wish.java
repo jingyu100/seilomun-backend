@@ -24,6 +24,6 @@ public class Wish {
 
     @ManyToOne
     @JoinColumn(name = "pr_id")
-    private Seller sellers;
+    private Product product;
 
 }

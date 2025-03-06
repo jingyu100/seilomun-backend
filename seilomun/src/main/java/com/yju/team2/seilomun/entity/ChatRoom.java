@@ -29,11 +29,11 @@ public class ChatRoom {
 
     @ManyToOne
     @JoinColumn(name = "cu_id")
-    private Customer customers;
+    private Customer customer;
 
     @ManyToOne
     @JoinColumn(name = "se_id")
-    private Seller sellers;
+    private Seller seller;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
