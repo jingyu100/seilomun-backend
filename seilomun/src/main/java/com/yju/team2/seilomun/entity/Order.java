@@ -3,7 +3,6 @@ package com.yju.team2.seilomun.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +16,7 @@ import java.time.LocalDateTime;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "or_id")
     private Long or_id;
 
@@ -39,7 +38,7 @@ public class Order {
     @Column(name = "delivery_address",nullable = true)
     private String delivery_address;
 
-    @Column(name = "delivery_status",nullable = false)
+    @Column(name = "delivery_status",nullable = true)
     private Character delivery_status;
 
     @Column(name = "is_reviewed",nullable = false)
