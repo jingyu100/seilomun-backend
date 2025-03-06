@@ -71,6 +71,6 @@ public class Customer {
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Wishe> wishes = new ArrayList<>();
+    private List<Wish> wishes = new ArrayList<>();
 
 }
