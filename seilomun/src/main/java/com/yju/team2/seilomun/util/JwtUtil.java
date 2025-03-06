@@ -3,24 +3,30 @@ package com.yju.team2.seilomun.util;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+
+import java.security.Key;
 import java.util.Date;
 
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
 
-    @Value("${tmp}")
-    private String secretKey;
+//    @Value("${tmp}")
+//    private String secretKey;
+
+    Key key;
 
     // 토큰 생성
     public String generateToken(String username) {
+        key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // HS256에 맞는 키 생성
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1시간 유효
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .signWith(SignatureAlgorithm.HS256, key)
                 .compact();
     }
 
@@ -32,7 +38,7 @@ public class JwtUtil {
     // 토큰에서 Claims (주장) 추출
     private Claims extractClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
