@@ -21,13 +21,13 @@ public class Event {
     @Column(name = "sp_id")
     private Long id;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, length = 50)
     private String title;
 
-    @Column(name = "content")
+    @Column(name = "content",length = 255)
     private String content;
 
-    @Column(name = "image_url", nullable = false, unique = true)
+    @Column(name = "image_url", nullable = false, length = 100 ,unique = true)
     private String imageUrl;
 
     @Column(name = "start_at", nullable = false)
@@ -36,7 +36,7 @@ public class Event {
     @Column(name = "end_at", nullable = false)
     private LocalDateTime endAt;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(name = "is_active", length = 1,nullable = false)
     private Character isActive;
 
     @ManyToOne
