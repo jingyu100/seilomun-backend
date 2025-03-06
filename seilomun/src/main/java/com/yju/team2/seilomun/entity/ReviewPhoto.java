@@ -12,7 +12,7 @@ import lombok.Setter;
 @Table(name = "review_photos")
 @NoArgsConstructor
 @AllArgsConstructor
-public class Review_Photo {
+public class ReviewPhoto {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
