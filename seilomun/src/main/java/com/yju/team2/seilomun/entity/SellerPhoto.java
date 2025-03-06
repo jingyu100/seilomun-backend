@@ -18,7 +18,7 @@ public class SellerPhoto {
     @Column(name = "sp_id")
     private Long id;
 
-    @Column(name = "photo_url", nullable = false, length = 100,unique = trued)
+    @Column(name = "photo_url", nullable = false, length = 100,unique = true)
     private String photoUrl;
 
     @ManyToOne
