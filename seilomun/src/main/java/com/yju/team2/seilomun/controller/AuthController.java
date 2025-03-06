@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.controller;
 
+import com.yju.team2.seilomun.dto.UserLoginRequest;
 import com.yju.team2.seilomun.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
