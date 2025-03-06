@@ -24,8 +24,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 보안 해제
                 .cors(Customizer.withDefaults()) // CORS 설정 추가
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/error").permitAll()
-                        .anyRequest().authenticated()
+//                        .requestMatchers("/api/auth/**", "/error", "/swagger-ui/index.html").permitAll()
+//                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 로그인 폼 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable) // 기본 인증 비활성화
