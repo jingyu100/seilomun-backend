@@ -5,6 +5,7 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.dto.SellerLoginDto;
 import com.yju.team2.seilomun.dto.SellerRegisterDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,22 @@ public class SellerController {
         return new ApiResponseJson(HttpStatus.OK, Map.of(
                 "email", seller.getEmail(),
                 "username", seller.getStoreName()
+        ));
+    }
+
+    //로그인
+    @PostMapping("/seller/login")
+    public ApiResponseJson sellerLogin(@Valid @RequestBody SellerLoginDto sellerLoginDto,
+                                       BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            throw new IllegalArgumentException("잘못된 요청입니다.");
+        }
+        String taken = sellerService.sellerLogin(sellerLoginDto);
+        log.info("Account successfully login with details: {}.", taken);
+
+        return new ApiResponseJson(HttpStatus.OK, Map.of(
+                "taken", taken,
+                "mesaage","로그인 성공"
         ));
     }
 }

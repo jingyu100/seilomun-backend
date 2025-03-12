@@ -2,13 +2,17 @@ package com.yju.team2.seilomun.domain.seller.service;
 
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.dto.SellerLoginDto;
 import com.yju.team2.seilomun.dto.SellerRegisterDto;
+import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -22,6 +26,9 @@ public class SellerService {
     private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+    // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto){
         checkPasswordStrength(sellerRegisterDto.getPassword());
 
@@ -50,7 +57,20 @@ public class SellerService {
         return sellerRepository.save(seller);
     }
 
-
+    //판매자 로그인
+    public String sellerLogin(SellerLoginDto sellerLoginDto){
+        Optional<Seller> byEmail = sellerRepository.findByEmail(sellerLoginDto.getEmail());
+        if (byEmail.isEmpty()){
+            throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
+        }
+        Seller seller = byEmail.get();
+        if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())){
+            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
+        }
+        return jwtUtil.generateToken(seller.getEmail());
+    }
+    
+    // 비밀번호 정규식 검사
     private void checkPasswordStrength(String password) {
         if (PASSWORD_PATTERN.matcher(password).matches()) {
             return;
