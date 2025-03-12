@@ -25,9 +25,7 @@ public class SellerService {
 
     private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto){
         checkPasswordStrength(sellerRegisterDto.getPassword());
