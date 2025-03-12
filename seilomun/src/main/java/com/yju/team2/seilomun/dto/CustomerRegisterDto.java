@@ -11,10 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CustomerRegisterDto {
-
-    @NotEmpty
-    private String id;
-
+//    NotBlank 고려
     @NotEmpty
     private String password;
 

@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.auth;
+package com.yju.team2.seilomun.api.user;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.service.CustomerService;
@@ -11,12 +11,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
 @Slf4j
-@ResponseStatus
+@RestController
 @RequiredArgsConstructor
 public class UserController {
 

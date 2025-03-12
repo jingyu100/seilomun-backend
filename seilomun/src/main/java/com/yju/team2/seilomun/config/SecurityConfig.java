@@ -1,6 +1,5 @@
 package com.yju.team2.seilomun.config;
 
-import com.yju.team2.seilomun.filter.JwtRequestFilter; // 필터 클래스 import 추가
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,21 +18,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private JwtRequestFilter jwtRequestFilter; // JwtRequestFilter 주입
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 보안 해제
                 .cors(Customizer.withDefaults()) // CORS 설정 추가
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // 같은 출처(도메인)에서는 iframe 허용
+                )
                 .authorizeHttpRequests(auth -> auth
 //                        .requestMatchers("/api/auth/**", "/error", "/swagger-ui/index.html").permitAll()
 //                        .anyRequest().authenticated()
+                                .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().permitAll()
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 로그인 폼 비활성화
-                .httpBasic(AbstractHttpConfigurer::disable) // 기본 인증 비활성화
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class); // 필터 등록
+                .httpBasic(AbstractHttpConfigurer::disable); // 기본 인증 비활성화
 
         return http.build();
     }
