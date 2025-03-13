@@ -19,7 +19,7 @@ public class ReviewPhoto {
     @Column(name = "rp_id")
     private Long id;
 
-    @Column(name = "photo_url", nullable = false , length = 255, unique = true)
+    @Column(name = "photo_url", nullable = false , length = 255)
     private String photo_url;
 
     @ManyToOne(fetch = FetchType.LAZY)

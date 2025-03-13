@@ -28,7 +28,7 @@ public class Event {
     @Column(name = "content",length = 255)
     private String content;
 
-    @Column(name = "image_url", nullable = false, length = 100 ,unique = true)
+    @Column(name = "image_url", nullable = false, length = 100)
     private String imageUrl;
 
     @Column(name = "start_at", nullable = false)
