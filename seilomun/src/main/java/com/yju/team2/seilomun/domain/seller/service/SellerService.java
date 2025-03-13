@@ -1,7 +1,12 @@
 package com.yju.team2.seilomun.domain.seller.service;
 
+import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
+import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
+import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.dto.DeliveryFeeDto;
+import com.yju.team2.seilomun.dto.SellerInformationDto;
 import com.yju.team2.seilomun.dto.SellerLoginDto;
 import com.yju.team2.seilomun.dto.SellerRegisterDto;
 import com.yju.team2.seilomun.util.JwtUtil;
@@ -24,8 +29,12 @@ public class SellerService {
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(PASSWORD_REGEX);
 
     private final SellerRepository sellerRepository;
+    private final SellerPhotoRepository sellerPhotoRepository;
+    private final DeliveryFeeRepository deliveryFeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto){
         checkPasswordStrength(sellerRegisterDto.getPassword());
@@ -75,6 +84,16 @@ public class SellerService {
         }
         log.info("비밀번호 정책 미달");
         throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
+    }
+
+    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
+        Seller seller = sellerRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+
+        seller.updateInformation(sellerInformationDto);
+
+        log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());
+        return sellerRepository.save(seller);
     }
 
 }

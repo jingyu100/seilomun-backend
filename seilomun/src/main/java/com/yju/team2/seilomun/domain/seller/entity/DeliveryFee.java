@@ -1,5 +1,7 @@
 package com.yju.team2.seilomun.domain.seller.entity;
 
+import com.yju.team2.seilomun.dto.DeliveryFeeDto;
+import com.yju.team2.seilomun.dto.SellerInformationDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,4 +29,11 @@ public class DeliveryFee {
     @ManyToOne
     @JoinColumn(name="se_id")
     private Seller seller;
+
+
+    // 업데이트용 메서드
+    public void updateInformation(DeliveryFeeDto deliveryFeeDto) {
+        this.ordersMoney = deliveryFeeDto.getOrdersMoney();
+        this.deliveryTip = deliveryFeeDto.getDeliveryTip();
+    }
 }
