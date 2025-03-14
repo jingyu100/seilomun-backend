@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.dto;
 
+import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AccessLevel;
@@ -12,7 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CustomerRegisterDto {
 //    NotBlank 고려
-    @NotEmpty
+//    @NotEmpty
+    @ValidPassword
     private String password;
 
     @NotEmpty
