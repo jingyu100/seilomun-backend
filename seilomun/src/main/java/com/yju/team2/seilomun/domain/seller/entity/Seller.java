@@ -112,8 +112,10 @@ public class Seller {
     @Builder.Default
     private List<ChatRoom> chatRooms = new ArrayList<>();
 
+
     @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL /*fetch = FetchType.LAZY*/)
     private ReviewComment reviewComment;
+
 
 
     // 업데이트용 메서드
@@ -124,5 +126,9 @@ public class Seller {
         this.deliveryAvailable = sellerInformationDto.getDeliveryAvailable();
         this.minOrderAmount = sellerInformationDto.getMinOrderAmount();
         this.deliveryArea = sellerInformationDto.getDeliveryArea();
+        this.operatingHours = sellerInformationDto.getOperatingHours();
+        this.category = sellerInformationDto.getCategory();
+        this.phone = sellerInformationDto.getPhone();
+        this.pickupTime = sellerInformationDto.getPickupTime();
     }
 }

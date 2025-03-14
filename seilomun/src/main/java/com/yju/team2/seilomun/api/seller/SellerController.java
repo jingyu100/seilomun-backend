@@ -4,10 +4,7 @@ package com.yju.team2.seilomun.api.seller;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
-import com.yju.team2.seilomun.dto.SellerInformationDto;
-import com.yju.team2.seilomun.dto.SellerLoginDto;
-import com.yju.team2.seilomun.dto.SellerRegisterDto;
+import com.yju.team2.seilomun.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,7 +78,7 @@ public class SellerController {
 //                "message", "매장 정보가 성공적으로 업데이트되었습니다."
 //        ));
 //    }
-    //임시로 수정
+    //임시로 매장정보 수정
     @PostMapping("/seller/testInformation")
     public ApiResponseJson testSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
                                                  BindingResult bindingResult) {
@@ -97,6 +94,22 @@ public class SellerController {
         return new ApiResponseJson(HttpStatus.OK, Map.of(
                 "storeName", seller.getStoreName(),
                 "message", "매장 정보가 성공적으로 업데이트되었습니다."
+        ));
+
+    }
+    @PostMapping("/seller/testInsertDeliveryFee")
+    public ApiResponseJson testInsertDeliveryFee(@Valid @RequestBody DeliveryFeeDto deliveryFeeDto,
+                                                 BindingResult bindingResult){
+        if (bindingResult.hasErrors()) {
+            throw new IllegalArgumentException("잘못된 요청입니다.");
+        }
+        // 테스트용 이메일 post맨으로 보낸거랑 같아야함
+        String testEmail = "aaa@naver.com";
+        Seller seller = sellerService.insertDeliveryFee(testEmail, deliveryFeeDto);
+
+        return new ApiResponseJson(HttpStatus.OK, Map.of(
+                "storeName", seller.getStoreName(),
+                "message", "매장에 배달비가 성공적으로 업데이트 되었습니다."
         ));
 
     }

@@ -25,4 +25,16 @@ public class SellerInformationDto {
     private DeliveryFeeDto deliveryFeeDto;
 
     private String deliveryArea;
+
+    @NotEmpty
+    private String operatingHours;
+
+    @NotEmpty
+    private String category;
+
+    @NotEmpty
+    private String phone;
+
+    @NotEmpty
+    private String pickupTime;
 }

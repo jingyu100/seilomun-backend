@@ -85,7 +85,8 @@ public class SellerService {
         log.info("비밀번호 정책 미달");
         throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
     }
-
+    
+    //판매자 매장 정보 수정
     public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
@@ -93,6 +94,17 @@ public class SellerService {
         seller.updateInformation(sellerInformationDto);
 
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());
+        return sellerRepository.save(seller);
+    }
+    public Seller insertDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
+        Seller seller = sellerRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
+        DeliveryFee deliveryFee = DeliveryFee.builder()
+                    .ordersMoney(deliveryFeeDto.getOrdersMoney())
+                    .deliveryTip(deliveryFeeDto.getDeliveryTip())
+                    .seller(seller)
+                    .build();
+        deliveryFeeRepository.save(deliveryFee);
         return sellerRepository.save(seller);
     }
 
