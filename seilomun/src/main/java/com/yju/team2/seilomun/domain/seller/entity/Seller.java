@@ -17,7 +17,6 @@ import java.util.ArrayList;
 @Entity
 @Table(name = "sellers")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -113,8 +112,7 @@ public class Seller {
     @Builder.Default
     private List<ChatRoom> chatRooms = new ArrayList<>();
 
-    @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
+    @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL /*fetch = FetchType.LAZY*/)
     private ReviewComment reviewComment;
 
 
