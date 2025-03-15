@@ -74,12 +74,12 @@ public class SellerService {
             throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
         Seller seller = byEmail.get();
-//        if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())) {
-//            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
-//        }
-        if (!sellerLoginDto.getPassword().equals(seller.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
         }
+//        if (!sellerLoginDto.getPassword().equals(seller.getPassword())) {
+//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+//        }
 
         // RefreshToken 생성 및 Redis에 저장
         String refreshToken = jwtUtil.generateRefreshToken(seller.getEmail());
@@ -100,8 +100,12 @@ public class SellerService {
 
     //판매자 매장 정보 수정
     public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
-        Seller seller = sellerRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+        Optional<Seller> sellerOptional = sellerRepository.findByEmail(email);
+        if (sellerOptional.isEmpty()) {
+            log.warn("updateSellerInformation 실패 - 존재하지 않는 판매자 이메일: {}", email);
+            throw new IllegalArgumentException("존재하지 않는 판매자입니다.");
+        }
+        Seller seller = sellerOptional.get();
 
         seller.updateInformation(sellerInformationDto);
 
