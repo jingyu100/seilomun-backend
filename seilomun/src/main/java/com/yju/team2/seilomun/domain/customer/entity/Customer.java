@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.customer.entity;
 
 import com.yju.team2.seilomun.domain.order.entity.Order;
+import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class Customer {
     private String email;
 
     @Column(name = "password", nullable = false, length = 100)
+    @ValidPassword
     private String password;
 
     @Column(name = "name", nullable = false, length = 10)

@@ -6,6 +6,7 @@ import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.review.entity.ReviewComment;
 import com.yju.team2.seilomun.dto.SellerInformationDto;
+import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,6 +35,7 @@ public class Seller {
     private String email;
 
     @Column(name = "password", nullable = false, length = 100)
+    @ValidPassword
     private String password;
 
     @Column(name = "store_name", nullable = false, length = 20)
