@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -112,7 +113,8 @@ public class SellerService {
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());
         return sellerRepository.save(seller);
     }
-
+    
+    //배달비 추가
     public Seller insertDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
@@ -124,5 +126,15 @@ public class SellerService {
         deliveryFeeRepository.save(deliveryFee);
         return sellerRepository.save(seller);
     }
-
+    
+    //배달비 수정
+    public DeliveryFee updateDeliveryFee( DeliveryFeeDto deliveryFeeDto) {
+        Optional<DeliveryFee> optionalDeliveryFee = deliveryFeeRepository.findById(deliveryFeeDto.getId());
+        if (optionalDeliveryFee.isEmpty()) {
+            throw new IllegalArgumentException("존재 하지 않는 배달비 정보입니다.");
+        }
+        DeliveryFee deliveryFee = optionalDeliveryFee.get();
+        deliveryFee.updateInformation(deliveryFeeDto);
+        return deliveryFeeRepository.save(deliveryFee);
+    }
 }

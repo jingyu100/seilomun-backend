@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeliveryFeeDto {
-
+    private Long id;
     private Integer ordersMoney;
     private Integer deliveryTip;
 }
