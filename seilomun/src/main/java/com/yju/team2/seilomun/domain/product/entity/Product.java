@@ -42,7 +42,7 @@ public class Product {
     @Column(name = "original_price", nullable = false)
     private Integer originalPrice;
 
-    @Column(name = "discount_price", nullable = false)
+    @Column(name = "discount_price")
     private Integer discountPrice;
 
     @Column(name = "stock_quantity", nullable = false)
@@ -51,16 +51,16 @@ public class Product {
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
 
-    @Column(name = "status", nullable = false, length = 1)
+    @Column(name = "status",length = 1)
     private Character status;
 
-    @Column(name = "max_discount_rate", nullable = false)
+    @Column(name = "max_discount_rate", nullable = false    )
     private Integer maxDiscountRate;
 
     @Column(name = "min_discount_rate", nullable = false)
     private Integer minDiscountRate;
 
-    @Column(name = "current_discount_rate", nullable = false)
+    @Column(name = "current_discount_rate")
     private Integer currentDiscountRate;
 
     @CreationTimestamp
