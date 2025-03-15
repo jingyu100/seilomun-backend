@@ -55,7 +55,7 @@ public class AuthController {
             Cookie accessTokenCookie = new Cookie("Authentication", newAccessToken);
             accessTokenCookie.setHttpOnly(true);
             accessTokenCookie.setPath("/");
-            accessTokenCookie.setMaxAge(30 * 60 * 4); // 30분
+            accessTokenCookie.setMaxAge(30 * 60 * 4); // 2시간
             response.addCookie(accessTokenCookie);
 
             return ResponseEntity.ok()
