@@ -7,21 +7,28 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.security.Key;
 import java.util.Date;
 
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
 
-//    @Value("${tmp}")
-//    private String secretKey;
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     Key key;
 
+    @PostConstruct
+    public void init() {
+        // 애플리케이션 시작 시 키 초기화
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
+
     // 토큰 생성
     public String generateToken(String username) {
-        key = Keys.secretKeyFor(SignatureAlgorithm.HS256); // HS256에 맞는 키 생성
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())

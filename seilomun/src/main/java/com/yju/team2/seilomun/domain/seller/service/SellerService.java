@@ -36,10 +36,10 @@ public class SellerService {
 
 
     // 판매자 가입
-    public Seller sellerRegister(SellerRegisterDto sellerRegisterDto){
+    public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
         checkPasswordStrength(sellerRegisterDto.getPassword());
 
-        if (sellerRepository.existsByEmail(sellerRegisterDto.getEmail())){
+        if (sellerRepository.existsByEmail(sellerRegisterDto.getEmail())) {
             log.info("이미 존재하는 이메일입니다.");
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
@@ -65,18 +65,22 @@ public class SellerService {
     }
 
     //판매자 로그인
-    public String sellerLogin(SellerLoginDto sellerLoginDto){
+    public String sellerLogin(SellerLoginDto sellerLoginDto) {
         Optional<Seller> byEmail = sellerRepository.findByEmail(sellerLoginDto.getEmail());
-        if (byEmail.isEmpty()){
+        if (byEmail.isEmpty()) {
+            log.info(byEmail.toString());
             throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
         Seller seller = byEmail.get();
-        if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())){
-            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
+//        if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())) {
+//            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
+//        }
+        if(!sellerLoginDto.getPassword().equals(seller.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
         return jwtUtil.generateToken(seller.getEmail());
     }
-    
+
     // 비밀번호 정규식 검사
     private void checkPasswordStrength(String password) {
         if (PASSWORD_PATTERN.matcher(password).matches()) {
@@ -85,7 +89,7 @@ public class SellerService {
         log.info("비밀번호 정책 미달");
         throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
     }
-    
+
     //판매자 매장 정보 수정
     public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
         Seller seller = sellerRepository.findByEmail(email)
@@ -96,14 +100,15 @@ public class SellerService {
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());
         return sellerRepository.save(seller);
     }
+
     public Seller insertDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
         DeliveryFee deliveryFee = DeliveryFee.builder()
-                    .ordersMoney(deliveryFeeDto.getOrdersMoney())
-                    .deliveryTip(deliveryFeeDto.getDeliveryTip())
-                    .seller(seller)
-                    .build();
+                .ordersMoney(deliveryFeeDto.getOrdersMoney())
+                .deliveryTip(deliveryFeeDto.getDeliveryTip())
+                .seller(seller)
+                .build();
         deliveryFeeRepository.save(deliveryFee);
         return sellerRepository.save(seller);
     }

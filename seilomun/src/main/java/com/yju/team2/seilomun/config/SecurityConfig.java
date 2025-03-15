@@ -31,7 +31,7 @@ public class SecurityConfig {
 //                        .requestMatchers("/api/auth/**", "/error", "/swagger-ui/index.html").permitAll()
 //                        .anyRequest().authenticated()
                                 .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().permitAll()
+                                .anyRequest().permitAll()
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 로그인 폼 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable); // 기본 인증 비활성화
