@@ -24,7 +24,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //        String token = null;
-        String username = null;
+//        String username = null;
 
         // Authorization 헤더에서 토큰 추출
 //        String authorizationHeader = request.getHeader("Authorization");
@@ -35,12 +35,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         String token = extractTokenFromCookie(request);
         if (token != null) {
-            if (jwtUtil.validateToken(token, username)) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        username, null, null // 실제로는 권한을 설정
-                );
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            String username = jwtUtil.extractUsername(token);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtUtil.validateToken(token, username)) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            username, null, null // 실제로는 권한을 설정
+                    );
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         }
 

@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.config;
 
+import com.yju.team2.seilomun.filter.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtRequestFilter jwtRequestFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -32,9 +34,12 @@ public class SecurityConfig {
 //                        .anyRequest().authenticated()
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .anyRequest().permitAll()
+//                                .requestMatchers("/", "/login", "/api/auth/**").permitAll() // 로그인 관련 경로도 접근 가능
+//                                .anyRequest().authenticated() // 추후에 모든 요청은 인증 필요에 사용
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 로그인 폼 비활성화
-                .httpBasic(AbstractHttpConfigurer::disable); // 기본 인증 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable) // 기본 인증 비활성화
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
