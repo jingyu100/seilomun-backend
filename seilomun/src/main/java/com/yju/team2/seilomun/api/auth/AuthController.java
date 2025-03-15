@@ -65,7 +65,7 @@ public class AuthController {
 //        return ResponseEntity.badRequest().body("Invalid refresh token");
         return ResponseEntity.ok()
                 .body(new ApiResponseJson(HttpStatus.BAD_REQUEST, Map.of(
-                        "Invalid refresh token", "인증되지 않은 리프레쉬 토큰입니다"
+                        "RefreshToken Not Found", "리프레시 토큰을 찾을 수 없습니다"
                 )));
     }
 }
