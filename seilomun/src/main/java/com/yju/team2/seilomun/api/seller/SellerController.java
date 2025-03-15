@@ -89,27 +89,6 @@ public class SellerController {
         return cookie;
     }
 
-    //토큰 못가져와서 이거 잠시 주석처리
-    @PostMapping("/seller/information")
-    public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
-                                                   BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
-        }
-
-        // 현재 인증된 사용자의 이메일 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
-
-        Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto);
-        log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", email);
-
-        return new ApiResponseJson(HttpStatus.OK, Map.of(
-                "storeName", seller.getStoreName(),
-                "message", "매장 정보가 성공적으로 업데이트되었습니다."
-        ));
-    }
-
     // 쿠키에 토큰이 들어가있는지 확인
     @PostMapping("api/test")
     public ApiResponseJson checkSellerInformation(HttpServletRequest request) {
@@ -145,42 +124,79 @@ public class SellerController {
             throw new IllegalArgumentException("오류가 발생했습니다 : " + e.getMessage());
         }
     }
-
-
-    //임시로 매장정보 수정
-//    @PostMapping("/seller/testInformation")
-//    public ApiResponseJson testSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
-//                                                 BindingResult bindingResult) {
-//
-//        if (bindingResult.hasErrors()) {
-//            throw new IllegalArgumentException("잘못된 요청입니다.");
-//        }
-//
-//        // 테스트용 이메일 post맨으로 보낸거랑 같아야함
-//        String testEmail = "aaa@naver.com";
-//
-//        Seller seller = sellerService.updateSellerInformation(testEmail, sellerInformationDto);
-//        return new ApiResponseJson(HttpStatus.OK, Map.of(
-//                "storeName", seller.getStoreName(),
-//                "message", "매장 정보가 성공적으로 업데이트되었습니다."
-//        ));
-//
-//    }
-
-    @PostMapping("/seller/testInsertDeliveryFee")
-    public ApiResponseJson testInsertDeliveryFee(@Valid @RequestBody DeliveryFeeDto deliveryFeeDto,
-                                                 BindingResult bindingResult) {
+    
+    @PostMapping("/seller/information")
+    public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
+                                                   BindingResult bindingResult,
+                                                   HttpServletRequest request) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
-        // 테스트용 이메일 post맨으로 보낸거랑 같아야함
-        String testEmail = "aaa@naver.com";
-        Seller seller = sellerService.insertDeliveryFee(testEmail, deliveryFeeDto);
 
-        return new ApiResponseJson(HttpStatus.OK, Map.of(
-                "storeName", seller.getStoreName(),
-                "message", "매장에 배달비가 성공적으로 업데이트 되었습니다."
-        ));
+        Cookie[] cookies = request.getCookies();
+        String token = null;
 
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("Authorization".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || token.isEmpty()) {
+            throw new IllegalArgumentException("인증 정보가 없습니다.");
+        }
+
+        try {
+            String email = jwtUtil.extractUsername(token);
+            log.info("토큰에서 추출한 이메일: {}", email);
+            Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto);
+
+            return new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "storeName", seller.getStoreName(),
+                    "message", "매장 정보가 성공적으로 업데이트되었습니다."
+            ));
+        } catch (Exception e) {
+            log.error("매장 정보 업데이트 중 오류 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("매장 정보 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+    @PostMapping("/seller/insertDeliveryFee")
+    public ApiResponseJson insertDeliveryFee(@Valid @RequestBody DeliveryFeeDto deliveryFeeDto,
+                                             BindingResult bindingResult,
+                                             HttpServletRequest request) {
+        if (bindingResult.hasErrors()) {
+            throw new IllegalArgumentException("잘못된 요청입니다.");
+        }
+        Cookie[] cookies = request.getCookies();
+        String token = null;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("Authorization".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (token == null || token.isEmpty()) {
+            throw new IllegalArgumentException("인증 정보가 없습니다.");
+        }
+
+        try{
+            String email = jwtUtil.extractUsername(token);
+            Seller seller = sellerService.insertDeliveryFee(email, deliveryFeeDto);
+
+            return new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "storeName", seller.getStoreName(),
+                    "message", "매장에 배달비가 성공적으로 업데이트 되었습니다."
+            ));
+        } catch (Exception e) {
+            log.error("매장 정보 업데이트 중 오류 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("매장 정보 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }
