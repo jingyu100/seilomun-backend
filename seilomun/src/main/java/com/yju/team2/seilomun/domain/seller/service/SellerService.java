@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.service;
 
+import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
@@ -33,6 +34,7 @@ public class SellerService {
     private final DeliveryFeeRepository deliveryFeeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
 
     // 판매자 가입
@@ -75,10 +77,15 @@ public class SellerService {
 //        if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())) {
 //            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
 //        }
-        if(!sellerLoginDto.getPassword().equals(seller.getPassword())) {
+        if (!sellerLoginDto.getPassword().equals(seller.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-        return jwtUtil.generateToken(seller.getEmail());
+
+        // RefreshToken 생성 및 Redis에 저장
+        String refreshToken = jwtUtil.generateRefreshToken(seller.getEmail());
+        refreshTokenService.saveRefreshToken(seller.getEmail(), refreshToken);
+
+        return jwtUtil.generateAccessToken(seller.getEmail());
     }
 
     // 비밀번호 정규식 검사
