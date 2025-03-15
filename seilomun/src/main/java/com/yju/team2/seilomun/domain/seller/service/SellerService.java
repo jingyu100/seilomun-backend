@@ -85,6 +85,7 @@ public class SellerService {
         String refreshToken = jwtUtil.generateRefreshToken(seller.getEmail());
         refreshTokenService.saveRefreshToken(seller.getEmail(), refreshToken);
 
+        // AccessToken 생성 및 반환
         return jwtUtil.generateAccessToken(seller.getEmail());
     }
 

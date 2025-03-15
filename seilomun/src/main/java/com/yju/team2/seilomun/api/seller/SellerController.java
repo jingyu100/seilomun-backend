@@ -69,10 +69,6 @@ public class SellerController {
                         "token", token,
                         "message", "로그인 성공"
                 )));
-        //        return new ApiResponseJson(HttpStatus.OK, Map.of(
-//                "token", token,
-//                "message", "로그인 성공"
-//        ));
     }
 
     // 쿠키에 토큰 삽입
@@ -88,7 +84,7 @@ public class SellerController {
                 None = 크로스 사이트 요청에서도 쿠키 사용 가능(HTTPS 필수)
                 * */
                 .path("/")       // 모든 경로에서 쿠키 사용 가능
-                .maxAge(30 * 60) // 1일 동안 유지
+                .maxAge(30 * 60 * 4) // 2시간 유지
                 .build();
         return cookie;
     }
