@@ -15,10 +15,7 @@ import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -125,7 +122,7 @@ public class SellerController {
             throw new IllegalArgumentException("오류가 발생했습니다 : " + e.getMessage());
         }
     }
-    
+    //매장 정보 수정
     @PostMapping("/seller/information")
     public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
                                                    BindingResult bindingResult) {
@@ -145,11 +142,10 @@ public class SellerController {
                 "message", "매장 정보가 성공적으로 업데이트되었습니다."
         ));
     }
-
+    // 매장 배달비 추가
     @PostMapping("/seller/insertDeliveryFee")
     public ApiResponseJson insertDeliveryFee(@Valid @RequestBody DeliveryFeeDto deliveryFeeDto,
-                                             BindingResult bindingResult,
-                                             HttpServletRequest request) {
+                                             BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
@@ -168,20 +164,42 @@ public class SellerController {
             throw new IllegalArgumentException("매장 정보 업데이트 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-
+    // 매장 배달비 수정
     @PostMapping("/seller/updateDeliveryFee")
     public ApiResponseJson updateDeliveryFee(@Valid @RequestBody DeliveryFeeDto deliveryFeeDto,
                                              BindingResult bindingResult,
-                                             HttpServletRequest request) {
+                                             Authentication authentication) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
 
+        String email = authentication.getName();
+
         try{
-            DeliveryFee deliveryFee = sellerService.updateDeliveryFee(deliveryFeeDto);
+            DeliveryFee deliveryFee = sellerService.updateDeliveryFee(email,deliveryFeeDto);
             return new ApiResponseJson(HttpStatus.OK, Map.of(
                     "deliveryTip", deliveryFee.getDeliveryTip(),
                     "message", "매장에 배달비가 성공적으로 업데이트 되었습니다."
+            ));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("매장에 배달비 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+    // 매장 배달비 삭제
+    @DeleteMapping("/seller/deleteDeliveryFee")
+    public  ApiResponseJson deleteDeliveryFee(@Valid @RequestBody DeliveryFeeDto deliveryFeeDto,
+                                              BindingResult bindingResult,
+                                              Authentication authentication){
+        if (bindingResult.hasErrors()) {
+            throw new IllegalArgumentException("잘못된 요청입니다.");
+        }
+
+        String email = authentication.getName();
+        try{
+            sellerService.deleteDeliveryFee(email,deliveryFeeDto);
+            return new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "deliveryTip", deliveryFeeDto.getId(),
+                    "message", "매장에 배달비가 성공적으로 삭제 되었습니다."
             ));
         } catch (Exception e) {
             throw new IllegalArgumentException("매장에 배달비 업데이트 중 오류가 발생했습니다: " + e.getMessage());
