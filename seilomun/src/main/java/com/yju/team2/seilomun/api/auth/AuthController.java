@@ -46,13 +46,13 @@ public class AuthController {
         String refreshToken = refreshTokenService.getRefreshToken(username);
 
         System.out.println("refreshToken : " + refreshToken);
-        if (refreshToken != null && jwtUtil.validateToken(refreshToken, username)) {
+        if (refreshToken != null && refreshTokenService.validateRefreshToken(refreshToken, username)) {
 
             // 새 AccessToken 생성
             String newAccessToken = jwtUtil.generateAccessToken(username);
 
             // 새 AccessToken을 쿠키에 설정
-            Cookie accessTokenCookie = new Cookie("Authentication", newAccessToken);
+            Cookie accessTokenCookie = new Cookie("Authorization", newAccessToken);
             accessTokenCookie.setHttpOnly(true);
             accessTokenCookie.setPath("/");
             accessTokenCookie.setMaxAge(30 * 60 * 4); // 2시간
