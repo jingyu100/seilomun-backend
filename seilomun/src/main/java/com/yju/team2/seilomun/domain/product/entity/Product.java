@@ -4,10 +4,7 @@ import com.yju.team2.seilomun.domain.customer.entity.Wish;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.order.entity.OrderItem;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -16,6 +13,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -82,4 +80,32 @@ public class Product {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    
+    //할인율 계산메서드
+    public Integer calculateDiscountRate() {
+        if(expiryDate == null || minDiscountRate == null || maxDiscountRate == null)
+            return 0;
+
+        LocalDateTime now= LocalDateTime.now();
+        if(now.isAfter(expiryDate))
+        {
+            return maxDiscountRate;
+        }
+
+        long totalDays = expiryDate.toLocalDate().toEpochDay() - now.toLocalDate().toEpochDay();
+        long elapsedDays = expiryDate.toLocalDate().toEpochDay() - expiryDate.toLocalDate().minusDays(totalDays).toEpochDay();
+
+        if(totalDays == 0)
+            return minDiscountRate;
+
+
+        double discountRate = minDiscountRate + ((double) elapsedDays / totalDays) * (maxDiscountRate - minDiscountRate);
+        return (int) Math.round(discountRate);
+    }
+
+    //할인 가격 계산메서드
+    public Integer calculateDiscountPrice(Integer originalPrice, Integer currentDiscountRate) {
+        return originalPrice - (originalPrice * currentDiscountRate / 100);
+    }
 }

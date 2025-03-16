@@ -29,7 +29,7 @@ public class ProductDto {
     private LocalDateTime createdAt;
     private List<String> photoUrl;
 
-    public static ProductDto fromEntity(Product product)
+    public static ProductDto fromEntity(Product product,Integer discountPrice, Integer currentDiscountRate)
     {
         return ProductDto.builder()
                 .id(product.getId())
@@ -38,13 +38,13 @@ public class ProductDto {
                 .description(product.getDescription())
                 .thumbnailUrl(product.getThumbnailUrl())
                 .originalPrice(product.getOriginalPrice())
-                .discountedPrice(product.getDiscountPrice())
+                .discountedPrice(discountPrice)
                 .stockQuantity(product.getStockQuantity())
                 .expiryDate(product.getExpiryDate())
                 .status(product.getStatus())
                 .minDiscountRate(product.getMinDiscountRate())
                 .maxDiscountRate(product.getMaxDiscountRate())
-                .currentDiscountRate(product.getCurrentDiscountRate())
+                .currentDiscountRate(currentDiscountRate)
                 .createdAt(product.getCreatedAt())
                 .photoUrl(product.getProductPhotos().stream()
                         .map(ProductPhoto::getPhotoUrl)
