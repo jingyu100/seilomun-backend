@@ -29,18 +29,20 @@ public class JwtUtil {
     private final long REFRESH_TOKEN_EXPIRE_TIME = 14 * 24 * 60 * 60 * 1000;
 
     // AccessToken 생성
-    public String generateAccessToken(String username) {
-        return generateToken(username, ACCESS_TOKEN_EXPIRE_TIME);
+    public String generateAccessToken(String username, String userType) {
+        return generateToken(username, userType, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
     // RefreshToken 생성
-    public String generateRefreshToken(String username) {
-        return generateToken(username, REFRESH_TOKEN_EXPIRE_TIME);
+    public String generateRefreshToken(String username, String userType) {
+        return generateToken(username, userType, REFRESH_TOKEN_EXPIRE_TIME);
     }
 
     // 토큰 생성
-    private String generateToken(String username, long expireTime) {
+    private String generateToken(String username, String userType, long expireTime) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("userType", userType); // "SELLER" 또는 "CUSTOMER"
+
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
@@ -54,6 +56,12 @@ public class JwtUtil {
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
+
+    // 토큰에서 userType 추출
+    public String extractUserType(String token) {
+        return extractClaim(token, claims -> claims.get("userType", String.class));
+    }
+
 
     // 토큰에서 유효시간 추출
     public Date extractExpiration(String token) {

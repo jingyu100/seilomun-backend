@@ -1,6 +1,6 @@
 package com.yju.team2.seilomun.api.seller;
 
-import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -122,17 +123,27 @@ public class SellerController {
             throw new IllegalArgumentException("오류가 발생했습니다 : " + e.getMessage());
         }
     }
+
     //매장 정보 수정
     @PostMapping("/seller/information")
     public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
-                                                   BindingResult bindingResult) {
+                                                   BindingResult bindingResult,
+                                                   @AuthenticationPrincipal JwtUserDetails userDetails) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
 
+        // 판매자 권한 확인
+        if (!userDetails.isSeller()) {
+            throw new SecurityException("판매자만 접근할 수 있습니다.");
+        }
+
         // 현재 인증된 사용자의 이메일 가져오기
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = userDetails.getEmail();
+
+        // 현재 인증된 사용자의 이메일 가져오기
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String email = authentication.getName();
 
         Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto);
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", email);

@@ -83,11 +83,11 @@ public class SellerService {
 //        }
 
         // RefreshToken 생성 및 Redis에 저장
-        String refreshToken = jwtUtil.generateRefreshToken(seller.getEmail());
-        refreshTokenService.saveRefreshToken(seller.getEmail(), refreshToken);
+        String refreshToken = jwtUtil.generateRefreshToken(seller.getEmail(), "SELLER");
+        refreshTokenService.saveRefreshToken(seller.getEmail(), "SELLER", refreshToken);
 
         // AccessToken 생성 및 반환
-        return jwtUtil.generateAccessToken(seller.getEmail());
+        return jwtUtil.generateAccessToken(seller.getEmail(), "SELLER");
     }
 
     // 비밀번호 정규식 검사
@@ -112,7 +112,7 @@ public class SellerService {
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());
         return sellerRepository.save(seller);
     }
-    
+
     //배달비 추가
     public Seller insertDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
         Seller seller = sellerRepository.findByEmail(email)
@@ -125,7 +125,7 @@ public class SellerService {
         deliveryFeeRepository.save(deliveryFee);
         return sellerRepository.save(seller);
     }
-    
+
     //배달비 수정
     public DeliveryFee updateDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
         Optional<DeliveryFee> optionalDeliveryFee = deliveryFeeRepository.findById(deliveryFeeDto.getId());
@@ -133,20 +133,20 @@ public class SellerService {
             throw new IllegalArgumentException("존재 하지 않는 배달비 정보입니다.");
         }
         DeliveryFee deliveryFee = optionalDeliveryFee.get();
-        
+
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
 
         if (!deliveryFee.getSeller().getId().equals(seller.getId())) {
             throw new IllegalArgumentException("수정할 권한이 없습니다");
         }
-        
+
         deliveryFee.updateInformation(deliveryFeeDto);
         return deliveryFeeRepository.save(deliveryFee);
     }
 
     //배달비 삭제
-    public void deleteDeliveryFee(String email,DeliveryFeeDto deliveryFeeDto) {
+    public void deleteDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
         Optional<DeliveryFee> optionalDeliveryFee = deliveryFeeRepository.findById(deliveryFeeDto.getId());
         if (optionalDeliveryFee.isEmpty()) {
             throw new IllegalArgumentException("존재 하지 않는 배달비 정보입니다.");
