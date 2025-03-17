@@ -4,9 +4,12 @@ import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
+import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.dto.ProductDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,11 +22,13 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
     private final RedisTemplate<String, String> redisTemplate;
+    private final SellerRepository sellerRepository;
 
     private static final String DISCOUNT_RATE_KEY = "Product:currentDiscountRate";
     private static final String DISCOUNT_PRICE_KEY = "Product:discountPrice";
@@ -109,7 +114,12 @@ public class ProductService {
     }
 
     // 상품 등록
-    public ProductDto createProductDto(ProductDto productDto) {
+    public ProductDto createProductDto(ProductDto productDto, String sellerEmail) {
+
+        Seller seller = sellerRepository.findByEmail(sellerEmail)
+                .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
+
+        log.info("상품 등록: 판매자 ID {}, 상품명 {}", seller.getId(), productDto.getName());
 
         Product product = productRepository.save(Product.builder()
                 .name(productDto.getName())
@@ -125,6 +135,7 @@ public class ProductService {
                 .discountPrice(productDto.getOriginalPrice()) //임시로만 현재 가격 null 에러떠서 넣음
                 .maxDiscountRate((productDto.getMaxDiscountRate()))
                 .createdAt(productDto.getCreatedAt())
+                .seller(seller)
                 .build());
 
         Integer currentDiscountRate = product.calculateDiscountRate();
@@ -146,12 +157,19 @@ public class ProductService {
     }
 
     // 상품 삭제
-    public void deleteProduct(Long id) {
+    public void deleteProduct(Long id, String sellerEmail) {
+
+        Seller seller = sellerRepository.findByEmail(sellerEmail)
+                .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
+
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
 
-        productPhotoRepository.deleteByProduct(product);
+        if (!product.getSeller().getId().equals(seller.getId())) {
+            throw new IllegalArgumentException("삭제 할 권한이 없습니다");
+        }
 
+        productPhotoRepository.deleteByProduct(product);
         productRepository.delete(product);
     }
 

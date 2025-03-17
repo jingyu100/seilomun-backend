@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cbb0de0c-c007-46f1-ad7b-628590943aab" name="변경" comment="" />
+    <list default="true" id="cbb0de0c-c007-46f1-ad7b-628590943aab" name="변경" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/api/product/ProductController.java" beforeDir="false" afterPath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/api/product/ProductController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/domain/product/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/domain/product/service/ProductService.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,9 +34,9 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 4
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
   <component name="ProjectId" id="2ttOfprZihgWdsfboF3RavnsOX0" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -42,7 +46,7 @@
   "keyToString": {
     "Gradle.seilomun [:com.yju.team2.seilomun.SeilomunApplication.main()].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "moonjihoon",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/munji/Documents/GitHub/seilomun-backend/seilomun/src/main/resources",
@@ -91,8 +95,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.22855.74" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.22855.74" />
+        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.24807.4" />
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.24807.4" />
       </set>
     </attachedChunks>
   </component>
@@ -108,6 +112,7 @@
       <option name="presentableId" value="Default" />
       <updated>1741168010079</updated>
       <workItem from="1741168011137" duration="1657000" />
+      <workItem from="1742197026372" duration="7158000" />
     </task>
     <servers />
   </component>
