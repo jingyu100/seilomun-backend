@@ -37,10 +37,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/seller/login",
-                                "/customer/login",
-                                "/seller/join",
-                                "/customer/join",
+                                "/api/seller/login",
+                                "/api/customer/login",
+                                "/api/sellers",
+                                "/api/customers",
                                 "/refresh-token",
                                 "/logout",
                                 "/h2-console/**",
