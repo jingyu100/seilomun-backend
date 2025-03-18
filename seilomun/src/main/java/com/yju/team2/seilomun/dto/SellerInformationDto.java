@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,7 +24,7 @@ public class SellerInformationDto {
 
     private String minOrderAmount;
 
-    private DeliveryFeeDto deliveryFeeDto;
+    private List<DeliveryFeeDto> deliveryFeeDtos;
 
     private String deliveryArea;
 

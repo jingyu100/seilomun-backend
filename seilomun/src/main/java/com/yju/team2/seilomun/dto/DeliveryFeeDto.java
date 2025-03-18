@@ -12,4 +12,6 @@ public class DeliveryFeeDto {
     private Long id;
     private Integer ordersMoney;
     private Integer deliveryTip;
+    //삭제 버튼 눌렀는지 안눌렀는지
+    private Boolean deleted;
 }

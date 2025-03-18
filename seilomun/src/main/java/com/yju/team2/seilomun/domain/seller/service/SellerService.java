@@ -98,66 +98,51 @@ public class SellerService {
         throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
     }
 
-    //판매자 매장 정보 수정
+    // 유저 정보 업데이트 (사진 추가는 아직 x)
     public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
-        Optional<Seller> optionalSeller = sellerRepository.findByEmail(email);
-        if (optionalSeller.isEmpty()) {
-            log.warn("updateSellerInformation 실패 - 존재하지 않는 판매자 이메일: {}", email);
-            throw new IllegalArgumentException("존재하지 않는 판매자입니다.");
-        }
-        Seller seller = optionalSeller.get();
+        Seller seller = sellerRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+
         seller.updateInformation(sellerInformationDto);
 
-        log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());
+        List<DeliveryFeeDto> deliveryFeeDtos = sellerInformationDto.getDeliveryFeeDtos();
+        if (deliveryFeeDtos != null && !deliveryFeeDtos.isEmpty()) {
+            for (DeliveryFeeDto deliveryFeeDto : deliveryFeeDtos) {
+                // ID가 있는 경우 기존 배달비 정보 업데이트 또는 삭제
+                if (deliveryFeeDto.getId() != null) {
+                    Optional<DeliveryFee> optionalDeliveryFee = deliveryFeeRepository.findById(deliveryFeeDto.getId());
+                    if (optionalDeliveryFee.isEmpty()) {
+                        throw new IllegalArgumentException("존재하지 않는 배달비 정보입니다: ID=" + deliveryFeeDto.getId());
+                    }
+
+                    DeliveryFee deliveryFee = optionalDeliveryFee.get();
+                    // 자기게 맞는지
+                    if (!deliveryFee.getSeller().getId().equals(seller.getId())) {
+                        throw new IllegalArgumentException("권한이 없습니다: ID=" + deliveryFeeDto.getId());
+                    }
+                    // 삭제 버튼 눌렀으면
+                    if (Boolean.TRUE.equals(deliveryFeeDto.getDeleted())) {
+                        deliveryFeeRepository.delete(deliveryFee);
+                        log.info("배달비 정보가 삭제되었습니다: ID={}", deliveryFee.getId());
+                    } else {
+                        deliveryFee.updateInformation(deliveryFeeDto);
+                        deliveryFeeRepository.save(deliveryFee);
+                        log.info("배달비 정보가 업데이트되었습니다: ID={}", deliveryFee.getId());
+                    }
+                }
+                // id가 없고 입력값이 있으면 새로만듬
+                else if (deliveryFeeDto.getDeliveryTip() != null && deliveryFeeDto.getOrdersMoney() != null) {
+                    DeliveryFee deliveryFee = DeliveryFee.builder()
+                            .ordersMoney(deliveryFeeDto.getOrdersMoney())
+                            .deliveryTip(deliveryFeeDto.getDeliveryTip())
+                            .seller(seller)
+                            .build();
+                    deliveryFeeRepository.save(deliveryFee);
+                    log.info("새 배달비 정보가 추가되었습니다: 판매자={}", seller.getEmail());
+                }
+            }
+        }
         return sellerRepository.save(seller);
     }
 
-    //배달비 추가
-    public Seller insertDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
-        Seller seller = sellerRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
-        DeliveryFee deliveryFee = DeliveryFee.builder()
-                .ordersMoney(deliveryFeeDto.getOrdersMoney())
-                .deliveryTip(deliveryFeeDto.getDeliveryTip())
-                .seller(seller)
-                .build();
-        deliveryFeeRepository.save(deliveryFee);
-        return sellerRepository.save(seller);
-    }
-
-    //배달비 수정
-    public DeliveryFee updateDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
-        Optional<DeliveryFee> optionalDeliveryFee = deliveryFeeRepository.findById(deliveryFeeDto.getId());
-        if (optionalDeliveryFee.isEmpty()) {
-            throw new IllegalArgumentException("존재 하지 않는 배달비 정보입니다.");
-        }
-        DeliveryFee deliveryFee = optionalDeliveryFee.get();
-
-        Seller seller = sellerRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
-
-        if (!deliveryFee.getSeller().getId().equals(seller.getId())) {
-            throw new IllegalArgumentException("수정할 권한이 없습니다");
-        }
-
-        deliveryFee.updateInformation(deliveryFeeDto);
-        return deliveryFeeRepository.save(deliveryFee);
-    }
-
-    //배달비 삭제
-    public void deleteDeliveryFee(String email, DeliveryFeeDto deliveryFeeDto) {
-        Optional<DeliveryFee> optionalDeliveryFee = deliveryFeeRepository.findById(deliveryFeeDto.getId());
-        if (optionalDeliveryFee.isEmpty()) {
-            throw new IllegalArgumentException("존재 하지 않는 배달비 정보입니다.");
-        }
-        DeliveryFee deliveryFee = optionalDeliveryFee.get();
-
-        Seller seller = sellerRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입다."));
-
-        if (!deliveryFee.getSeller().getId().equals(seller.getId())) {
-            throw new IllegalArgumentException("삭제 할 권한이 없습니다");
-        }
-        deliveryFeeRepository.delete(deliveryFee);
-    }
 }
