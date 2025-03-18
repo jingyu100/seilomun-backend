@@ -25,12 +25,12 @@ public class ProductController {
     private final ProductService productService;
 
     //상품 목록 조회
-    @GetMapping("/list")
-    public ResponseEntity<ApiResponseJson> getAllProducts(HttpSession httpSession) {
-        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Products", productService.getAllProducts(),
-                        "Message", "상품 리스트가 조회되었습니다")));
-    }
+//    @GetMapping("/list")
+//    public ResponseEntity<ApiResponseJson> getAllProducts() {
+//        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+//                Map.of("Products", productService.getAllProducts(),
+//                        "Message", "상품 리스트가 조회되었습니다")));
+//    }
 
     //상품 상세 조회
     @GetMapping("/list/{id}")
@@ -67,12 +67,12 @@ public class ProductController {
     }
 
     //상품 수정
-    @PutMapping("/update/{id}")
-    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto) {
-        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Update", productService.updateProductDto(id, productDto),
-                        "Message", "상품 수정이 완료되었습니다")));
-    }
+//    @PutMapping("/update/{id}")
+//    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto) {
+//        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+//                Map.of("Update", productService.updateProductDto(id, productDto),
+//                        "Message", "상품 수정이 완료되었습니다")));
+//    }
 
     // 상품 삭제
     @DeleteMapping("/delete/{id}")

@@ -3,6 +3,7 @@ package com.yju.team2.seilomun.domain.product.entity;
 import com.yju.team2.seilomun.domain.customer.entity.Wish;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.order.entity.OrderItem;
+import com.yju.team2.seilomun.dto.ProductDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -13,7 +14,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,24 +24,18 @@ public class Product {
     @Column(name = "pr_id")
     private Long id;
 
-    @Column(name = "name" , nullable = false, length = 20)
+    @Column(name = "name", nullable = false, length = 20)
     private String name;
-
-    @Column(name = "category", nullable = false, length = 10)
-    private String category;
 
     @Column(name = "description")
     private String description;
-    
+
     //상품사진 주소
-    @Column(name = "thumbnail_url",length = 100)
+    @Column(name = "thumbnail_url", length = 100)
     private String thumbnailUrl;
-    
+
     @Column(name = "original_price", nullable = false)
     private Integer originalPrice;
-
-    @Column(name = "discount_price")
-    private Integer discountPrice;
 
     @Column(name = "stock_quantity", nullable = false)
     private Integer stockQuantity;
@@ -49,17 +43,15 @@ public class Product {
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
 
-    @Column(name = "status",length = 1)
+    @Column(name = "status", length = 1)
     private Character status;
 
-    @Column(name = "max_discount_rate", nullable = false    )
+    @Column(name = "max_discount_rate", nullable = false)
     private Integer maxDiscountRate;
 
     @Column(name = "min_discount_rate", nullable = false)
     private Integer minDiscountRate;
 
-    @Column(name = "current_discount_rate")
-    private Integer currentDiscountRate;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
@@ -81,22 +73,21 @@ public class Product {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    
+
     //할인율 계산메서드
     public Integer calculateDiscountRate() {
-        if(expiryDate == null || minDiscountRate == null || maxDiscountRate == null)
+        if (expiryDate == null || minDiscountRate == null || maxDiscountRate == null)
             return 0;
 
-        LocalDateTime now= LocalDateTime.now();
-        if(now.isAfter(expiryDate))
-        {
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(expiryDate)) {
             return maxDiscountRate;
         }
 
         long totalDays = expiryDate.toLocalDate().toEpochDay() - now.toLocalDate().toEpochDay();
         long elapsedDays = expiryDate.toLocalDate().toEpochDay() - expiryDate.toLocalDate().minusDays(totalDays).toEpochDay();
 
-        if(totalDays == 0)
+        if (totalDays == 0)
             return minDiscountRate;
 
 
@@ -107,5 +98,18 @@ public class Product {
     //할인 가격 계산메서드
     public Integer calculateDiscountPrice(Integer originalPrice, Integer currentDiscountRate) {
         return originalPrice - (originalPrice * currentDiscountRate / 100);
+    }
+
+    public void updateProudct(ProductDto productDto) {
+                this.name = productDto.getName();
+                this.description = productDto.getDescription();
+                this.thumbnailUrl = productDto.getThumbnailUrl();
+                this.originalPrice = productDto.getOriginalPrice();
+                this.stockQuantity = productDto.getStockQuantity();
+                this.expiryDate = productDto.getExpiryDate();
+                this.status = productDto.getStatus();
+                this.minDiscountRate = productDto.getMinDiscountRate();
+                this.maxDiscountRate = productDto.getMaxDiscountRate();
+                this.createdAt = productDto.getCreatedAt();
     }
 }
