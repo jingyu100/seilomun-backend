@@ -41,9 +41,6 @@ public class Seller {
     @Column(name = "store_name", nullable = false, length = 20)
     private String storeName;
 
-    @Column(name = "category", nullable = false, length = 10)
-    private String category;
-
     @Column(name = "store_description")
     private String storeDescription;
 
@@ -118,6 +115,9 @@ public class Seller {
     @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL /*fetch = FetchType.LAZY*/)
     private ReviewComment reviewComment;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sc_id")
+    private SellerCategory sellerCategory;
 
 
     // 업데이트용 메서드
@@ -129,7 +129,6 @@ public class Seller {
         this.minOrderAmount = sellerInformationDto.getMinOrderAmount();
         this.deliveryArea = sellerInformationDto.getDeliveryArea();
         this.operatingHours = sellerInformationDto.getOperatingHours();
-        this.category = sellerInformationDto.getCategory();
         this.phone = sellerInformationDto.getPhone();
         this.pickupTime = sellerInformationDto.getPickupTime();
     }

@@ -133,17 +133,8 @@ public class SellerController {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
 
-        // 판매자 권한 확인
-        if (!userDetails.isSeller()) {
-            throw new SecurityException("판매자만 접근할 수 있습니다.");
-        }
-
         // 현재 인증된 사용자의 이메일 가져오기
         String email = userDetails.getEmail();
-
-        // 현재 인증된 사용자의 이메일 가져오기
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String email = authentication.getName();
 
         Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto);
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", email);

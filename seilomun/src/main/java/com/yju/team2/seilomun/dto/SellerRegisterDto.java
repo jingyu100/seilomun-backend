@@ -25,9 +25,6 @@ public class SellerRegisterDto {
     @NotEmpty
     private String storeName;
 
-    @NotEmpty
-    private String category;
-
     //우편번호는 비워놓았습니다.
     @NotEmpty
     private String phone;
