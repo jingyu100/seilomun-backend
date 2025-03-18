@@ -41,9 +41,6 @@ public class Seller {
     @Column(name = "store_name", nullable = false, length = 20)
     private String storeName;
 
-    @Column(name = "category", nullable = false, length = 10)
-    private String category;
-
     @Column(name = "store_description")
     private String storeDescription;
 
@@ -132,7 +129,6 @@ public class Seller {
         this.minOrderAmount = sellerInformationDto.getMinOrderAmount();
         this.deliveryArea = sellerInformationDto.getDeliveryArea();
         this.operatingHours = sellerInformationDto.getOperatingHours();
-        this.category = sellerInformationDto.getCategory();
         this.phone = sellerInformationDto.getPhone();
         this.pickupTime = sellerInformationDto.getPickupTime();
     }

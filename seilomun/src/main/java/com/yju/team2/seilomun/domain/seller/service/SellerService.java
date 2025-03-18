@@ -52,7 +52,6 @@ public class SellerService {
                 .password(passwordEncoder.encode(sellerRegisterDto.getPassword()))
                 .businessNumber(sellerRegisterDto.getBusinessNumber())
                 .storeName(sellerRegisterDto.getStoreName())
-                .category(sellerRegisterDto.getCategory())
                 .addressDetail(sellerRegisterDto.getAddressDetail())
                 .phone(sellerRegisterDto.getPhone())
                 //여기서부턴 임시
