@@ -118,6 +118,9 @@ public class Seller {
     @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL /*fetch = FetchType.LAZY*/)
     private ReviewComment reviewComment;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sc_id")
+    private SellerCategory sellerCategory;
 
 
     // 업데이트용 메서드

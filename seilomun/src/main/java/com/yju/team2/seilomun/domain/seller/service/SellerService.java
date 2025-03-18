@@ -69,12 +69,12 @@ public class SellerService {
 
     //판매자 로그인
     public String sellerLogin(SellerLoginDto sellerLoginDto) {
-        Optional<Seller> byEmail = sellerRepository.findByEmail(sellerLoginDto.getEmail());
-        if (byEmail.isEmpty()) {
-            log.info(byEmail.toString());
+        Optional<Seller> optionalSeller = sellerRepository.findByEmail(sellerLoginDto.getEmail());
+        if (optionalSeller.isEmpty()) {
+            log.info(optionalSeller.toString());
             throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
-        Seller seller = byEmail.get();
+        Seller seller = optionalSeller.get();
         if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
         }
@@ -101,12 +101,12 @@ public class SellerService {
 
     //판매자 매장 정보 수정
     public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
-        Optional<Seller> sellerOptional = sellerRepository.findByEmail(email);
-        if (sellerOptional.isEmpty()) {
+        Optional<Seller> optionalSeller = sellerRepository.findByEmail(email);
+        if (optionalSeller.isEmpty()) {
             log.warn("updateSellerInformation 실패 - 존재하지 않는 판매자 이메일: {}", email);
             throw new IllegalArgumentException("존재하지 않는 판매자입니다.");
         }
-        Seller seller = sellerOptional.get();
+        Seller seller = optionalSeller.get();
         seller.updateInformation(sellerInformationDto);
 
         log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", seller.getEmail());

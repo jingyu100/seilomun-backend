@@ -64,12 +64,12 @@ public class CustomerService {
 
     //소비자 로그인
     public String customerLogin(CustomerLoginDto customerLoginDto) {
-        Optional<Customer> byEmail = customerRepository.findByEmail(customerLoginDto.getEmail());
-        if (byEmail.isEmpty()) {
-            log.info(byEmail.toString());
+        Optional<Customer> optionalCustomer = customerRepository.findByEmail(customerLoginDto.getEmail());
+        if (optionalCustomer.isEmpty()) {
+            log.info(optionalCustomer.toString());
             throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
-        Customer customer = byEmail.get();
+        Customer customer = optionalCustomer.get();
         if (!passwordEncoder.matches(customerLoginDto.getPassword(), customer.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
         }

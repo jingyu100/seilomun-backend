@@ -81,6 +81,9 @@ public class Product {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pc_id")
+    private ProductCategory productCategory;
     
     //할인율 계산메서드
     public Integer calculateDiscountRate() {
