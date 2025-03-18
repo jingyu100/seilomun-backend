@@ -3,10 +3,8 @@ package com.yju.team2.seilomun.domain.customer.service;
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
-import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.dto.CustomerLoginDto;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
-import com.yju.team2.seilomun.dto.SellerLoginDto;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -77,10 +75,10 @@ public class CustomerService {
         }
 
         // RefreshToken 생성 및 Redis에 저장
-        String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail(), "SELLER");
-        refreshTokenService.saveRefreshToken(customer.getEmail(), "SELLER", refreshToken);
+        String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail(), "CUSTOMER");
+        refreshTokenService.saveRefreshToken(customer.getEmail(), "CUSTOMER", refreshToken);
 
         // AccessToken 생성 및 반환
-        return jwtUtil.generateAccessToken(customer.getEmail(), "SELLER");
+        return jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
     }
 }
