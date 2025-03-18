@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 @Slf4j
 public class ProductController {
@@ -41,7 +41,7 @@ public class ProductController {
     }
 
     //상품 등록
-    @PostMapping("/create")
+    @PostMapping()
     public ResponseEntity<ApiResponseJson> createProductDto(@RequestBody ProductDto productDto,
                                                             BindingResult bindingResult,
                                                             @AuthenticationPrincipal JwtUserDetails userDetail) {
@@ -75,16 +75,13 @@ public class ProductController {
 //    }
 
     // 상품 삭제
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponseJson> deleteProductDto(@PathVariable Long id,
-                                                            BindingResult bindingResult
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponseJson> deleteProductDto(@PathVariable Long id
+                                                            //BindingResult bindingResult
             , @AuthenticationPrincipal JwtUserDetails userDetail) {
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
-        }
-        if (!userDetail.isSeller()) {
-            throw new SecurityException("판매자만 상품을 삭제할 수 있습니다.");
-        }
+       // if (bindingResult.hasErrors()) {
+         //   throw new IllegalArgumentException("잘못된 요청입니다.");
+        //}
         try {
             String sellerEmail = userDetail.getEmail();
             productService.deleteProduct(id, sellerEmail);
