@@ -179,18 +179,15 @@ public class ProductService {
 //        return updateProductDto;
 //    }
 
-    // 유통기한이 현재시간이 되면 상태변화
-    //일단은 1분마다 왜냐하면 테스트를 해야하니깐
-    @Scheduled(fixedDelay = 60000)
-    @Transactional
-    public void updateExpiredProductStatus() {
+    // 유통기한이 현재시간이 되면 상태변화 메서드
+    public void updateExpiredProductStatus(ProductDto productDto) {
         LocalDateTime now = LocalDateTime.now();
         List<Product> expiredProducts = productRepository.findByExpiryDateBeforeAndStatusNot(now, '0');
-
+        productDto.setStatus('0');
         if (!expiredProducts.isEmpty()) {
             for (Product product : expiredProducts) {
                 // 유통기한 다되면 상태를 변화 지금은 임시로 0 차후에 뭘로 할지 상의
-//                product.setStatus('0');
+                product.updateProudct(productDto);
                 productRepository.save(product);
 
                 String currentDiscountRateKey = DISCOUNT_RATE_KEY + product.getId();

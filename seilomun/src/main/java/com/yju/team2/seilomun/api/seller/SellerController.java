@@ -27,13 +27,15 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/api")
 public class SellerController {
 
     private final SellerService sellerService;
     private final JwtUtil jwtUtil;
 
     //valid 어노테이션은 유효성 검사
-    @PostMapping("/seller/join")
+    //회원가입
+    @PostMapping("/sellers")
     public ApiResponseJson sellerRegister(@Valid @RequestBody SellerRegisterDto sellerRegisterDto,
                                           BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -89,7 +91,7 @@ public class SellerController {
     }
 
     // 쿠키에 토큰이 들어가있는지 확인
-    @PostMapping("api/test")
+    @PostMapping("/test")
     public ApiResponseJson checkSellerInformation(HttpServletRequest request) {
 
         // 모든 쿠키 가져오기
@@ -125,7 +127,7 @@ public class SellerController {
     }
 
     //매장 정보 수정
-    @PostMapping("/seller/information")
+    @PutMapping("/sellers")
     public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
                                                    BindingResult bindingResult,
                                                    @AuthenticationPrincipal JwtUserDetails userDetails) {
