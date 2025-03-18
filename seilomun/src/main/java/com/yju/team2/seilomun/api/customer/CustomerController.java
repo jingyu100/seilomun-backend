@@ -1,12 +1,10 @@
-package com.yju.team2.seilomun.api.user;
+package com.yju.team2.seilomun.api.customer;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.service.CustomerService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.CustomerLoginDto;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
-import com.yju.team2.seilomun.dto.SellerLoginDto;
-import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -24,11 +23,12 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class UserController {
+@RequestMapping("/api")
+public class CustomerController {
 
     private final CustomerService customerService;
 
-    @PostMapping("/customer/join")
+    @PostMapping("/customers")
     public ApiResponseJson registerNewAccount(@Valid @RequestBody CustomerRegisterDto customerRegisterDto,
                                               BindingResult bindingResult) {
 
