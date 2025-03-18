@@ -13,42 +13,30 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ProductDto {
-    private Long id;
     private String name;
-    private String category;
     private String description;
     private String thumbnailUrl;
     private Integer originalPrice;
-    private Integer discountedPrice;
     private Integer stockQuantity;
     private LocalDateTime expiryDate;
     private Character status;
     private Integer minDiscountRate;
     private Integer maxDiscountRate;
-    private Integer currentDiscountRate;
     private LocalDateTime createdAt;
     private List<String> photoUrl;
 
-    public static ProductDto fromEntity(Product product,Integer discountPrice, Integer currentDiscountRate)
-    {
+    public static ProductDto fromEntity(Product product) {
         return ProductDto.builder()
-                .id(product.getId())
                 .name(product.getName())
-                .category(product.getCategory())
                 .description(product.getDescription())
                 .thumbnailUrl(product.getThumbnailUrl())
                 .originalPrice(product.getOriginalPrice())
-                .discountedPrice(discountPrice)
                 .stockQuantity(product.getStockQuantity())
                 .expiryDate(product.getExpiryDate())
                 .status(product.getStatus())
                 .minDiscountRate(product.getMinDiscountRate())
                 .maxDiscountRate(product.getMaxDiscountRate())
-                .currentDiscountRate(currentDiscountRate)
                 .createdAt(product.getCreatedAt())
-                .photoUrl(product.getProductPhotos().stream()
-                        .map(ProductPhoto::getPhotoUrl)
-                        .toList())
                 .build();
     }
 }
