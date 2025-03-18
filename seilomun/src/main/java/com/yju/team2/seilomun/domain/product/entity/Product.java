@@ -115,5 +115,7 @@ public class Product {
                 this.minDiscountRate = productDto.getMinDiscountRate();
                 this.maxDiscountRate = productDto.getMaxDiscountRate();
                 this.createdAt = productDto.getCreatedAt();
+                this.seller = productDto.getSeller();
+                this.productCategory = productDto.getProductCategory();
     }
 }
