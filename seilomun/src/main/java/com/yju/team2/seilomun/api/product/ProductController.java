@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.ProductDto;
@@ -67,12 +68,15 @@ public class ProductController {
     }
 
     //상품 수정
-//    @PutMapping("/update/{id}")
-//    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto) {
-//        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-//                Map.of("Update", productService.updateProductDto(id, productDto),
-//                        "Message", "상품 수정이 완료되었습니다")));
-//    }
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto,
+                                                            @AuthenticationPrincipal JwtUserDetails userDetail) {
+       String sellerEmail = userDetail.getEmail();
+
+       return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+               Map.of("Update",productService.updateProductDto(id,productDto,sellerEmail),
+                       "Message","상품이 수정 되었습니다")));
+    }
 
     // 상품 삭제
     @DeleteMapping("/{id}")

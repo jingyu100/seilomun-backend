@@ -41,7 +41,7 @@ public class ProductDto {
                 .minDiscountRate(product.getMinDiscountRate())
                 .maxDiscountRate(product.getMaxDiscountRate())
                 .createdAt(product.getCreatedAt())
-                .seller(product.getSeller())
+//                .seller(product.getSeller())
                 .productCategory(product.getProductCategory())
                 .build();
     }
