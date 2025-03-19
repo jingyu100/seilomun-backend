@@ -1,8 +1,10 @@
 package com.yju.team2.seilomun.api.customer;
 
+import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.service.CustomerService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.dto.CustomerFavoriteDto;
 import com.yju.team2.seilomun.dto.CustomerLoginDto;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
 import jakarta.validation.Valid;
@@ -12,11 +14,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -83,4 +83,35 @@ public class CustomerController {
         return cookie;
     }
 
+    @PostMapping("/customers/favorite/{id}")
+    public ResponseEntity<ApiResponseJson> customerFavorite(@Valid @PathVariable Long id,
+                                                            @AuthenticationPrincipal JwtUserDetails userDetails) {
+
+        try {
+            String email = userDetails.getEmail();
+            customerService.favorite(email,id);
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("Message", "즐겨찾기가 되었습니다",
+                            "사용자",email)));
+        } catch (Exception e) {
+            log.error("매장 즐겨찾기 중 에러 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("매장 즐겨찾기 중 에러가 발생했습니다: " + e.getMessage());
+        }
+    }
+    @DeleteMapping("/customers/favorite")
+    public ResponseEntity<ApiResponseJson> customerFavoriteDelete(@Valid @RequestBody CustomerFavoriteDto customerFavoriteDto,
+                                                             BindingResult bindingResult,
+                                                            @AuthenticationPrincipal JwtUserDetails userDetails) {
+
+        try {
+            String email = userDetails.getEmail();
+            customerService.favoriteDelete(email,customerFavoriteDto.getId());
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("Message", "즐겨찾기가 취소 되었습니다",
+                            "사용자",email)));
+        } catch (Exception e) {
+            log.error("매장 즐겨찾기 취소 중 에러 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("매장 즐겨찾기 취소 중 에러가 발생했습니다: " + e.getMessage());
+        }
+    }
 }

@@ -2,7 +2,12 @@ package com.yju.team2.seilomun.domain.customer.service;
 
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.customer.entity.Favorite;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
+import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
+import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
+import com.yju.team2.seilomun.dto.CustomerFavoriteDto;
 import com.yju.team2.seilomun.dto.CustomerLoginDto;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
 import com.yju.team2.seilomun.util.JwtUtil;
@@ -25,7 +30,9 @@ public class CustomerService {
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(PASSWORD_REGEX);
 
     private final CustomerRepository customerRepository;
+    private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FavoriteRepository favoriteRepository;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
@@ -81,4 +88,37 @@ public class CustomerService {
         // AccessToken 생성 및 반환
         return jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
     }
+    
+    // 소비자 매장 즐겨찾기 추가
+    public void favorite(String email,Long id){
+        Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+        }
+        Customer customer = optionalCustomer.get();
+        Optional<Seller> optionalSeller = sellerRepository.findById(id);
+        if (optionalSeller.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+        }
+        Seller seller = optionalSeller.get();
+        Favorite favorite = Favorite.builder().
+                customer(customer).
+                seller(seller).
+                build();
+        favoriteRepository.save(favorite);
+    }
+
+    public void favoriteDelete(String email,Long id) {
+        Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+        }
+        Optional<Favorite> optionalFavorite = favoriteRepository.findById(id);
+        if (optionalFavorite.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 즐겨찾기 입니다 입니다.");
+        }
+        Favorite favorite1 = optionalFavorite.get();
+        favoriteRepository.delete(favorite1);
+    }
 }
+
