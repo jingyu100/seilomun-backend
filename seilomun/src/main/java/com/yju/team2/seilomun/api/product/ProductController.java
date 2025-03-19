@@ -89,10 +89,10 @@ public class ProductController {
     }
 
     // 상품 검색
-    @GetMapping("/search")
-    public ResponseEntity<List<ProductDocument>> search(@RequestParam String keyword) {
-        List<ProductDocument> products = productService.searchProducts(keyword);
-        return ResponseEntity.ok(products);
-    }
+//    @GetMapping("/search")
+//    public ResponseEntity<List<ProductDocument>> search(@RequestParam String keyword) {
+//        List<ProductDocument> products = productService.searchProducts(keyword);
+//        return ResponseEntity.ok(products);
+//    }
 
 }
