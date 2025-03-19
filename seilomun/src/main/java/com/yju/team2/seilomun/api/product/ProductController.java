@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.ProductDto;
@@ -91,6 +92,13 @@ public class ProductController {
             log.error("상품등록중 오류 발생: {}", e.getMessage());
             throw new IllegalArgumentException("상품 등록 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    // 상품 검색
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductDocument>> search(@RequestParam String keyword) {
+        List<ProductDocument> products = productService.searchProducts(keyword);
+        return ResponseEntity.ok(products);
     }
 
 }

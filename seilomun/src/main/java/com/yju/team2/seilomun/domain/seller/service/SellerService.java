@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.seller.service;
 
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
+import com.yju.team2.seilomun.domain.seller.entity.SellerCategory;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
@@ -55,6 +56,7 @@ public class SellerService {
                 .addressDetail(sellerRegisterDto.getAddressDetail())
                 .phone(sellerRegisterDto.getPhone())
                 //여기서부턴 임시
+                .sellerCategory(null)
                 .status('1')
                 .postCode("11111")
                 .operatingHours("12")

@@ -1,9 +1,11 @@
 package com.yju.team2.seilomun.domain.product.service;
 
 import com.yju.team2.seilomun.domain.product.entity.Product;
+import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
+import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.dto.ProductDto;
@@ -29,6 +31,7 @@ public class ProductService {
     private final ProductPhotoRepository productPhotoRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final SellerRepository sellerRepository;
+    private final ProductSearchRepository productSearchRepository;
 
     private static final String DISCOUNT_RATE_KEY = "Product:currentDiscountRate";
     private static final String DISCOUNT_PRICE_KEY = "Product:discountPrice";
@@ -110,6 +113,20 @@ public class ProductService {
                 .createdAt(productDto.getCreatedAt())
                 .seller(seller)
                 .build());
+
+        // Elasticsearch에 저장
+        ProductDocument productDoc = ProductDocument.builder()
+                .id(product.getId().toString())
+                .name(product.getName())
+                .description(product.getDescription())
+                .thumbnailUrl(product.getThumbnailUrl())
+                .originalPrice(product.getOriginalPrice())
+                .stockQuantity(product.getStockQuantity())
+                .status(product.getStatus())
+                .sellerId(product.getSeller().getId())
+                .build();
+
+        productSearchRepository.save(productDoc);
 
 
         ProductDto productdto = ProductDto.fromEntity(product);
@@ -196,6 +213,11 @@ public class ProductService {
                 redisTemplate.delete(discountPriceKey);
             }
         }
+    }
+
+    // Elasticsearch에서 검색
+    public List<ProductDocument> searchProducts(String keyword) {
+        return productSearchRepository.findByNameContaining(keyword);
     }
 
 }
