@@ -157,7 +157,13 @@ public class ProductService {
             throw new IllegalArgumentException("삭제 할 권한이 없습니다");
         }
 
+        // ElasticSearch에서 삭제
+        productSearchRepository.deleteById(String.valueOf(product.getId()));
+
+        // 상품 사진 삭제
         productPhotoRepository.deleteByProduct(product);
+
+        // 상품 삭제
         productRepository.delete(product);
     }
 
@@ -175,6 +181,20 @@ public class ProductService {
         }
 
         product.updateProudct(productDto);
+
+        // ElasticSearch 문서 업데이트
+        ProductDocument productDoc = ProductDocument.builder()
+                .id(product.getId().toString())
+                .name(product.getName())
+                .description(product.getDescription())
+                .thumbnailUrl(product.getThumbnailUrl())
+                .originalPrice(product.getOriginalPrice())
+                .stockQuantity(product.getStockQuantity())
+                .status(product.getStatus())
+                .sellerId(product.getSeller().getId())
+                .build();
+
+        productSearchRepository.save(productDoc);
 
         productRepository.save(product);
 

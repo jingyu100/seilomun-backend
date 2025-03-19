@@ -2,11 +2,9 @@ package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
-import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.ProductDto;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,14 +23,6 @@ import java.util.Map;
 public class ProductController {
 
     private final ProductService productService;
-
-    //상품 목록 조회
-//    @GetMapping("/list")
-//    public ResponseEntity<ApiResponseJson> getAllProducts() {
-//        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-//                Map.of("Products", productService.getAllProducts(),
-//                        "Message", "상품 리스트가 조회되었습니다")));
-//    }
 
     //상품 상세 조회
     @GetMapping("/list/{id}")
