@@ -1,7 +1,9 @@
 package com.yju.team2.seilomun.dto;
 
 import com.yju.team2.seilomun.domain.product.entity.Product;
+import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
+import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,8 @@ public class ProductDto {
     private Integer maxDiscountRate;
     private LocalDateTime createdAt;
     private List<String> photoUrl;
+    private Seller seller;
+    private ProductCategory productCategory;
 
     public static ProductDto fromEntity(Product product) {
         return ProductDto.builder()
@@ -37,6 +41,8 @@ public class ProductDto {
                 .minDiscountRate(product.getMinDiscountRate())
                 .maxDiscountRate(product.getMaxDiscountRate())
                 .createdAt(product.getCreatedAt())
+//                .seller(product.getSeller())
+                .productCategory(product.getProductCategory())
                 .build();
     }
 }

@@ -162,39 +162,24 @@ public class ProductService {
     }
 
     //상품 수정
-//    public ProductDto updateProductDto(Long id, ProductDto productDto) {
-//        Product product = productRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
-//
-//        product.setName(productDto.getName());
-//        product.setCategory(productDto.getCategory());
-//        product.setDescription(productDto.getDescription());
-//        product.setThumbnailUrl(productDto.getThumbnailUrl());
-//        product.setOriginalPrice(productDto.getOriginalPrice());
-//        product.setStockQuantity(productDto.getStockQuantity());
-//        product.setExpiryDate(productDto.getExpiryDate());
-//        product.setMinDiscountRate(productDto.getMinDiscountRate());
-//        product.setMaxDiscountRate(productDto.getMaxDiscountRate());
-//        product.setCreatedAt(productDto.getCreatedAt());
-//
-//        Integer currentDiscountRate = product.calculateDiscountRate();
-//        Integer DiscountPrice = product.calculateDiscountPrice(productDto.getOriginalPrice(), currentDiscountRate);
-//
-//        ProductDto updateProductDto = ProductDto.fromEntity(product, currentDiscountRate, DiscountPrice);
-//
-//        if (productDto.getPhotoUrl() != null && !productDto.getPhotoUrl().isEmpty()) {
-//            productPhotoRepository.deleteByProduct(product);
-//
-//            productDto.getPhotoUrl().forEach(url -> {
-//                productPhotoRepository.save(ProductPhoto.builder()
-//                        .product(product)
-//                        .photoUrl(url)
-//                        .build());
-//            });
-//        }
-//
-//        return updateProductDto;
-//    }
+    public ProductDto updateProductDto(Long id, ProductDto productDto,String sellerEmail) {
+
+        Seller seller = sellerRepository.findByEmail(sellerEmail)
+                .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
+
+        if (!product.getSeller().getId().equals(seller.getId())) {
+            throw new IllegalArgumentException("수정 할 권한이 없습니다");
+        }
+
+        product.updateProudct(productDto);
+
+        productRepository.save(product);
+
+        return ProductDto.fromEntity(product);
+    }
 
     // 유통기한이 현재시간이 되면 상태변화 메서드
     public void updateExpiredProductStatus(ProductDto productDto) {
