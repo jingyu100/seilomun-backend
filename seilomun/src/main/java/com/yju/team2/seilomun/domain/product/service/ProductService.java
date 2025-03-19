@@ -6,6 +6,8 @@ import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
+import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
+import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.dto.ProductDto;
@@ -73,7 +75,6 @@ public class ProductService {
 //    }
 
 
-
     // 상품 목록 조회
 //    public List<ProductDto> getAllProducts() {
 //        return productRepository.findAll().stream()
@@ -124,6 +125,9 @@ public class ProductService {
                 .stockQuantity(product.getStockQuantity())
                 .status(product.getStatus())
                 .sellerId(product.getSeller().getId())
+                .createdAt(productDto.getCreatedAt()) // 추가
+                .expiryDate(productDto.getExpiryDate()) // 추가
+                .averageRating(0.0) // 기본값 설정 (필요하면 별도 로직 추가)
                 .build();
 
         productSearchRepository.save(productDoc);
@@ -168,7 +172,7 @@ public class ProductService {
     }
 
     //상품 수정
-    public ProductDto updateProductDto(Long id, ProductDto productDto,String sellerEmail) {
+    public ProductDto updateProductDto(Long id, ProductDto productDto, String sellerEmail) {
 
         Seller seller = sellerRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
@@ -183,17 +187,7 @@ public class ProductService {
         product.updateProudct(productDto);
 
         // ElasticSearch 문서 업데이트
-        ProductDocument productDoc = ProductDocument.builder()
-                .id(product.getId().toString())
-                .name(product.getName())
-                .description(product.getDescription())
-                .thumbnailUrl(product.getThumbnailUrl())
-                .originalPrice(product.getOriginalPrice())
-                .stockQuantity(product.getStockQuantity())
-                .status(product.getStatus())
-                .sellerId(product.getSeller().getId())
-                .build();
-
+        ProductDocument productDoc = ProductDocument.from(product);
         productSearchRepository.save(productDoc);
 
         productRepository.save(product);
@@ -218,11 +212,6 @@ public class ProductService {
                 redisTemplate.delete(discountPriceKey);
             }
         }
-    }
-
-    // Elasticsearch에서 검색
-    public List<ProductDocument> searchProducts(String keyword) {
-        return productSearchRepository.findByNameContaining(keyword);
     }
 
 }
