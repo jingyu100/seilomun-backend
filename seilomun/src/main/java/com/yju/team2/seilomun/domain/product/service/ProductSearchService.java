@@ -1,6 +1,8 @@
 package com.yju.team2.seilomun.domain.product.service;
 
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
+import com.yju.team2.seilomun.domain.product.enums.ProductFilterType;
+import com.yju.team2.seilomun.domain.product.enums.ProductSortType;
 import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +13,6 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,26 +27,10 @@ public class ProductSearchService {
     private final ProductSearchRepository productSearchRepository;
     private final ElasticsearchOperations elasticsearchOperations;
 
-    // 검색 필터 타입
-    public enum ProductFilterType {
-        ALL,           // 모든 상품
-        RECENT,        // 7일 내 등록 상품
-        EXPIRING_SOON  // 7일 내 유통기한 만료 상품
-    }
-
-    // 정렬 타입
-    public enum ProductSortType {
-        LATEST,         // 최신순
-        HIGHEST_RATING, // 별점 높은순
-        LOWEST_RATING,  // 별점 낮은순
-        HIGHEST_PRICE,  // 가격 높은순
-        LOWEST_PRICE    // 가격 낮은순
-    }
-
     // 기본 키워드 검색
-    public List<ProductDocument> searchByKeyword(String keyword) {
-        return productSearchRepository.findByNameContaining(keyword);
-    }
+//    public List<ProductDocument> searchByKeyword(String keyword) {
+//        return productSearchRepository.findByNameContaining(keyword);
+//    }
 
     // 키워드 + 필터링 + 정렬
     public List<ProductDocument> advancedSearch(String keyword, ProductFilterType filterType, ProductSortType sortType) {
@@ -111,12 +96,12 @@ public class ProductSearchService {
     }
 
     // 7일 내 등록된 상품 검색
-    public List<ProductDocument> searchRecentProducts(String keyword) {
-        return productSearchRepository.findByNameContainingAndCreatedWithinLastWeek(keyword);
-    }
+//    public List<ProductDocument> searchRecentProducts(String keyword) {
+//        return productSearchRepository.findByNameContainingAndCreatedWithinLastWeek(keyword);
+//    }
 
     // 7일 내 유통기한이 만료되는 상품 검색
-    public List<ProductDocument> searchExpiringProducts(String keyword) {
-        return productSearchRepository.findByNameContainingAndExpiringWithinNextWeek(keyword);
-    }
+//    public List<ProductDocument> searchExpiringProducts(String keyword) {
+//        return productSearchRepository.findByNameContainingAndExpiringWithinNextWeek(keyword);
+//    }
 }

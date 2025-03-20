@@ -1,9 +1,9 @@
 package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
+import com.yju.team2.seilomun.domain.product.enums.ProductFilterType;
+import com.yju.team2.seilomun.domain.product.enums.ProductSortType;
 import com.yju.team2.seilomun.domain.product.service.ProductSearchService;
-import com.yju.team2.seilomun.domain.product.service.ProductSearchService.ProductFilterType;
-import com.yju.team2.seilomun.domain.product.service.ProductSearchService.ProductSortType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +22,8 @@ public class ProductSearchController {
 
     @GetMapping("/search")
     public ResponseEntity<List<ProductDocument>> searchProducts(
-            @RequestParam String keyword,
+//            @RequestParam String keyword,
+            @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false, defaultValue = "ALL") ProductFilterType filterType,
             @RequestParam(required = false, defaultValue = "LATEST") ProductSortType sortType
     ) {
@@ -30,15 +31,15 @@ public class ProductSearchController {
         return ResponseEntity.ok(results);
     }
 
-    @GetMapping("/search/recent")
-    public ResponseEntity<List<ProductDocument>> searchRecentProducts(@RequestParam String keyword) {
-        List<ProductDocument> results = productSearchService.searchRecentProducts(keyword);
-        return ResponseEntity.ok(results);
-    }
-
-    @GetMapping("/search/expiring")
-    public ResponseEntity<List<ProductDocument>> searchExpiringProducts(@RequestParam String keyword) {
-        List<ProductDocument> results = productSearchService.searchExpiringProducts(keyword);
-        return ResponseEntity.ok(results);
-    }
+//    @GetMapping("/search/recent")
+//    public ResponseEntity<List<ProductDocument>> searchRecentProducts(@RequestParam String keyword) {
+//        List<ProductDocument> results = productSearchService.searchRecentProducts(keyword);
+//        return ResponseEntity.ok(results);
+//    }
+//
+//    @GetMapping("/search/expiring")
+//    public ResponseEntity<List<ProductDocument>> searchExpiringProducts(@RequestParam String keyword) {
+//        List<ProductDocument> results = productSearchService.searchExpiringProducts(keyword);
+//        return ResponseEntity.ok(results);
+//    }
 }
