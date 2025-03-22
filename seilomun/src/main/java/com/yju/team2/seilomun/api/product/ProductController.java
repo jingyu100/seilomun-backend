@@ -1,7 +1,6 @@
 package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.ProductDto;
@@ -13,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -62,21 +60,17 @@ public class ProductController {
     @PutMapping("/update/{id}")
     public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto,
                                                             @AuthenticationPrincipal JwtUserDetails userDetail) {
-       String sellerEmail = userDetail.getEmail();
+        String sellerEmail = userDetail.getEmail();
 
-       return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-               Map.of("Update",productService.updateProductDto(id,productDto,sellerEmail),
-                       "Message","상품이 수정 되었습니다")));
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("Update", productService.updateProductDto(id, productDto, sellerEmail),
+                        "Message", "상품이 수정 되었습니다")));
     }
 
     // 상품 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseJson> deleteProductDto(@PathVariable Long id
-                                                            //BindingResult bindingResult
-            , @AuthenticationPrincipal JwtUserDetails userDetail) {
-       // if (bindingResult.hasErrors()) {
-         //   throw new IllegalArgumentException("잘못된 요청입니다.");
-        //}
+    public ResponseEntity<ApiResponseJson> deleteProductDto(@PathVariable Long id,
+                                                            @AuthenticationPrincipal JwtUserDetails userDetail) {
         try {
             String sellerEmail = userDetail.getEmail();
             productService.deleteProduct(id, sellerEmail);
@@ -87,12 +81,5 @@ public class ProductController {
             throw new IllegalArgumentException("상품 등록 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-
-    // 상품 검색
-//    @GetMapping("/search")
-//    public ResponseEntity<List<ProductDocument>> search(@RequestParam String keyword) {
-//        List<ProductDocument> products = productService.searchProducts(keyword);
-//        return ResponseEntity.ok(products);
-//    }
 
 }

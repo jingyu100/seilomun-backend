@@ -74,16 +74,6 @@ public class ProductService {
 //        }
 //    }
 
-
-    // 상품 목록 조회
-//    public List<ProductDto> getAllProducts() {
-//        return productRepository.findAll().stream()
-//                .map(product -> {
-//                    return ProductDto.fromEntity(product);
-//                })
-//                .toList();
-//    }
-
     // 상품 상세 조회
     public ProductDto getProductById(Long id) {
         return productRepository.findById(id)

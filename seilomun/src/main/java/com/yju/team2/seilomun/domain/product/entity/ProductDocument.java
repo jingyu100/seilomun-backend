@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ProductDocument {
+
     @Id
     private String id;
 
