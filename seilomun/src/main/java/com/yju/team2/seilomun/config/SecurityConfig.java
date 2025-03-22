@@ -48,7 +48,10 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/api/products/**"
+                                "/api/products/**",
+                                "/ws/**",        // WebSocket 엔드포인트 허용
+                                "/ws/info/**",   // SockJS 정보 경로 허용
+                                "/ws/websocket/**"
                         ).permitAll()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
