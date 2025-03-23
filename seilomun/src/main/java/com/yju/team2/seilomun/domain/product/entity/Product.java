@@ -82,7 +82,8 @@ public class Product {
     public Integer calculateDiscountRate() {
         if (expiryDate == null || minDiscountRate == null || maxDiscountRate == null)
             return 0;
-
+        
+        //현재 시간이 만료일을 지났는지 확인
         LocalDateTime now = LocalDateTime.now();
         if (now.isAfter(expiryDate)) {
             return maxDiscountRate;
@@ -99,10 +100,6 @@ public class Product {
         return (int) Math.round(discountRate);
     }
 
-    //할인 가격 계산메서드
-    public Integer calculateDiscountPrice(Integer originalPrice, Integer currentDiscountRate) {
-        return originalPrice - (originalPrice * currentDiscountRate / 100);
-    }
 
     public void updateProudct(ProductDto productDto) {
                 this.name = productDto.getName();

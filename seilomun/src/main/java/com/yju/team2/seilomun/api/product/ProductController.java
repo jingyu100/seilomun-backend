@@ -1,7 +1,10 @@
 package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
+import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.ProductDto;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +24,17 @@ import java.util.Map;
 public class ProductController {
 
     private final ProductService productService;
+    private final SellerService sellerService;
 
     //상품 상세 조회
-    @GetMapping("/list/{id}")
-    public ResponseEntity<ApiResponseJson> getProductById(@PathVariable Long id) {
+    @GetMapping("/list/{id}/{sellerid}")
+    public ResponseEntity<ApiResponseJson> getProductById(@PathVariable Long id,
+                                                          @PathVariable(name="sellerid") Long seid ) {
+
+        Seller seller = sellerService.getSellerById(seid);
+
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Products", productService.getProductById(id),
+                Map.of("Products", productService.getProductById(id,seller),
                         "Message", "상품 상세 조회가 되었습니다")));
     }
 
@@ -82,4 +90,12 @@ public class ProductController {
         }
     }
 
+    //할인율 조회
+    @GetMapping("{id}/discount")
+    public Integer getCurrentDisCountRate(@PathVariable Long id) {
+
+        Integer product = productService.getCurrentDiscountRate(id);
+
+        return product;
+    }
 }

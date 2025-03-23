@@ -4,6 +4,7 @@ import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.SellerCategory;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
+import com.yju.team2.seilomun.domain.seller.repository.SellerCategoryRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
@@ -34,6 +35,7 @@ public class SellerService {
     private final SellerRepository sellerRepository;
     private final SellerPhotoRepository sellerPhotoRepository;
     private final DeliveryFeeRepository deliveryFeeRepository;
+    private final SellerCategoryRepository sellerCategoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
@@ -145,6 +147,12 @@ public class SellerService {
             }
         }
         return sellerRepository.save(seller);
+    }
+
+    public Seller getSellerById(Long id)
+    {
+        return sellerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("가게를 찾지 못했습니다"));
     }
 
 }

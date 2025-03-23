@@ -26,7 +26,7 @@ public class ProductDto {
     private Integer maxDiscountRate;
     private LocalDateTime createdAt;
     private List<String> photoUrl;
-    private Seller seller;
+    private SellerInformationDto seller;
     private ProductCategory productCategory;
 
     public static ProductDto fromEntity(Product product) {
@@ -41,7 +41,7 @@ public class ProductDto {
                 .minDiscountRate(product.getMinDiscountRate())
                 .maxDiscountRate(product.getMaxDiscountRate())
                 .createdAt(product.getCreatedAt())
-//                .seller(product.getSeller())
+                .seller(SellerInformationDto.toDto(product.getSeller()))
                 .productCategory(product.getProductCategory())
                 .build();
     }

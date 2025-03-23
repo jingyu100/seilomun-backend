@@ -11,6 +11,7 @@ import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.dto.ProductDto;
+import com.yju.team2.seilomun.dto.SellerInformationDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,24 +41,24 @@ public class ProductService {
     private static final long CACHE_EXPIRATION_SECONDS = 30 * 60; // 30분 캐싱
 
     //할인율 조회
-//    public Integer getCurrentDiscountRate(Long id) {
-//        String redisKey = DISCOUNT_RATE_KEY + id;
-//
-//        String cacheRate = redisTemplate.opsForValue().get(redisKey);
-//
-//        if (cacheRate != null) {
-//            return Integer.parseInt(cacheRate);
-//        }
-//
-//        Product product = productRepository.findById(id)
-//                .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다"));
-//
-//        Integer currentDiscountRate = product.getCurrentDiscountRate(id);
-//
-//        redisTemplate.opsForValue().set(redisKey, String.valueOf(currentDiscountRate), CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS);
-//
-//        return currentDiscountRate;
-//    }
+    public Integer getCurrentDiscountRate(Long id) {
+        String redisKey = DISCOUNT_RATE_KEY + id;
+
+        String cacheRate = redisTemplate.opsForValue().get(redisKey);
+
+        if (cacheRate != null) {
+            return Integer.parseInt(cacheRate);
+        }
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다"));
+
+        Integer currentDiscountRate = product.calculateDiscountRate();
+
+        redisTemplate.opsForValue().set(redisKey, String.valueOf(currentDiscountRate), CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS);
+
+        return currentDiscountRate;
+    }
 
     // 30분 마다 할인율 조정
 //    @Scheduled(fixedRate = 30 * 60 * 1000)
@@ -75,10 +76,14 @@ public class ProductService {
 //    }
 
     // 상품 상세 조회
-    public ProductDto getProductById(Long id) {
+    public ProductDto getProductById(Long id,Seller seller) {
         return productRepository.findById(id)
                 .map(product -> {
-                    return ProductDto.fromEntity(product);
+                    ProductDto prodcutDto = ProductDto.fromEntity(product);
+
+                    prodcutDto.setSeller(SellerInformationDto.toDto(seller));
+
+                    return prodcutDto;
                 })
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
     }
