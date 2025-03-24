@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.chat.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,8 @@ import com.yju.team2.seilomun.domain.chat.entity.ChatRoom;
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Query("SELECT cr FROM ChatRoom cr WHERE cr.customer.id = :customerId AND cr.seller.id = :sellerId")
     Optional<ChatRoom> findByCustomerIdAndSellerId(@Param("customerId") Long customerId, @Param("sellerId") Long sellerId);
+
+    List<ChatRoom> findByCustomer_Id(Long customerId);
+    List<ChatRoom> findBySeller_Id(Long sellerId);
+
 }

@@ -3,6 +3,7 @@ package com.yju.team2.seilomun.api.chat;
 import java.util.List;
 import java.util.Map;
 
+import com.yju.team2.seilomun.domain.chat.entity.ChatRoom;
 import com.yju.team2.seilomun.dto.ChatMessageDto;
 import com.yju.team2.seilomun.dto.ChatRoomDto;
 import org.springframework.http.ResponseEntity;
@@ -75,6 +76,21 @@ public class ChatController {
                 "createdAt", chatRoom.getCreatedAt(),
                 "lastMessage", chatRoom.getLastMessage(),
                 "lastMessageTime", chatRoom.getLastMessageTime()
+        ));
+    }
+
+    @GetMapping("/chat/rooms")
+    public ApiResponseJson getChatRooms(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        Character userType;
+        if (userDetails.getUserType().equals("CUSTOMER")) {
+            userType = 'C';
+        } else {
+            userType = 'S';
+        }
+        Long userId = userDetails.getId();
+        List<ChatRoomDto> chatRooms = chatService.getChatRooms(userId, userType);
+        return new ApiResponseJson(HttpStatus.OK, Map.of(
+                "chatRooms", chatRooms
         ));
     }
 
