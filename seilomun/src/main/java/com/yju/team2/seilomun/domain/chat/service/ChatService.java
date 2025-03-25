@@ -177,4 +177,43 @@
             }
             return chatRoomDtoList;
         }
+        // 일단 채팅 가져오기
+        public List<ChatMessageDto> getChatMessages(Long id, Character userType, Long userId) {
+            // 채팅방 존재 여부 확인
+            ChatRoom chatRoom = chatRoomRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
+
+
+            Long receiverId;
+            String senderNickname;
+            if(userType.equals('C')){
+                receiverId = chatRoom.getSeller().getId();
+                senderNickname = chatRoom.getCustomer().getNickname();
+            }
+            else {
+                receiverId = chatRoom.getCustomer().getId();
+                senderNickname = chatRoom.getSeller().getStoreName();
+            }
+
+            List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoom_Id(chatRoom.getId());
+
+            List<ChatMessageDto> chatMessageDtoList = new ArrayList<>();
+            for (ChatMessage chatMessage : chatMessages) {
+
+                ChatMessageDto chatMessageDto = ChatMessageDto.builder()
+                        .type(ChatMessageDto.MessageType.CHAT)
+                        .chatRoomId(chatRoom.getId())
+                        .senderId(userId)
+                        .receiverId(receiverId)
+                        .senderName(senderNickname)
+                        .content(chatMessage.getContent())
+                        .senderType(userType)
+                        .timestamp(chatMessage.getCreatedAt())
+                        .read(true)
+                        .build();
+                chatMessageDtoList.add(chatMessageDto);
+            }
+            chatMessageDtoList.sort(Comparator.comparing(ChatMessageDto::getTimestamp));
+            return chatMessageDtoList;
+        }
     }

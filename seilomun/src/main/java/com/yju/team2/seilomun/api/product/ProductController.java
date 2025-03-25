@@ -47,9 +47,6 @@ public class ProductController {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
 
-        if (!userDetail.isSeller()) {
-            throw new SecurityException("판매자만 상품을 등록할 수 있습니다.");
-        }
         try {
             String sellerEmail = userDetail.getEmail();
             log.info("상품 등록 요청: 판매자 이메일 {}", sellerEmail);

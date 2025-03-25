@@ -11,4 +11,5 @@ import com.yju.team2.seilomun.domain.chat.entity.ChatRoom;
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     List<ChatMessage> findByChatRoomOrderByCreatedAtDesc(ChatRoom chatRoom);
+    List<ChatMessage> findByChatRoom_Id(Long id);
 }

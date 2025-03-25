@@ -94,4 +94,19 @@ public class ChatController {
         ));
     }
 
+
+    @GetMapping("/chat/rooms/{id}")
+    public ApiResponseJson getChats(@PathVariable Long id,
+                                    @AuthenticationPrincipal JwtUserDetails userDetails) {
+        Character userType;
+        if (userDetails.getUserType().equals("CUSTOMER")) {
+            userType = 'C';
+        } else {
+            userType = 'S';
+        }
+        Long userId = userDetails.getId();
+        List<ChatMessageDto> chatMessages = chatService.getChatMessages(id, userType, userId);
+        return new ApiResponseJson(HttpStatus.OK, Map.of("ok", chatMessages));
+    }
+
 }
