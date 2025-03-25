@@ -104,8 +104,7 @@ public class ChatController {
         } else {
             userType = 'S';
         }
-        Long userId = userDetails.getId();
-        List<ChatMessageDto> chatMessages = chatService.getChatMessages(id, userType, userId);
+        List<ChatMessageDto> chatMessages = chatService.getChatMessages(id, userType);
         return new ApiResponseJson(HttpStatus.OK, Map.of("ok", chatMessages));
     }
 

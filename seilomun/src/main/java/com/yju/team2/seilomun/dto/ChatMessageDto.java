@@ -29,7 +29,7 @@ public class ChatMessageDto {
     private Character senderType;
     private String content;
     private LocalDateTime timestamp;
-    private boolean read;
+    private Character read;
 
 
     @JsonCreator

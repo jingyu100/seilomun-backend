@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.dto;
 
+import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,6 @@ public class SellerLoginDto {
     @Email
     private String email;
 
-    @NotEmpty
+    @ValidPassword
     private String password;
 }

@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.dto;
 
+import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +20,7 @@ public class SellerRegisterDto {
     @NotEmpty
     private String businessNumber;
 
-    @NotEmpty
+    @ValidPassword
     private String password;
 
     @NotEmpty

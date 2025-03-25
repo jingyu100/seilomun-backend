@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         // 클라이언트가 구독할 주제 경로 설정
         // topic은 1대다 queue는 1대1
-        registry.enableSimpleBroker("/topic", "/queue");
+        registry.enableSimpleBroker("/queue");
 
         // 클라이언트가 메시지를 서버로 전송할 주소 접두사
         registry.setApplicationDestinationPrefixes("/app");
