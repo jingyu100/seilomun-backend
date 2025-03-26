@@ -12,13 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
-
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class RedisSubscriber implements MessageListener {
 
-    private final ObjectMapper objectMapper;
     private final RedisTemplate<String, Object> chatRedisTemplate;
     private final SimpMessageSendingOperations messagingTemplate;
 
@@ -40,9 +38,8 @@ public class RedisSubscriber implements MessageListener {
             ChatMessageDto chatMessage = customMapper.readValue(publishMessage, ChatMessageDto.class);
 
             // WebSocket 구독자에게 메시지 전송
-            messagingTemplate.convertAndSendToUser(
-                    chatMessage.getReceiverId().toString(),
-                    "/queue/messages",
+            messagingTemplate.convertAndSend(
+                    "/queue/messages/" + chatMessage.getChatRoomId(),
                     chatMessage);
 
 
