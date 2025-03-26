@@ -149,8 +149,7 @@ public class SellerService {
         return sellerRepository.save(seller);
     }
 
-    public Seller getSellerById(Long id)
-    {
+    public Seller getSellerById(Long id) {
         return sellerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("가게를 찾지 못했습니다"));
     }

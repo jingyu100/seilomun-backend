@@ -88,11 +88,11 @@ public class ProductController {
     }
 
     //할인율 조회
-    @GetMapping("{id}/discount")
-    public Integer getCurrentDisCountRate(@PathVariable Long id) {
-
-        Integer product = productService.getCurrentDiscountRate(id);
-
-        return product;
-    }
+//    @GetMapping("{id}/discount")
+//    public Integer getCurrentDisCountRate(@PathVariable Long id) {
+//
+//        Integer product = productService.getCurrentDiscountRate(id);
+//
+//        return product;
+//    }
 }

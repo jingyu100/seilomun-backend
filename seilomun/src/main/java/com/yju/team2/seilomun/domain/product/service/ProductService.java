@@ -55,6 +55,7 @@ public class ProductService {
 
         Integer currentDiscountRate = product.calculateDiscountRate();
 
+        //레디스에서 조회
         redisTemplate.opsForValue().set(redisKey, String.valueOf(currentDiscountRate), CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS);
 
         return currentDiscountRate;
@@ -76,14 +77,16 @@ public class ProductService {
 //    }
 
     // 상품 상세 조회
-    public ProductDto getProductById(Long id,Seller seller) {
+    public ProductDto getProductById(Long id, Seller seller) {
         return productRepository.findById(id)
                 .map(product -> {
-                    ProductDto prodcutDto = ProductDto.fromEntity(product);
+                    Integer currentDiscountRate = getCurrentDiscountRate(id);
 
-                    prodcutDto.setSeller(SellerInformationDto.toDto(seller));
+                    ProductDto productDto = ProductDto.fromEntity(product, currentDiscountRate);
 
-                    return prodcutDto;
+                    productDto.setSeller(SellerInformationDto.toDto(seller));
+
+                    return productDto;
                 })
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
     }
@@ -110,6 +113,8 @@ public class ProductService {
                 .seller(seller)
                 .build());
 
+        Integer currentDiscountRate = getCurrentDiscountRate(product.getId());
+
         // Elasticsearch에 저장
         ProductDocument productDoc = ProductDocument.builder()
                 .id(product.getId().toString())
@@ -128,7 +133,8 @@ public class ProductService {
         productSearchRepository.save(productDoc);
 
 
-        ProductDto productdto = ProductDto.fromEntity(product);
+
+        ProductDto productdto = ProductDto.fromEntity(product, currentDiscountRate);
 
 
         if (productDto.getPhotoUrl() != null && !productDto.getPhotoUrl().isEmpty()) {
@@ -187,7 +193,9 @@ public class ProductService {
 
         productRepository.save(product);
 
-        return ProductDto.fromEntity(product);
+        Integer currentDiscountRate = getCurrentDiscountRate(id);
+
+        return ProductDto.fromEntity(product, currentDiscountRate);
     }
 
     // 유통기한이 현재시간이 되면 상태변화 메서드

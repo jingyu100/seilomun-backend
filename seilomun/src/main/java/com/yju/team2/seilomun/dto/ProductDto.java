@@ -19,27 +19,31 @@ public class ProductDto {
     private String description;
     private String thumbnailUrl;
     private Integer originalPrice;
+    private Integer discountPrice;
     private Integer stockQuantity;
     private LocalDateTime expiryDate;
     private Character status;
     private Integer minDiscountRate;
     private Integer maxDiscountRate;
+    private Integer currentDiscountRate;
     private LocalDateTime createdAt;
     private List<String> photoUrl;
     private SellerInformationDto seller;
     private ProductCategory productCategory;
 
-    public static ProductDto fromEntity(Product product) {
+    public static ProductDto fromEntity(Product product, Integer currentDiscountRate) {
         return ProductDto.builder()
                 .name(product.getName())
                 .description(product.getDescription())
                 .thumbnailUrl(product.getThumbnailUrl())
                 .originalPrice(product.getOriginalPrice())
+                .discountPrice(product.getOriginalPrice() * (100 - currentDiscountRate) / 100)
                 .stockQuantity(product.getStockQuantity())
                 .expiryDate(product.getExpiryDate())
                 .status(product.getStatus())
                 .minDiscountRate(product.getMinDiscountRate())
                 .maxDiscountRate(product.getMaxDiscountRate())
+                .currentDiscountRate(currentDiscountRate)
                 .createdAt(product.getCreatedAt())
                 .seller(SellerInformationDto.toDto(product.getSeller()))
                 .productCategory(product.getProductCategory())

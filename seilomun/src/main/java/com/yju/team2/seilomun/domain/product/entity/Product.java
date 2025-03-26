@@ -6,8 +6,11 @@ import com.yju.team2.seilomun.domain.order.entity.OrderItem;
 import com.yju.team2.seilomun.dto.ProductDto;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 @Table(name = "products")
 public class Product {
     @Id
@@ -77,41 +81,53 @@ public class Product {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pc_id")
     private ProductCategory productCategory;
-    
+
     //할인율 계산메서드
     public Integer calculateDiscountRate() {
         if (expiryDate == null || minDiscountRate == null || maxDiscountRate == null)
             return 0;
-        
+
         //현재 시간이 만료일을 지났는지 확인
         LocalDateTime now = LocalDateTime.now();
         if (now.isAfter(expiryDate)) {
-            return maxDiscountRate;
+            return minDiscountRate;
         }
 
-        long totalDays = expiryDate.toLocalDate().toEpochDay() - now.toLocalDate().toEpochDay();
-        long elapsedDays = expiryDate.toLocalDate().toEpochDay() - expiryDate.toLocalDate().minusDays(totalDays).toEpochDay();
+        long totalDays = Duration.between(now, expiryDate).toDays();
+        log.info("유통기한까지 남은 일수 계산 : " + totalDays);
 
-        if (totalDays == 0)
-            return minDiscountRate;
+        if(totalDays < 0)
+            totalDays = 0;
+        if (totalDays <= 3)
+            return maxDiscountRate;
+        else {
+            double discountRate = minDiscountRate + (double) (maxDiscountRate - minDiscountRate) * (1.0 -(double) totalDays / (double) totalDaysInMonth(expiryDate));
 
+            discountRate = Math.max(minDiscountRate, Math.min(maxDiscountRate, discountRate));
 
-        double discountRate = minDiscountRate + ((double) elapsedDays / totalDays) * (maxDiscountRate - minDiscountRate);
-        return (int) Math.round(discountRate);
+            return (int) Math.round(discountRate);
+        }
+
+    }
+
+    // 유통기한이 있는 달의 마지막 날까지의 총 일수 계산
+    private long totalDaysInMonth(LocalDateTime expiryDate) {
+        log.info("유통기한의 마지막 날 : " + String.valueOf(expiryDate.toLocalDate().lengthOfMonth()));
+        return expiryDate.toLocalDate().lengthOfMonth();
     }
 
 
     public void updateProudct(ProductDto productDto) {
-                this.name = productDto.getName();
-                this.description = productDto.getDescription();
-                this.thumbnailUrl = productDto.getThumbnailUrl();
-                this.originalPrice = productDto.getOriginalPrice();
-                this.stockQuantity = productDto.getStockQuantity();
-                this.expiryDate = productDto.getExpiryDate();
-                this.status = productDto.getStatus();
-                this.minDiscountRate = productDto.getMinDiscountRate();
-                this.maxDiscountRate = productDto.getMaxDiscountRate();
-                this.createdAt = productDto.getCreatedAt();
-                this.productCategory = productDto.getProductCategory();
+        this.name = productDto.getName();
+        this.description = productDto.getDescription();
+        this.thumbnailUrl = productDto.getThumbnailUrl();
+        this.originalPrice = productDto.getOriginalPrice();
+        this.stockQuantity = productDto.getStockQuantity();
+        this.expiryDate = productDto.getExpiryDate();
+        this.status = productDto.getStatus();
+        this.minDiscountRate = productDto.getMinDiscountRate();
+        this.maxDiscountRate = productDto.getMaxDiscountRate();
+        this.createdAt = productDto.getCreatedAt();
+        this.productCategory = productDto.getProductCategory();
     }
 }
