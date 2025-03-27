@@ -20,6 +20,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -53,14 +54,50 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다"));
 
-        Integer currentDiscountRate = product.calculateDiscountRate();
+        Integer currentDiscountRate = calculateDiscountRate(id);
 
         //레디스에서 조회
         redisTemplate.opsForValue().set(redisKey, String.valueOf(currentDiscountRate), CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS);
 
         return currentDiscountRate;
     }
+    //할인율 계산메서드
+    public Integer calculateDiscountRate(Long id) {
 
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다"));
+
+        if (product.getExpiryDate() == null || product.getMinDiscountRate() == null || product.getMaxDiscountRate() == null)
+            return 0;
+
+        //현재 시간이 만료일을 지났는지 확인
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(product.getExpiryDate())) {
+            return product.getMinDiscountRate();
+        }
+
+        long totalDays = Duration.between(now, product.getExpiryDate()).toDays();
+        log.info("유통기한까지 남은 일수 계산 : " + totalDays);
+
+        if(totalDays < 0)
+            totalDays = 0;
+        if (totalDays <= 3)
+            return product.getMaxDiscountRate();
+        else {
+            double discountRate = product.getMinDiscountRate() + (double) (product.getMaxDiscountRate() - product.getMinDiscountRate()) * (1.0 -(double) totalDays / (double) totalDaysInMonth(product.getExpiryDate()));
+
+            discountRate = Math.max(product.getMinDiscountRate(), Math.min(product.getMaxDiscountRate(), discountRate));
+
+            return (int) Math.round(discountRate);
+        }
+
+    }
+
+    // 유통기한이 있는 달의 마지막 날까지의 총 일수 계산
+    private long totalDaysInMonth(LocalDateTime expiryDate) {
+        log.info("유통기한의 마지막 날 : " + (expiryDate.toLocalDate().lengthOfMonth()));
+        return expiryDate.toLocalDate().lengthOfMonth();
+    }
     // 30분 마다 할인율 조정
 //    @Scheduled(fixedRate = 30 * 60 * 1000)
 //    @Transactional
