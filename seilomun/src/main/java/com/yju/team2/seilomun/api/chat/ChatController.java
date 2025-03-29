@@ -3,14 +3,11 @@ package com.yju.team2.seilomun.api.chat;
 import java.util.List;
 import java.util.Map;
 
-import com.yju.team2.seilomun.domain.chat.entity.ChatRoom;
 import com.yju.team2.seilomun.dto.ChatMessageDto;
 import com.yju.team2.seilomun.dto.ChatRoomDto;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,6 +41,16 @@ public class ChatController {
         chatService.sendMessage(chatMessage);
     }
 
+    // 이건 웹소켓 연결후에 클라이언트가 stomp 메세지를 보낼때 호출 되는거
+    // 근데 프론트 만들어지면 getChats 이거랑 통합 할수도 있음 테스트 때매 만들어짐
+    @MessageMapping("/chat.enterRoom")
+    public void enterChatRoom(@Payload ChatMessageDto chatMessage) {
+        chatService.userEnterRoom(
+                chatMessage.getChatRoomId(),
+                chatMessage.getSenderId(),
+                chatMessage.getSenderType()
+        );
+    }
     // 채팅방 생성 또는 조회
     @PostMapping("/chat/rooms")
     public ApiResponseJson createOrGetChatRoom(@RequestBody ChatRoomDto chatRoomDto,
@@ -104,6 +111,8 @@ public class ChatController {
         } else {
             userType = 'S';
         }
+        chatService.userEnterRoom(id, userDetails.getId(), userType);
+
         List<ChatMessageDto> chatMessages = chatService.getChatMessages(id, userType);
         return new ApiResponseJson(HttpStatus.OK, Map.of("ok", chatMessages));
     }

@@ -2,16 +2,14 @@ package com.yju.team2.seilomun.domain.chat.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 import com.yju.team2.seilomun.dto.ChatMessageDto;
 import com.yju.team2.seilomun.dto.ChatRoomDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +40,8 @@ public class ChatService {
     private final ChannelTopic channelTopic;
     private final ObjectMapper objectMapper;
 
+    // 10분
+    private static final long EXPIRE_TIME = 600;
     // 채팅방 생성 또는 기존 채팅방 찾기
     @Transactional
     public ChatRoomDto createOrGetChatRoom(Long customerId, Long sellerId) {
@@ -100,6 +100,18 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.findById(chatMessageDto.getChatRoomId())
                 .orElseThrow(() -> new IllegalArgumentException("채팅방이 존재하지 않습니다."));
 
+        // 수신자 타입
+        Character receiverType;
+            if (chatMessageDto.getSenderType().equals('C')) {
+                receiverType = 'S';
+            } else {
+                receiverType = 'C';
+            }
+
+        // 수신자가 채팅방에 있는지 확인
+        boolean isReceiverInRoom = isUserInChatRoom(chatMessageDto.getChatRoomId(),
+                                                    chatMessageDto.getReceiverId(),
+                                                    receiverType);
         // 메시지 저장
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
@@ -107,13 +119,15 @@ public class ChatService {
                 .senderId(chatMessageDto.getSenderId())
                 .content(chatMessageDto.getContent())
                 .createdAt(LocalDateTime.now())
-                .isRead('N')
+                .isRead(isReceiverInRoom ? 'Y' : 'N')
                 .build();
 
         chatMessageRepository.save(chatMessage);
 
         // 타임스탬프 설정
         chatMessageDto.setTimestamp(chatMessage.getCreatedAt());
+        chatMessageDto.setRead(chatMessage.getIsRead());
+        chatMessageDto.setId(chatMessage.getId());
 
         // Redis를 통해 메시지 발행
         try {
@@ -240,5 +254,21 @@ public class ChatService {
             chatMessageDtoList.add(chatMessageDto);
         }
         return chatMessageDtoList;
+    }
+
+    // 사용자가 채팅방에 있는지 확인
+    public boolean isUserInChatRoom(Long chatRoomId, Long userId, Character userType) {
+        String key = "chat_active:" + chatRoomId + ":" + userId + ":" + userType;
+        Boolean exists = redisTemplate.hasKey(key);
+        log.debug("사용자 {}(타입:{}) 채팅방 {} 존재 여부: {}", userId, userType, chatRoomId, exists);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    // 사용자 채팅방 입장 처리
+    @Transactional
+    public void userEnterRoom(Long chatRoomId, Long userId, Character userType) {
+        // redis에 사용자 활성 상태 저장
+        String key = "chat_active:" + chatRoomId + ":" + userId + ":" + userType;
+        redisTemplate.opsForValue().set(key, "active", EXPIRE_TIME, TimeUnit.SECONDS);
     }
 }
