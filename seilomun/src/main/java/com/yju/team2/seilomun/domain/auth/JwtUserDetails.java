@@ -48,10 +48,6 @@ public class JwtUserDetails implements UserDetails {
         return username;
     }
 
-    public Long getUserId() {
-        return id;
-    }
-
     // 판매자인지 확인
     public boolean isSeller() {
         return "SELLER".equals(userType);

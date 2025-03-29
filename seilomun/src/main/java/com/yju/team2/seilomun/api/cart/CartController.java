@@ -25,9 +25,9 @@ public class CartController {
     // 장바구니 상품 조회
     @GetMapping
     public ResponseEntity<ApiResponseJson> getCart(@AuthenticationPrincipal JwtUserDetails user) {
-        log.info("장바구니 조회 요청: userId={}", user.getUserId());
+        log.info("장바구니 조회 요청: userId={}", user.getId());
 
-        Map<Long, Integer> cartItems = cartService.getCartItems(user.getUserId());
+        Map<Long, Integer> cartItems = cartService.getCartItems(user.getId());
 
         return ResponseEntity.ok(new ApiResponseJson(
                 HttpStatus.OK,
@@ -47,9 +47,9 @@ public class CartController {
             @AuthenticationPrincipal JwtUserDetails user) {
 
         log.info("장바구니 상품 추가 요청: userId={}, productId={}, quantity={}",
-                user.getUserId(), request.getProductId(), request.getQuantity());
+                user.getId(), request.getProductId(), request.getQuantity());
 
-        int newQuantity = cartService.addToCart(user.getUserId(), request.getProductId(), request.getQuantity());
+        int newQuantity = cartService.addToCart(user.getId(), request.getProductId(), request.getQuantity());
 
         return ResponseEntity.ok(new ApiResponseJson(
                 HttpStatus.OK,
@@ -69,7 +69,7 @@ public class CartController {
             @AuthenticationPrincipal JwtUserDetails user) {
 
         log.info("장바구니 상품 수량 업데이트 요청: userId={}, productId={}, quantity={}",
-                user.getUserId(), productId, request.getQuantity());
+                user.getId(), productId, request.getQuantity());
 
         // URL의 productId와 요청 본문의 productId가 일치하는지 확인
         if (!productId.equals(request.getProductId())) {
@@ -79,7 +79,7 @@ public class CartController {
             ));
         }
 
-        cartService.updateCartItemQuantity(user.getUserId(), productId, request.getQuantity());
+        cartService.updateCartItemQuantity(user.getId(), productId, request.getQuantity());
 
         return ResponseEntity.ok(new ApiResponseJson(
                 HttpStatus.OK,
@@ -97,9 +97,9 @@ public class CartController {
             @PathVariable Long productId,
             @AuthenticationPrincipal JwtUserDetails user) {
 
-        log.info("장바구니 상품 제거 요청: userId={}, productId={}", user.getUserId(), productId);
+        log.info("장바구니 상품 제거 요청: userId={}, productId={}", user.getId(), productId);
 
-        boolean removed = cartService.removeFromCart(user.getUserId(), productId);
+        boolean removed = cartService.removeFromCart(user.getId(), productId);
 
         if (removed) {
             return ResponseEntity.ok(new ApiResponseJson(
@@ -124,9 +124,9 @@ public class CartController {
     // 장바구니 초기화
     @DeleteMapping
     public ResponseEntity<ApiResponseJson> clearCart(@AuthenticationPrincipal JwtUserDetails user) {
-        log.info("장바구니 비우기 요청: userId={}", user.getUserId());
+        log.info("장바구니 비우기 요청: userId={}", user.getId());
 
-        cartService.clearCart(user.getUserId());
+        cartService.clearCart(user.getId());
 
         return ResponseEntity.ok(new ApiResponseJson(
                 HttpStatus.OK,
