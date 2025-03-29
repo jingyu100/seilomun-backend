@@ -19,7 +19,7 @@ public class ChatMessageDto {
     public enum MessageType {
         CHAT, JOIN, LEAVE
     }
-
+    private Long id;
     private MessageType type;
     private Long chatRoomId;
     private Long senderId;
