@@ -61,6 +61,7 @@ public class ProductService {
 
         return currentDiscountRate;
     }
+
     //할인율 계산메서드
     public Integer calculateDiscountRate(Long id) {
 
@@ -79,12 +80,12 @@ public class ProductService {
         long totalDays = Duration.between(now, product.getExpiryDate()).toDays();
         log.info("유통기한까지 남은 일수 계산 : " + totalDays);
 
-        if(totalDays < 0)
+        if (totalDays < 0)
             totalDays = 0;
         if (totalDays <= 3)
             return product.getMaxDiscountRate();
         else {
-            double discountRate = product.getMinDiscountRate() + (double) (product.getMaxDiscountRate() - product.getMinDiscountRate()) * (1.0 -(double) totalDays / (double) totalDaysInMonth(product.getExpiryDate()));
+            double discountRate = product.getMinDiscountRate() + (double) (product.getMaxDiscountRate() - product.getMinDiscountRate()) * (1.0 - (double) totalDays / (double) totalDaysInMonth(product.getExpiryDate()));
 
             discountRate = Math.max(product.getMinDiscountRate(), Math.min(product.getMaxDiscountRate(), discountRate));
 
@@ -170,7 +171,6 @@ public class ProductService {
         productSearchRepository.save(productDoc);
 
 
-
         ProductDto productdto = ProductDto.fromEntity(product, currentDiscountRate);
 
 
@@ -254,4 +254,7 @@ public class ProductService {
         }
     }
 
+    public boolean existsById(Long productId) {
+        return productRepository.existsById(productId);
+    }
 }
