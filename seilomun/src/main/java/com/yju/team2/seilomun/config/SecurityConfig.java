@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.sameOrigin()) // 같은 출처(도메인)에서는 iframe 허용
                 )
+
                 // 세션 관리: JWT를 사용하므로 STATELESS 설정
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -51,7 +52,10 @@ public class SecurityConfig {
                                 "/api/products/**",
                                 "/ws/**",        // WebSocket 엔드포인트 허용
                                 "/ws/info/**",   // SockJS 정보 경로 허용
-                                "/ws/websocket/**"
+                                "/ws/websocket/**",
+                                "/login/**",
+                                "/oauth2/authorization/naver",//네이버로그인
+                                "/login/oauth2/code/**"
                         ).permitAll()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
@@ -61,6 +65,11 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/common/**")).hasAnyRole("SELLER", "CUSTOMER")
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/oauth2/authorization/naver")   // 네이버 로그인 페이지 이동
+                        .defaultSuccessUrl("http://localhost:5173") // 로그인 성공 후 이동
+                        .failureUrl("http://localhost:5173")    //로그인 실패 후 이동
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 로그인 폼 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable) // 기본 인증 비활성화
@@ -80,6 +89,7 @@ public class SecurityConfig {
                         })
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
 
         return http.build();
     }

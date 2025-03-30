@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.api.auth;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetailsService;
+import com.yju.team2.seilomun.domain.auth.OauthService;
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.RefreshTokenRequestDto;
@@ -10,14 +11,20 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
@@ -29,6 +36,8 @@ public class AuthController {
     private final JwtUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final OauthService oauthService;
+
 
     // RefreshToken을 사용하여 새로운 AccessToken을 발급
     @PostMapping("/refresh-token")
@@ -110,4 +119,63 @@ public class AuthController {
                         "message", "로그아웃이 성공적으로 처리되었습니다."
                 )));
     }
+
+
+    // ✅ 1. 네이버 OAuth 콜백 처리 및 JWT 발급
+    @GetMapping("/login/oauth2/code/naver")
+    public ResponseEntity<ApiResponseJson> handleNaverCallback(@RequestParam("code") String code, @RequestParam("state") String state) {
+        try {
+            log.info("Received code: {}", code);
+            log.info("Received state: {}", state);
+
+            // 네이버 AccessToken 요청
+            String accessToken = oauthService.getAccessTokenFromNaver(code);
+            log.info("네이버 액세스 토큰 : {}", accessToken);
+
+            // 사용자 정보 요청
+            Map<String, Object> userInfo = oauthService.getUserInfoFromNaver(accessToken);
+            String email = (String) userInfo.get("email");
+            log.info("이메일 : {}", email);
+            if (email == null) {
+                log.error("이메일 정보 없음");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponseJson(HttpStatus.BAD_REQUEST, Map.of("error", "이메일 정보를 가져올 수 없습니다.")));
+            }
+
+            // JWT 발급 및 리프레시 토큰 저장
+            String jwt = jwtUtil.generateAccessToken(email, "CUSTOMER");
+            String refreshToken = refreshTokenService.getRefreshToken(email);
+            refreshTokenService.saveRefreshToken(email, "CUSTOMER", refreshToken);
+
+            // 쿠키 설정
+            ResponseCookie accessTokenCookie = ResponseCookie.from("Authorization", jwt)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .path("/")
+                    .maxAge(30 * 60 * 4) // 4시간
+                    .build();
+
+            ResponseCookie refreshTokenCookie = ResponseCookie.from("Refresh-Token", refreshToken)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .path("/")
+                    .maxAge(30 * 60 * 24 * 7) // 7일
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header("Set-Cookie", accessTokenCookie.toString())
+                    .header("Set-Cookie", refreshTokenCookie.toString())
+                    .body(new ApiResponseJson(HttpStatus.OK, Map.of("message", "JWT가 발급되었습니다.")));
+        } catch (Exception e) {
+            log.error("OAuth 로그인 처리 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseJson(HttpStatus.INTERNAL_SERVER_ERROR, Map.of("error", "OAuth 로그인 처리 중 오류가 발생했습니다.")));
+        }
+    }
+
+
+
+
 }
