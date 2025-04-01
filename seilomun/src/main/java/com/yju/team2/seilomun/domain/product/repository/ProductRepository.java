@@ -9,5 +9,4 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     //현재시간 이전이거나 상태가 0 이 아닌거 찾는거
     List<Product> findByExpiryDateBeforeAndStatusNot(LocalDateTime dateTime, Character status);
-    
 }

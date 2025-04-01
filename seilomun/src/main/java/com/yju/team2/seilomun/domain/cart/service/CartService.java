@@ -28,6 +28,8 @@ public class CartService {
             throw new RuntimeException("존재하지 않는 상품입니다: " + productId);
         }
 
+        // 현재 상품 재고량 조회
+        int availableStock = productService.getStockQuantity(productId);
         String cartKey = getCartKey(userId);
 
         try {
@@ -41,6 +43,11 @@ public class CartService {
 
             // 새 수량 계산
             int newQuantity = currentQuantity + quantity;
+
+            // 상품 재고보다 많으면 예외 발생
+            if (newQuantity > availableStock) {
+                throw new RuntimeException("재고 부족: 현재 재고(" + availableStock + "), 요청 수량(" + newQuantity + ")");
+            }
 
             // 장바구니에 상품 추가/업데이트
             redisTemplate.opsForHash().put(cartKey, productId.toString(), String.valueOf(newQuantity));
@@ -58,7 +65,7 @@ public class CartService {
 
     // 장바구니 상품 수량 변경
     public void updateCartItemQuantity(Long userId, Long productId, Integer quantity) {
-
+        // 수량이 0 이하인 경우 상품을 장바구니에서 제거
         if (quantity <= 0) {
             removeFromCart(userId, productId);
             return;
@@ -67,10 +74,20 @@ public class CartService {
         String cartKey = getCartKey(userId);
 
         try {
+            // 상품 존재 여부 확인
             if (!productService.existsById(productId)) {
                 throw new RuntimeException("존재하지 않는 상품입니다: " + productId);
             }
 
+            // 현재 상품 재고량 조회
+            int availableStock = productService.getStockQuantity(productId);
+
+            // 요청한 수량이 재고보다 많으면 예외 발생
+            if (quantity > availableStock) {
+                throw new RuntimeException("재고 부족: 현재 재고(" + availableStock + "), 요청 수량(" + quantity + ")");
+            }
+
+            // 장바구니에 상품 수량 업데이트
             redisTemplate.opsForHash().put(cartKey, productId.toString(), quantity.toString());
             log.info("장바구니 상품 수량이 업데이트되었습니다. userId={}, productId={}, quantity={}",
                     userId, productId, quantity);
