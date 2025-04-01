@@ -257,4 +257,11 @@ public class ProductService {
     public boolean existsById(Long productId) {
         return productRepository.existsById(productId);
     }
+
+    //
+    public int getStockQuantity(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다: " + productId));
+        return product.getStockQuantity();
+    }
 }
