@@ -34,10 +34,6 @@ public class Product {
     @Column(name = "description")
     private String description;
 
-    //상품사진 주소
-    @Column(name = "thumbnail_url", length = 100)
-    private String thumbnailUrl;
-
     @Column(name = "original_price", nullable = false)
     private Integer originalPrice;
 
@@ -86,7 +82,6 @@ public class Product {
     public void updateProudct(ProductDto productDto) {
         this.name = productDto.getName();
         this.description = productDto.getDescription();
-        this.thumbnailUrl = productDto.getThumbnailUrl();
         this.originalPrice = productDto.getOriginalPrice();
         this.stockQuantity = productDto.getStockQuantity();
         this.expiryDate = productDto.getExpiryDate();

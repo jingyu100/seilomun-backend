@@ -56,7 +56,6 @@ public class ProductDocument {
                 .id(product.getId().toString())
                 .name(product.getName())
                 .description(product.getDescription())
-                .thumbnailUrl(product.getThumbnailUrl())
                 .originalPrice(product.getOriginalPrice())
                 .stockQuantity(product.getStockQuantity())
                 .status(product.getStatus())

@@ -17,7 +17,6 @@ import java.util.List;
 public class ProductDto {
     private String name;
     private String description;
-    private String thumbnailUrl;
     private Integer originalPrice;
     private Integer discountPrice;
     private Integer stockQuantity;
@@ -35,7 +34,6 @@ public class ProductDto {
         return ProductDto.builder()
                 .name(product.getName())
                 .description(product.getDescription())
-                .thumbnailUrl(product.getThumbnailUrl())
                 .originalPrice(product.getOriginalPrice())
                 .discountPrice(product.getOriginalPrice() * (100 - currentDiscountRate) / 100)
                 .stockQuantity(product.getStockQuantity())
