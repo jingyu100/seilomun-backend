@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.order.service;
 
+import com.yju.team2.seilomun.domain.auth.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.order.entity.Order;
@@ -8,7 +9,9 @@ import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
 import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
+import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.dto.OrderDto;
+import com.yju.team2.seilomun.dto.OrderProductDto;
 import com.yju.team2.seilomun.dto.ProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +29,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
-
+    private final ProductService productService;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -54,15 +57,15 @@ public class OrderService {
         if (product.getStockQuantity() < orderDto.getQuantity()){
             throw new IllegalArgumentException("구매 하려는 상품의 수량이 초과하였습니다.");
         }
-        String orderNumber;
+        String orderName;
         do {
-            orderNumber = generateOrderNumber();
-        } while (orderRepository.existsByOrderNumber(orderNumber));
+            orderName = generateOrderNumber();
+        } while (orderRepository.existsByOrderName(orderName));
 
         Order order = Order.builder().
                 customer(customer).
                 seller(product.getSeller()).
-                orderNumber(orderNumber).
+                orderName(orderName).
                 memo(orderDto.getMemo()).
                 usedPoints(orderDto.getUsedPoints()).
                 totalAmount(orderDto.getPrice() * orderDto.getQuantity()).
@@ -80,5 +83,21 @@ public class OrderService {
                 .unitPrice(orderDto.getPrice()).build();
         orderItemRepository.save(orderItem);
         return orderDto;
+    }
+    // 상품 바로구매 할때 정보 페이지로 가져가기
+    public OrderProductDto getBuyProduct(CartItemRequestDto cartItemRequestDto, Long customerId){
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()){
+            throw new IllegalArgumentException("존재하지 않는 소비자입니다.");
+        }
+        Optional<Product> optionalProduct = productRepository.findById(cartItemRequestDto.getProductId());
+        if (optionalProduct.isEmpty()){
+            throw new IllegalArgumentException("존재하지 않는 상품입니다.");
+        }
+        Product product = optionalProduct.get();
+        Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
+        Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
+        OrderProductDto orderProductDto = new OrderProductDto(product.getId(),cartItemRequestDto.getQuantity(),discountPrice);
+        return orderProductDto;
     }
 }

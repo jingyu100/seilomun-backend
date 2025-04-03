@@ -72,7 +72,7 @@ public class CustomerService {
                 .status('0')
                 .deletedAt(null)
                 .build();
-        
+
         return customerRepository.save(customer);
     }
 
@@ -103,6 +103,7 @@ public class CustomerService {
         // AccessToken 생성 및 반환
         return jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
     }
+
     // 소비자 매장 즐겨찾기 보여주기
     public List<FavoriteSellerDto> getFavorite(Long customerId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
@@ -123,9 +124,9 @@ public class CustomerService {
         }
         return favoriteSellerDtoList;
     }
-    
+
     // 소비자 매장 즐겨찾기 추가
-    public void setFavorite(String email, Long id){
+    public void setFavorite(String email, Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
@@ -142,9 +143,9 @@ public class CustomerService {
                 build();
         favoriteRepository.save(favorite);
     }
-    
+
     // 즐겨찾기 취소
-    public void favoriteDelete(String email,Long id) {
+    public void favoriteDelete(String email, Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
@@ -156,16 +157,16 @@ public class CustomerService {
         Favorite favorite1 = optionalFavorite.get();
         favoriteRepository.delete(favorite1);
     }
-    
+
     // 상품 좋아요
-    public void setwishes(String email, Long id){
+    public void setwishes(String email, Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
         }
         Customer customer = optionalCustomer.get();
         Optional<Product> optionalProduct = productRepository.findById(id);
-        if (optionalProduct.isEmpty()){
+        if (optionalProduct.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 상품 입니다.");
         }
         Product product = optionalProduct.get();
@@ -175,8 +176,9 @@ public class CustomerService {
                 .build();
         wishRepository.save(wish);
     }
+
     // 좋아요한 상품 조회
-    public List<WishProductDto> getWishedProducts(Long customerId){
+    public List<WishProductDto> getWishedProducts(Long customerId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
@@ -185,13 +187,13 @@ public class CustomerService {
 
         List<Wish> wishList = wishRepository.findByCustomer(customer);
         List<WishProductDto> wishProductDtoList = new ArrayList<>();
-        for (Wish wish : wishList){
+        for (Wish wish : wishList) {
             Product product = wish.getProduct();
             Seller seller = product.getSeller();
             Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
             //할인된 가격
             Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
-            // 첫 번째 사진 URL 가져오기 (stream 없이)
+            // 첫 번째 사진 URL 가져오기
             String photoUrl = productPhotoRepository.findTopByProductOrderById(product)
                     .map(ProductPhoto::getPhotoUrl)
                     .orElse(null);
@@ -213,7 +215,7 @@ public class CustomerService {
     }
 
     //상품 좋아요 취소
-    public void wishDelete(String email,Long id) {
+    public void wishDelete(String email, Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
