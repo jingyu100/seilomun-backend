@@ -24,22 +24,30 @@ public class OauthService {
         return customerRepository.findByEmail(email);
     }
 
-    /**
-     * 회원 등록 (기존 회원이면 에러)
-     */
+
     public Customer registerCustomer(
-            String email, String nickname, String profileImage, CustomerRegisterDto customerRegisterDto) {
+            String name, String birthday, String email, String nickname, String profileImage) {
+        log.info("이메일 : email: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
+        return customerRepository.findByEmail(email).orElseGet(() ->  {
 
-        if (customerRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 가입된 회원입니다.");
-        }
+            Customer customer = Customer.builder()
+                    .email(email)
+                    .password("oauth_user")
+                    .nickname(nickname)
+                    .profileImageUrl(profileImage)
+                    .name(name)
+                    .phone("01011111111")
+                    .birthDate(birthday)
+                    .gender('U')
+                    .points(0)
+                    .status('0')
+                    .deletedAt(null)
+                    .build();
+            log.info("신규 회원 저장 - email: {}, nickname: {}, profileImage: {}",
+                    customer.getEmail(), customer.getNickname(), customer.getProfileImageUrl());
 
-        return customerRepository.save(Customer.builder()
-                .email(email)
-                .nickname(nickname)
-                .profileImageUrl("default_profile.png")
-                .phone(customerRegisterDto.getPhone())
-                .build());
+            return customerRepository.save(customer);
+        });
     }
 
 }
