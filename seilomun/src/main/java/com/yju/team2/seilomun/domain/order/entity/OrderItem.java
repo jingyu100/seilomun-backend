@@ -3,14 +3,11 @@ package com.yju.team2.seilomun.domain.order.entity;
 
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "order_items")
@@ -25,10 +22,10 @@ public class OrderItem {
     private Integer quantity;
 
     @Column(name = "discount_rate",nullable = false)
-    private Integer discount_rate;
+    private Integer discountRate;
 
     @Column(name = "unit_price", nullable = false)
-    private Integer unit_price;
+    private Integer unitPrice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "or_id")

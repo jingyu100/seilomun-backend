@@ -86,7 +86,6 @@ public class ProductController {
             throw new IllegalArgumentException("상품 등록 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-
     //할인율 조회
 //    @GetMapping("{id}/discount")
 //    public Integer getCurrentDisCountRate(@PathVariable Long id) {

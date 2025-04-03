@@ -5,6 +5,7 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -20,37 +21,38 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "or_id")
-    private Long or_id;
+    private Long orId;
 
-    @Column(name = "order_name", nullable = false, length = 100,unique = true)
-    private String order_number;
+    @Column(name = "order_number", nullable = false, length = 100,unique = true)
+    private String orderNumber;
 
     @Column(name = "total_amount",nullable = false)
-    private Integer total_amount;
+    private Integer totalAmount;
 
     @Column(name = "used_points",nullable = false)
-    private Integer used_points;
+    private Integer usedPoints;
 
     @Column(name = "memo",nullable = true,length = 50)
     private String memo;
 
     @Column(name = "is_delivery",nullable = false)
-    private Character is_delivery;
+    private Character isDelivery;
 
     @Column(name = "delivery_address",nullable = true)
-    private String delivery_address;
+    private String deliveryAddress;
 
     @Column(name = "delivery_status",nullable = true)
-    private Character delivery_status;
+    private Character deliveryStatus;
 
     @Column(name = "is_reviewed",nullable = false)
-    private Character is_reivewed;
+    private Character isReivewed;
 
     @Column(name = "order_status",nullable = false)
-    private Character order_status;
+    private Character orderStatus;
 
+    @CreationTimestamp
     @Column(name = "created_at",nullable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cu_id")
