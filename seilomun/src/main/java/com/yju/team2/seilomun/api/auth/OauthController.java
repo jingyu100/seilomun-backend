@@ -24,52 +24,24 @@ public class OauthController {
     private final JwtUtil jwtUtil;
     private final OauthService oauthService;
 
-    /**
-     * 회원가입 (OAuth 로그인 후 추가 정보 입력)
-     */
-    @PostMapping("/signup")
-    public ResponseEntity<ApiResponseJson> registerCustomer(@RequestBody CustomerRegisterDto customerRegisterDto) {
-        log.info("회원 등록 요청 : {} ", customerRegisterDto.getEmail());
+    // 로그인 및 자동 회원가입
+    @GetMapping("/login")
+    public ResponseEntity<ApiResponseJson> loginOrRegister(@RequestParam String name, @RequestParam String birthday,
+                                                            @RequestParam String email,
+                                                           @RequestParam(required = false) String nickname,
+                                                           @RequestParam(required = false) String profileImage) {
+        log.info("OAuth 로그인 요청 : {} ", email);
 
-        Customer customer = oauthService.registerCustomer(
-                customerRegisterDto.getEmail(),
-                customerRegisterDto.getNickname(),
-                "default_profile.png",
-                customerRegisterDto
-        );
+        // 회원이 없으면 자동 가입
+        Customer customer = oauthService.findCustomerByEmail(email)
+                .orElseGet(() -> {
+                    log.info("신규 회원 자동 가입: {}", email);
+                    return oauthService.registerCustomer(name, birthday,email, nickname, profileImage);
+                });
 
+        // JWT 발급
         String accessToken = jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
         String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail(), "CUSTOMER");
-
-        log.info("회원가입 완료 - JWT 발급 : {} ", customer.getEmail());
-
-        return ResponseEntity.ok(
-                new ApiResponseJson(
-                        HttpStatus.OK,
-                        Map.of("accessToken", accessToken,
-                                "refreshToken", refreshToken,
-                                "message", "회원가입이 완료되었습니다.")));
-    }
-
-    /**
-     * 로그인 (이메일로 회원 찾기)
-     */
-    @GetMapping("/login")
-    public ResponseEntity<ApiResponseJson> login(@RequestParam String email) {
-        log.info("기존 회원 로그인 요청 : {} ", email);
-
-        Optional<Customer> customerOptional = oauthService.findCustomerByEmail(email);
-
-        if (customerOptional.isEmpty()) {
-            log.warn("로그인 실패 - 가입되지 않은 이메일: {}", email);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponseJson(HttpStatus.NOT_FOUND,
-                            Map.of("message", "가입되지 않은 이메일입니다.")));
-        }
-
-        Customer customer = customerOptional.get();
-        String accessToken = jwtUtil.generateAccessToken(email, "CUSTOMER");
-        String refreshToken = jwtUtil.generateRefreshToken(email, "CUSTOMER");
 
         return ResponseEntity.ok(
                 new ApiResponseJson(
@@ -78,4 +50,6 @@ public class OauthController {
                                 "refreshToken", refreshToken,
                                 "message", "로그인이 완료되었습니다.")));
     }
+
+    // 마이페이지 수정 메서드 구현
 }
