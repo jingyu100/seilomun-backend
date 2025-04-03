@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.Optional;
 
-@RequestMapping("/oauth")
+@RequestMapping("api/oauth")
 @Controller
 @Slf4j
 @RequiredArgsConstructor

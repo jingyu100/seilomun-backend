@@ -34,7 +34,7 @@ public class ChatController {
 
     // WebSocket 메시지 핸들링
     @MessageMapping("/chat.sendMessage")
-    public void sendMessage(@Payload ChatMessageDto chatMessage, 
+    public void sendMessage(@Payload ChatMessageDto chatMessage,
                             //아래는 나중에 쓸려고 만든거임
                             SimpMessageHeaderAccessor headerAccessor) {
         log.debug("메시지 수신: {}", chatMessage);
@@ -51,6 +51,7 @@ public class ChatController {
                 chatMessage.getSenderType()
         );
     }
+
     // 채팅방 생성 또는 조회
     @PostMapping("/chat/rooms")
     public ApiResponseJson createOrGetChatRoom(@RequestBody ChatRoomDto chatRoomDto,

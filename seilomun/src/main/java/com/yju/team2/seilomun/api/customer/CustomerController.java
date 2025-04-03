@@ -20,12 +20,12 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
 
-    @PostMapping("/customers")
+    @PostMapping
     public ApiResponseJson registerNewAccount(@Valid @RequestBody CustomerRegisterDto customerRegisterDto,
                                               BindingResult bindingResult) {
 
@@ -42,9 +42,9 @@ public class CustomerController {
         ));
     }
 
-    @PostMapping("/customer/login")
+    @PostMapping("/login")
     public ResponseEntity<ApiResponseJson> customerLogin(@Valid @RequestBody CustomerLoginDto customerLoginDto,
-                                                       BindingResult bindingResult) {
+                                                         BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
@@ -79,85 +79,89 @@ public class CustomerController {
                 .build();
         return cookie;
     }
-    @GetMapping("/customers/favorite")
-    public ResponseEntity<ApiResponseJson> getCustomerFavorite( @AuthenticationPrincipal JwtUserDetails userDetails){
+
+    @GetMapping("/favorites")
+    public ResponseEntity<ApiResponseJson> getCustomerFavorite(@AuthenticationPrincipal JwtUserDetails userDetails) {
         Long customerId = userDetails.getId();
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "즐겨찾기",customerService.getFavorite(customerId)
+                "즐겨찾기", customerService.getFavorite(customerId)
         ))));
     }
-    @PostMapping("/customers/favorite/{id}")
+
+    @PostMapping("/favorites/{id}")
     public ResponseEntity<ApiResponseJson> customerFavorite(@Valid @PathVariable Long id,
                                                             @AuthenticationPrincipal JwtUserDetails userDetails) {
 
         try {
             String email = userDetails.getEmail();
-            customerService.setFavorite(email,id);
+            customerService.setFavorite(email, id);
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                     Map.of("Message", "즐겨찾기가 되었습니다",
-                            "사용자",email)));
+                            "사용자", email)));
         } catch (Exception e) {
             log.error("매장 즐겨찾기 중 에러 발생: {}", e.getMessage());
             throw new IllegalArgumentException("매장 즐겨찾기 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
-    @DeleteMapping("/customers/favorite/{id}")
-    public ResponseEntity<ApiResponseJson> customerFavoriteDelete(@PathVariable Long id,
-                                                             BindingResult bindingResult,
-                                                            @AuthenticationPrincipal JwtUserDetails userDetails) {
 
-        if (bindingResult.hasErrors()){
+    @DeleteMapping("/favorites/{CustomerId}")
+    public ResponseEntity<ApiResponseJson> customerFavoriteDelete(@PathVariable Long id,
+                                                                  BindingResult bindingResult,
+                                                                  @AuthenticationPrincipal JwtUserDetails userDetails) {
+
+        if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
         try {
             String email = userDetails.getEmail();
-            customerService.favoriteDelete(email,id);
+            customerService.favoriteDelete(email, id);
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                     Map.of("Message", "즐겨찾기가 취소 되었습니다",
-                            "사용자",email)));
+                            "사용자", email)));
         } catch (Exception e) {
             log.error("매장 즐겨찾기 취소 중 에러 발생: {}", e.getMessage());
             throw new IllegalArgumentException("매장 즐겨찾기 취소 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
-    @GetMapping("/customers/wishes")
-    public ResponseEntity<ApiResponseJson>getCustomerWishes(@AuthenticationPrincipal JwtUserDetails userDetails){
+
+    @GetMapping("/wishes")
+    public ResponseEntity<ApiResponseJson> getCustomerWishes(@AuthenticationPrincipal JwtUserDetails userDetails) {
         Long customerId = userDetails.getId();
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "즐겨찾기",customerService.getWishedProducts(customerId)
+                "즐겨찾기", customerService.getWishedProducts(customerId)
         ))));
     }
 
-    @PostMapping("/customers/wishes/{id}")
+    @PostMapping("/wishes/{customerId}")
     public ResponseEntity<ApiResponseJson> customerWishes(@Valid @PathVariable Long id,
-                                                            @AuthenticationPrincipal JwtUserDetails userDetails) {
+                                                          @AuthenticationPrincipal JwtUserDetails userDetails) {
 
         try {
             String email = userDetails.getEmail();
-            customerService.setwishes(email,id);
+            customerService.setwishes(email, id);
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                     Map.of("Message", "상품 좋아요가 되었습니다",
-                            "사용자",email)));
+                            "사용자", email)));
         } catch (Exception e) {
             log.error("상품 좋아요 중 에러 발생: {}", e.getMessage());
             throw new IllegalArgumentException("상품 좋아요 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
 
-    @DeleteMapping("/customers/wishes/{id}")
+    @DeleteMapping("/wishes/{customerId}")
     public ResponseEntity<ApiResponseJson> customerWishesDelete(@Valid @PathVariable Long id,
                                                                 BindingResult bindingResult,
                                                                 @AuthenticationPrincipal JwtUserDetails userDetails) {
-        if (bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
 
         try {
             String email = userDetails.getEmail();
-            customerService.wishDelete(email,id);
+            customerService.wishDelete(email, id);
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                     Map.of("Message", "상품 좋아요가 취소 되었습니다",
-                            "사용자",email)));
+                            "사용자", email)));
         } catch (Exception e) {
             log.error("상품 좋아요 취소 중 에러 발생: {}", e.getMessage());
             throw new IllegalArgumentException("상품 좋아요 취소 중 에러가 발생했습니다: " + e.getMessage());

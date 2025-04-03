@@ -1,7 +1,6 @@
 package com.yju.team2.seilomun.api.product;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
@@ -29,17 +28,17 @@ public class ProductController {
     //상품 상세 조회
     @GetMapping("/list/{id}/{sellerid}")
     public ResponseEntity<ApiResponseJson> getProductById(@PathVariable Long id,
-                                                          @PathVariable(name="sellerid") Long seid ) {
+                                                          @PathVariable(name = "sellerid") Long seid) {
 
         Seller seller = sellerService.getSellerById(seid);
 
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Products", productService.getProductById(id,seller),
+                Map.of("Products", productService.getProductById(id, seller),
                         "Message", "상품 상세 조회가 되었습니다")));
     }
 
     //상품 등록
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<ApiResponseJson> createProductDto(@RequestBody ProductDto productDto,
                                                             BindingResult bindingResult,
                                                             @AuthenticationPrincipal JwtUserDetails userDetail) {
@@ -62,7 +61,7 @@ public class ProductController {
     }
 
     //상품 수정
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto,
                                                             @AuthenticationPrincipal JwtUserDetails userDetail) {
         String sellerEmail = userDetail.getEmail();
@@ -86,7 +85,8 @@ public class ProductController {
             throw new IllegalArgumentException("상품 등록 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
-    //할인율 조회
+
+    // 할인율 조회
 //    @GetMapping("{id}/discount")
 //    public Integer getCurrentDisCountRate(@PathVariable Long id) {
 //
@@ -94,4 +94,5 @@ public class ProductController {
 //
 //        return product;
 //    }
+
 }

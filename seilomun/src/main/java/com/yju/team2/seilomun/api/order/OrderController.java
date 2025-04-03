@@ -28,16 +28,16 @@ public class OrderController {
                                                       @AuthenticationPrincipal JwtUserDetails userDetail) {
         Long customerId = userDetail.getId();
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Update",         orderService.buyProduct(orderDto, customerId),
+                Map.of("Update", orderService.buyProduct(orderDto, customerId),
                         "Message", "상품이 주문 되었습니다")));
     }
 
     @GetMapping("/buy")
     public ResponseEntity<ApiResponseJson> getBuyProduct(@RequestBody CartItemRequestDto cartItemRequestDto,
-                                                      @AuthenticationPrincipal JwtUserDetails userDetail) {
+                                                         @AuthenticationPrincipal JwtUserDetails userDetail) {
         Long customerId = userDetail.getId();
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("주문페이지로 갑니다",orderService.getBuyProduct(cartItemRequestDto, customerId))));
+                Map.of("주문페이지로 갑니다", orderService.getBuyProduct(cartItemRequestDto, customerId))));
     }
 
 }

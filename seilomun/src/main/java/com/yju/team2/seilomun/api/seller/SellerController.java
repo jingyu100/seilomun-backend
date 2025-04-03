@@ -1,33 +1,24 @@
 package com.yju.team2.seilomun.api.seller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import com.yju.team2.seilomun.dto.*;
 import com.yju.team2.seilomun.util.JwtUtil;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/api")
+@RequestMapping("/api/sellers")
 public class SellerController {
 
     private final SellerService sellerService;
@@ -35,7 +26,7 @@ public class SellerController {
 
     //valid 어노테이션은 유효성 검사
     //회원가입
-    @PostMapping("/sellers")
+    @PostMapping
     public ApiResponseJson sellerRegister(@Valid @RequestBody SellerRegisterDto sellerRegisterDto,
                                           BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -52,7 +43,7 @@ public class SellerController {
     }
 
     //로그인
-    @PostMapping("/seller/login")
+    @PostMapping("/login")
     public ResponseEntity<ApiResponseJson> sellerLogin(@Valid @RequestBody SellerLoginDto sellerLoginDto,
                                                        BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
@@ -90,51 +81,15 @@ public class SellerController {
         return cookie;
     }
 
-    // 쿠키에 토큰이 들어가있는지 확인
-    @PostMapping("/test")
-    public ApiResponseJson checkSellerInformation(HttpServletRequest request) {
-
-        // 모든 쿠키 가져오기
-        Cookie[] cookies = request.getCookies();
-        String token = null;
-
-        // 디버그용 로그 추가
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                log.info("쿠키 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
-                if ("Authorization".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                }
-            }
-        } else {
-            log.info("쿠키가 없습니다");
-        }
-
-        if (token == null || token.isEmpty()) {
-            throw new IllegalArgumentException("인증 정보가 없습니다.");
-        }
-
-        try {
-            String email = jwtUtil.extractUsername(token);
-            log.info("추출된 이메일: {}", email);
-
-            return new ApiResponseJson(HttpStatus.OK, Map.of(
-                    "sellerEmail", email
-            ));
-        } catch (Exception e) {
-            throw new IllegalArgumentException("오류가 발생했습니다 : " + e.getMessage());
-        }
-    }
-
     //매장 정보 수정
-    @PutMapping("/sellers")
+    @PutMapping
     public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
                                                    BindingResult bindingResult,
                                                    @AuthenticationPrincipal JwtUserDetails userDetails) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
-        
+
         String email = userDetails.getEmail();
 
         try {

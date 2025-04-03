@@ -1,47 +1,33 @@
 package com.yju.team2.seilomun.api.auth;
 
-import com.yju.team2.seilomun.domain.auth.JwtUserDetailsService;
-import com.yju.team2.seilomun.domain.auth.OauthService;
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.RefreshTokenRequestDto;
-import com.yju.team2.seilomun.dto.UsernameRequest;
 import com.yju.team2.seilomun.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/api/auth")
 @Tag(name = "인증 관리", description = "토큰 갱신 및 인증 관련 API")
 public class AuthController {
 
-    private final JwtUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
-    private final OauthService oauthService;
 
 
     // RefreshToken을 사용하여 새로운 AccessToken을 발급
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponseJson> refreshToken(@RequestBody RefreshTokenRequestDto request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponseJson> refreshToken(@RequestBody RefreshTokenRequestDto request) {
 
         String username = request.getUsername();
         String userType = request.getUserType();
@@ -75,7 +61,7 @@ public class AuthController {
                     .secure(true)
                     .sameSite("None")
                     .path("/")
-                    .maxAge(30 * 60 * 4) // 2시간
+                    .maxAge(60 * 60 * 2) // 2시간
                     .build();
 
             return ResponseEntity.ok()
@@ -94,9 +80,8 @@ public class AuthController {
     }
 
 
-    @PostMapping("/api/logout")
-    public ResponseEntity<ApiResponseJson> logout(@RequestBody RefreshTokenRequestDto request,
-                                                  HttpServletResponse response) {
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponseJson> logout(@RequestBody RefreshTokenRequestDto request) {
         String username = request.getUsername();
 
         log.info("로그아웃 요청 - 사용자: {}", username);
@@ -119,6 +104,5 @@ public class AuthController {
                         "message", "로그아웃이 성공적으로 처리되었습니다."
                 )));
     }
-
 
 }

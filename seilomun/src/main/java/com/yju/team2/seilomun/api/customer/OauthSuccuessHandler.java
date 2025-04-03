@@ -31,12 +31,12 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
         log.info("Oauth 로그인 성공 !!");
 
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-        log.info("사용자 정보 : {}",oauth2User.getAttributes());
+        log.info("사용자 정보 : {}", oauth2User.getAttributes());
         // Oauth 제공자 naver, kakao 인지 끝에 적혀 있기 때문에
 
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         String registrationId = oauthToken.getAuthorizedClientRegistrationId();
-        log.info("Oauth 제공자 : {}",registrationId);
+        log.info("Oauth 제공자 : {}", registrationId);
 
         // Oauth 사용자 정보 처리
         OauthAttribute userInfo = OauthAttribute.of(registrationId, oauth2User.getAttributes());
