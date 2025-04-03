@@ -94,7 +94,7 @@ public class AuthController {
     }
 
 
-    @PostMapping("/logout")
+    @PostMapping("/api/logout")
     public ResponseEntity<ApiResponseJson> logout(@RequestBody RefreshTokenRequestDto request,
                                                   HttpServletResponse response) {
         String username = request.getUsername();

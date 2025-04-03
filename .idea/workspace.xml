@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="cbb0de0c-c007-46f1-ad7b-628590943aab" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/api/product/ProductController.java" beforeDir="false" afterPath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/api/product/ProductController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/domain/product/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/seilomun/src/main/java/com/yju/team2/seilomun/domain/product/service/ProductService.java" afterDir="false" />
-    </list>
+    <list default="true" id="cbb0de0c-c007-46f1-ad7b-628590943aab" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -46,7 +42,8 @@
   "keyToString": {
     "Gradle.seilomun [:com.yju.team2.seilomun.SeilomunApplication.main()].executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "moonjihoon",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/munji/Documents/GitHub/seilomun-backend/seilomun/src/main/resources",
@@ -95,8 +92,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-28b599e66164-intellij.indexing.shared.core-IU-242.24807.4" />
-        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-IU-242.24807.4" />
+        <option value="bundled-jdk-9823dce3aa75-125ca727e0f0-intellij.indexing.shared.core-IU-243.23654.117" />
+        <option value="bundled-js-predefined-d6986cc7102b-822845ee3bb5-JavaScript-IU-243.23654.117" />
       </set>
     </attachedChunks>
   </component>
@@ -113,6 +110,7 @@
       <updated>1741168010079</updated>
       <workItem from="1741168011137" duration="1657000" />
       <workItem from="1742197026372" duration="7158000" />
+      <workItem from="1743483572654" duration="26000" />
     </task>
     <servers />
   </component>

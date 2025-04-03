@@ -54,10 +54,21 @@ public class CustomerController {
 
         ResponseCookie cookie = getResponseCookie(token);
 
+        String email = customerLoginDto.getEmail();
+        Customer customer = new Customer();
+        try {
+            customer = customerService.findByEmail(email);
+            log.info("Customer found with email: {}.", customer);
+        }
+        catch (Exception e) {
+            log.info("Customer not found with email: {}.", email);
+        }
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString()) // 쿠키를 응답 헤더에 추가
                 .body(new ApiResponseJson(HttpStatus.OK, Map.of(
                         "token", token,
+                        "nickName", customer.getNickname(),
                         "message", "로그인 성공"
                 )));
     }
