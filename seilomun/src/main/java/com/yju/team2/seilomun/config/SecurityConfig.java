@@ -1,5 +1,7 @@
 package com.yju.team2.seilomun.config;
 
+import com.yju.team2.seilomun.api.customer.OauthSuccuessHandler;
+import com.yju.team2.seilomun.domain.auth.OauthService;
 import com.yju.team2.seilomun.filter.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +24,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
     private final JwtRequestFilter jwtRequestFilter;
+    private final OauthSuccuessHandler oauthSuccuessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -54,7 +57,7 @@ public class SecurityConfig {
                                 "/ws/info/**",   // SockJS 정보 경로 허용
                                 "/ws/websocket/**",
                                 "/login/**",
-                                "/oauth2/authorization/naver",//네이버로그인
+                                "/oauth2/authorization/**",//네이버로그인
                                 "/login/oauth2/code/**"
                         ).permitAll()
                         // 판매자만 접근 가능
@@ -67,8 +70,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/oauth2/authorization/naver")   // 네이버 로그인 페이지 이동
-                        .defaultSuccessUrl("http://localhost:5173") // 로그인 성공 후 이동
+                        .successHandler(oauthSuccuessHandler) // 로그인 성공 후 이동
                         .failureUrl("http://localhost:5173")    //로그인 실패 후 이동
                 )
                 .formLogin(AbstractHttpConfigurer::disable) // 기본 로그인 폼 비활성화
