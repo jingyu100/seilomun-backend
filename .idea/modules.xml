@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/seilomun-backend.iml" filepath="$PROJECT_DIR$/.idea/seilomun-backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/seilomun.main.iml" filepath="$PROJECT_DIR$/.idea/modules/seilomun.main.iml" />
     </modules>
   </component>
 </project>

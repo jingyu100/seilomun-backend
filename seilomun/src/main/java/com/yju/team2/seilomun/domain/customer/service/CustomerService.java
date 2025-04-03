@@ -227,9 +227,5 @@ public class CustomerService {
         Wish wish = optionalWish.get();
         wishRepository.delete(wish);
     }
-
-    public Customer findByEmail(String email) {
-        return customerRepository.findByEmail(email).orElse(null);
-    }
 }
 
