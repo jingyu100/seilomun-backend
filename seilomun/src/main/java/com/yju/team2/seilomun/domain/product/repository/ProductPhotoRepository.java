@@ -4,6 +4,10 @@ import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface ProductPhotoRepository extends JpaRepository<ProductPhoto, Long> {
     void deleteByProduct(Product product);
+
+    Optional<ProductPhoto> findTopByProductOrderById(Product product);
 }

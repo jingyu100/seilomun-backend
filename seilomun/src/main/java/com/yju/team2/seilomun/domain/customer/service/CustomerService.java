@@ -8,12 +8,16 @@ import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
 import com.yju.team2.seilomun.domain.customer.repository.WishRepository;
 import com.yju.team2.seilomun.domain.product.entity.Product;
+import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
+import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
+import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
-import com.yju.team2.seilomun.dto.CustomerFavoriteDto;
 import com.yju.team2.seilomun.dto.CustomerLoginDto;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
+import com.yju.team2.seilomun.dto.FavoriteSellerDto;
+import com.yju.team2.seilomun.dto.WishProductDto;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -38,9 +44,12 @@ public class CustomerService {
     private final WishRepository wishRepository;
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;
+    private final ProductPhotoRepository productPhotoRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+
+    private final ProductService productService;
 
     public Customer registerCustomer(CustomerRegisterDto customerRegisterDto) {
         checkPasswordStrength(customerRegisterDto.getPassword());
@@ -94,9 +103,29 @@ public class CustomerService {
         // AccessToken 생성 및 반환
         return jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
     }
+    // 소비자 매장 즐겨찾기 보여주기
+    public List<FavoriteSellerDto> getFavorite(Long customerId) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
+        }
+        Customer customer = optionalCustomer.get();
+        List<Favorite> customerList = favoriteRepository.findByCustomer(customer);
+        List<FavoriteSellerDto> favoriteSellerDtoList = new ArrayList<>();
+        for (Favorite favorite : customerList) {
+            Seller seller = favorite.getSeller();
+            favoriteSellerDtoList.add(new FavoriteSellerDto(
+                    seller.getId(),
+                    seller.getStoreName(),
+                    seller.getAddressDetail(),
+                    seller.getRating()
+            ));
+        }
+        return favoriteSellerDtoList;
+    }
     
     // 소비자 매장 즐겨찾기 추가
-    public void favorite(String email,Long id){
+    public void setFavorite(String email, Long id){
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
@@ -129,7 +158,7 @@ public class CustomerService {
     }
     
     // 상품 좋아요
-    public void wishes(String email,Long id){
+    public void setwishes(String email, Long id){
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
@@ -145,6 +174,42 @@ public class CustomerService {
                 .product(product)
                 .build();
         wishRepository.save(wish);
+    }
+    // 좋아요한 상품 조회
+    public List<WishProductDto> getWishedProducts(Long customerId){
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
+        }
+        Customer customer = optionalCustomer.get();
+
+        List<Wish> wishList = wishRepository.findByCustomer(customer);
+        List<WishProductDto> wishProductDtoList = new ArrayList<>();
+        for (Wish wish : wishList){
+            Product product = wish.getProduct();
+            Seller seller = product.getSeller();
+            Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
+            //할인된 가격
+            Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
+            // 첫 번째 사진 URL 가져오기 (stream 없이)
+            String photoUrl = productPhotoRepository.findTopByProductOrderById(product)
+                    .map(ProductPhoto::getPhotoUrl)
+                    .orElse(null);
+            wishProductDtoList.add(new WishProductDto(
+                    product.getId(),
+                    wish.getId(),
+                    product.getName(),
+                    product.getDescription(),
+                    product.getOriginalPrice(),
+                    discountPrice,
+                    currentDiscountRate,
+                    product.getExpiryDate(),
+                    seller.getAddressDetail(),
+                    photoUrl,
+                    product.getStatus()
+            ));
+        }
+        return wishProductDtoList;
     }
 
     //상품 좋아요 취소
