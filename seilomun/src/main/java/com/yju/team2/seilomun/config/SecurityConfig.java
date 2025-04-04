@@ -41,8 +41,8 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/seller/login",
-                                "/api/customer/login",
+                                "/api/sellers/login",
+                                "/api/customers/login",
                                 "/api/sellers",
                                 "/api/customers",
                                 "/refresh-token",

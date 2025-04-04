@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.api.auth;
 
+import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.RefreshTokenRequestDto;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -104,5 +106,4 @@ public class AuthController {
                         "message", "로그아웃이 성공적으로 처리되었습니다."
                 )));
     }
-
 }
