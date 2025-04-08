@@ -1,14 +1,20 @@
 package com.yju.team2.seilomun.api.customer;
 
 import com.yju.team2.seilomun.domain.auth.OauthService;
+import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.oauth.OauthAttribute;
+import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -26,7 +32,7 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
 
     private final OauthService oauthService;
     private final JwtUtil jwtUtil;
-
+    private final RefreshTokenService refreshTokenService;
 
     //  카카오
     @Override
@@ -79,14 +85,46 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
         String accessToken = jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
         String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail(), "CUSTOMER");
 
+        refreshTokenService.saveRefreshToken(oauthAttr.getEmail(), "CUSTOMER", refreshToken);
+
+        ResponseCookie cookie = ResponseCookie.from("Authorization", accessToken)
+                .httpOnly(true)
+                .secure(false) // 개발환경에서는 false, 운영에서는 true
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(60 * 60 * 2) // 2시간
+                .build();
+
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
         // 로그인 성공 후 리다이렉트
         String redirectUrl = "http://localhost:5173/oauth-success?accessToken=" + accessToken + "&refreshToken=" + refreshToken;
         log.info("로그인 완료: {}", oauthAttr.getEmail());
         response.sendRedirect(redirectUrl);
+
+
     }
 
 
     private OauthAttribute extractOauthAttribute(String provider, Map<String, Object> attributes) {
         return OauthAttribute.of(provider,attributes);
+    }
+
+    // 쿠키에 토큰 삽입
+    private static ResponseCookie getResponseCookie(String token) {
+        // HttpOnly & Secure 쿠키 설정
+        ResponseCookie cookie = ResponseCookie.from("Authorization", token)
+                .httpOnly(true)  // JavaScript에서 접근 불가능
+                .secure(false)    // HTTPS에서만 전송
+                .sameSite("None") // CSRF 방지를 위한 SameSite 설정
+                /*
+                Strict = 다른 사이트에서 요청할 때 쿠키가 전송되지 않음
+                Lax = GET 요청 같은 안전한 요청에서는 쿠키 전송 가능
+                None = 크로스 사이트 요청에서도 쿠키 사용 가능(HTTPS 필수)
+                * */
+                .path("/")       // 모든 경로에서 쿠키 사용 가능
+                .maxAge(30 * 60 * 4) // 2시간 유지
+                .build();
+        return cookie;
     }
 }
