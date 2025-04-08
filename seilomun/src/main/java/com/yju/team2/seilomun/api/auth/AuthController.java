@@ -106,4 +106,11 @@ public class AuthController {
                         "message", "로그아웃이 성공적으로 처리되었습니다."
                 )));
     }
+
+    @PostMapping("/ping")
+    public void ping(@AuthenticationPrincipal JwtUserDetails user) {
+        String username = user.getUsername();
+        System.out.println("username = " + username);
+
+    }
 }
