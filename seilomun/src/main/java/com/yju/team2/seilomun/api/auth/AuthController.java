@@ -4,10 +4,13 @@ import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.dto.RefreshTokenRequestDto;
+import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +31,7 @@ public class AuthController {
 
 
     // RefreshToken을 사용하여 새로운 AccessToken을 발급
-    @PostMapping("/refresh-token")
+    @PostMapping("/refresh")
     public ResponseEntity<ApiResponseJson> refreshToken(@RequestBody RefreshTokenRequestDto request) {
 
         String username = request.getUsername();
@@ -91,17 +94,15 @@ public class AuthController {
         // Redis에서 RefreshToken 삭제
         refreshTokenService.deleteRefreshToken(username);
 
-        // 쿠키 삭제
-        ResponseCookie cookie = ResponseCookie.from("Authorization", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/")
-                .maxAge(0) // 쿠키 즉시 만료
-                .build();
+        // 액세스 토큰 쿠키 삭제
+        ResponseCookie accessTokenCookie = CookieUtil.createExpiredAccessTokenCookie();
+
+        // 리프레시 토큰 쿠키 삭제
+        ResponseCookie refreshTokenCookie = CookieUtil.createExpiredRefreshTokenCookie();
 
         return ResponseEntity.ok()
-                .header("Set-Cookie", cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .body(new ApiResponseJson(HttpStatus.OK, Map.of(
                         "message", "로그아웃이 성공적으로 처리되었습니다."
                 )));

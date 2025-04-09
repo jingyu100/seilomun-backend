@@ -25,9 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -85,13 +83,16 @@ public class CustomerService {
     }
 
     //소비자 로그인
-    public String customerLogin(CustomerLoginDto customerLoginDto) {
+    public Map<String, String> customerLogin(CustomerLoginDto customerLoginDto) {
+
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(customerLoginDto.getEmail());
+
         if (optionalCustomer.isEmpty()) {
-            log.info(optionalCustomer.toString());
             throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
+
         Customer customer = optionalCustomer.get();
+
         if (!passwordEncoder.matches(customerLoginDto.getPassword(), customer.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
         }
@@ -101,7 +102,14 @@ public class CustomerService {
         refreshTokenService.saveRefreshToken(customer.getEmail(), "CUSTOMER", refreshToken);
 
         // AccessToken 생성 및 반환
-        return jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
+        String accessToken = jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
+
+        // 두 토큰을 맵에 담아 반환
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+
+        return tokens;
     }
 
     // 소비자 매장 즐겨찾기 보여주기

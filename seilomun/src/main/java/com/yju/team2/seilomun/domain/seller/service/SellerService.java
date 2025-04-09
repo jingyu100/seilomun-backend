@@ -20,7 +20,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -70,27 +72,34 @@ public class SellerService {
         return sellerRepository.save(seller);
     }
 
-    //판매자 로그인
-    public String sellerLogin(SellerLoginDto sellerLoginDto) {
+    // 판매자 로그인
+    public Map<String, String> sellerLogin(SellerLoginDto sellerLoginDto) {
+
         Optional<Seller> optionalSeller = sellerRepository.findByEmail(sellerLoginDto.getEmail());
+
         if (optionalSeller.isEmpty()) {
-            log.info(optionalSeller.toString());
             throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
         }
+
         Seller seller = optionalSeller.get();
+
         if (!passwordEncoder.matches(sellerLoginDto.getPassword(), seller.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
         }
-//        if (!sellerLoginDto.getPassword().equals(seller.getPassword())) {
-//            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-//        }
 
         // RefreshToken 생성 및 Redis에 저장
         String refreshToken = jwtUtil.generateRefreshToken(seller.getEmail(), "SELLER");
         refreshTokenService.saveRefreshToken(seller.getEmail(), "SELLER", refreshToken);
 
-        // AccessToken 생성 및 반환
-        return jwtUtil.generateAccessToken(seller.getEmail(), "SELLER");
+        // AccessToken 생성
+        String accessToken = jwtUtil.generateAccessToken(seller.getEmail(), "SELLER");
+
+        // 두 토큰을 맵에 담아 반환
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+
+        return tokens;
     }
 
     // 비밀번호 정규식 검사

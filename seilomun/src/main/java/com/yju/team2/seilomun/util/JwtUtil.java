@@ -4,15 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -62,20 +58,10 @@ public class JwtUtil {
         return extractClaim(token, claims -> claims.get("userType", String.class));
     }
 
-
     // 토큰에서 유효시간 추출
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
-//    // 토큰에서 Claims (주장) 추출
-//    private Claims extractClaims(String token) {
-//        return Jwts.parserBuilder()
-//                .setSigningKey(secretKey)
-//                .build()
-//                .parseClaimsJws(token)
-//                .getBody();
-//    }
 
     // 클레임 추출
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {

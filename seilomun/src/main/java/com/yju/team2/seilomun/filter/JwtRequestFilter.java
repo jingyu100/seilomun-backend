@@ -41,7 +41,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                     if (jwtUtil.validateToken(token, email)) {
                         // userType에 따라 적절한 UserDetails 로드
                         UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(email, userType);
-
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -63,7 +62,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("Authorization".equals(cookie.getName())) {
+                if ("access_token".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }

@@ -15,11 +15,6 @@ public class RefreshTokenService {
     private final RedisTemplate<String, String> redisTemplate;
     private final long REFRESH_TOKEN_EXPIRE_TIME = 14 * 24 * 60 * 60; // 14일 (초 단위)
 
-//    public RefreshTokenService(RedisTemplate<String, String> redisTemplate) {
-//        this.redisTemplate = redisTemplate;
-//        this.jwtUtil = new JwtUtil();
-//    }
-
     // RefreshToken 저장
     public void saveRefreshToken(String username, String userType, String refreshToken) {
         // "RT:userType:username" 형식으로 키 저장
