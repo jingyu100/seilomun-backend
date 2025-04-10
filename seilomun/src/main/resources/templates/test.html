@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>샘플 상품 결제 테스트</title>
+    <!-- 토스페이먼츠 결제창 SDK 추가 -->
+    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <style>
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .product-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .product-image {
+            width: 100%;
+            height: 200px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .payment-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .payment-info {
+            margin-bottom: 20px;
+        }
+        .payment-info div {
+            margin-bottom: 8px;
+        }
+        button {
+            background-color: #3182F6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1a6ed8;
+        }
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 120px;
+        }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .quantity-control button {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            padding: 0;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .quantity-control input {
+            width: 60px;
+            height: 40px;
+            text-align: center;
+            font-size: 16px;
+            margin: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .discount-badge {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+        .original-price {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+<h1>샘플 상품 결제 테스트</h1>
+
+<div class="product-container">
+    <div class="product-image">
+        <span>상품 이미지</span>
+    </div>
+    <h2>샘플 상품 <span class="discount-badge">10% 할인</span></h2>
+    <p>이 상품은 샘플입니다.</p>
+    <div><span class="label">가격:</span> <span id="discounted-price">1,800원</span> <span class="original-price">2,000원</span></div>
+    <div><span class="label">재고:</span> <span>50개</span></div>
+    <div><span class="label">유효기간:</span> <span>2025년 12월 31일까지</span></div>
+
+    <div class="quantity-control">
+        <span class="label">수량:</span>
+        <button id="decrease-qty">-</button>
+        <input type="number" id="quantity" value="1" min="1" max="50">
+        <button id="increase-qty">+</button>
+    </div>
+</div>
+
+<div class="payment-container">
+    <h2>주문 정보</h2>
+    <div class="payment-info">
+        <div><span class="label">상품명:</span> <span id="orderName">샘플 상품</span></div>
+        <div><span class="label">상품 가격:</span> <span id="price">1,800원</span></div>
+        <div><span class="label">수량:</span> <span id="qty-display">1개</span></div>
+        <div><span class="label">할인율:</span> <span id="discountRate">10%</span></div>
+        <div><span class="label">사용 포인트:</span> <span id="usedPoints">0원</span></div>
+        <div><span class="label">배송:</span> <span id="delivery">배송 필요</span></div>
+        <div><span class="label">배송지:</span> <span id="address">서울시 강남구 테헤란로 123</span></div>
+        <div><span class="label">총 결제 금액:</span> <span id="totalAmount">1,800원</span></div>
+    </div>
+
+    <button id="payment-button">결제하기</button>
+</div>
+
+<script>
+    // 상품 정보
+    const product = {
+        id: 1,
+        name: "샘플 상품",
+        originalPrice: 2000,
+        discountRate: 10,
+        stockQuantity: 50
+    };
+
+    // 수량 제어 로직
+    const qtyInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decrease-qty');
+    const increaseBtn = document.getElementById('increase-qty');
+    const qtyDisplay = document.getElementById('qty-display');
+    const totalAmountDisplay = document.getElementById('totalAmount');
+
+    function updateTotalAmount() {
+        const quantity = parseInt(qtyInput.value);
+        const discountedPrice = product.originalPrice * (100 - product.discountRate) / 100;
+        const total = discountedPrice * quantity;
+
+        qtyDisplay.textContent = `${quantity}개`;
+        totalAmountDisplay.textContent = `${total.toLocaleString()}원`;
+    }
+
+    decreaseBtn.addEventListener('click', function() {
+        const currentQty = parseInt(qtyInput.value);
+        if (currentQty > 1) {
+            qtyInput.value = currentQty - 1;
+            updateTotalAmount();
+        }
+    });
+
+    increaseBtn.addEventListener('click', function() {
+        const currentQty = parseInt(qtyInput.value);
+        if (currentQty < product.stockQuantity) {
+            qtyInput.value = currentQty + 1;
+            updateTotalAmount();
+        }
+    });
+
+    qtyInput.addEventListener('change', function() {
+        let quantity = parseInt(qtyInput.value);
+
+        if (quantity < 1) {
+            quantity = 1;
+            qtyInput.value = 1;
+        } else if (quantity > product.stockQuantity) {
+            quantity = product.stockQuantity;
+            qtyInput.value = product.stockQuantity;
+        }
+
+        updateTotalAmount();
+    });
+
+    // 테스트 클라이언트 키로 객체 초기화
+    var clientKey = 'test_ck_d46qopOB896A1WOwGApY3ZmM75y0';
+    var tossPayments = TossPayments(clientKey);
+
+    // 결제하기 버튼에 기능 추가
+    var button = document.getElementById('payment-button');
+    button.addEventListener('click', function () {
+        // UUID 생성 함수
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // 현재 시간을 기준으로 고유한 주문번호 생성
+        var orderId = generateUUID();
+
+        // 수량과 가격 계산
+        const quantity = parseInt(qtyInput.value);
+        const discountedPrice = product.originalPrice * (100 - product.discountRate) / 100;
+        const totalAmount = discountedPrice * quantity;
+
+        // 결제창 띄우기
+        tossPayments.requestPayment('CARD', {
+            amount: totalAmount,
+            orderId: orderId,
+            orderName: `${product.name} ${quantity}개`,
+            customerName: '테스트 고객',
+            customerEmail: 'test@example.com',
+            successUrl: 'http://localhost/api/v1/payments/toss/success',
+            failUrl: 'http://localhost/api/v1/payments/toss/fail'
+        }).catch(function(error) {
+            if (error.code === 'USER_CANCEL') {
+                alert('결제가 취소되었습니다.');
+            } else {
+                alert('결제 중 오류가 발생했습니다: ' + error.message);
+            }
+            console.error('결제 오류:', error);
+        });
+    });
+
+    // 초기 총액 표시
+    updateTotalAmount();
+</script>
+</body>
+</html>
