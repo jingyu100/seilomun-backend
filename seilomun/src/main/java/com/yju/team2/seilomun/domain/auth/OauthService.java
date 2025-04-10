@@ -3,11 +3,14 @@ package com.yju.team2.seilomun.domain.auth;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
+import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -16,12 +19,28 @@ import java.util.Optional;
 public class OauthService {
 
     private final CustomerRepository customerRepository;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtUtil jwtUtil;
 
-    /**
-     * 기존 회원 조회 (Optional 반환)
-     */
-    public Optional<Customer> findCustomerByEmail(String email) {
-        return customerRepository.findByEmail(email);
+    public Map<String,String> customerLogin(String email) {
+        Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
+
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 이메일 입니다");
+        }
+
+        Customer customer = optionalCustomer.get();
+
+        String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail(),"CUSTOMER");
+        refreshTokenService.saveRefreshToken(customer.getEmail(),"CUSTOMER",refreshToken);
+
+        String accessToken = jwtUtil.generateAccessToken(customer.getEmail(),"CUSTOMER");
+
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken",accessToken);
+        tokens.put("refreshToken",refreshToken);
+
+        return tokens;
     }
 
 
