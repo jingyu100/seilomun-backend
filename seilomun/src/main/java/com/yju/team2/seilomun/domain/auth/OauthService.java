@@ -21,7 +21,8 @@ public class OauthService {
     private final CustomerRepository customerRepository;
     private final RefreshTokenService refreshTokenService;
     private final JwtUtil jwtUtil;
-
+    
+    // DB에 email이 있다면 token 발급/저장
     public Map<String,String> customerLogin(String email) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
 
@@ -43,12 +44,10 @@ public class OauthService {
         return tokens;
     }
 
-
+    // DB에 회원 저장
     public Customer registerCustomer(
             String name, String birthday, String email, String nickname, String profileImage) {
         log.info("이메일 : email: {}, nickname: {}, profileImage: {}", email, nickname, profileImage);
-        return customerRepository.findByEmail(email).orElseGet(() ->  {
-
             Customer customer = Customer.builder()
                     .email(email)
                     .password("oauth_user")
@@ -66,7 +65,6 @@ public class OauthService {
                     customer.getEmail(), customer.getNickname(), customer.getProfileImageUrl());
 
             return customerRepository.save(customer);
-        });
-    }
-
+        };
 }
+

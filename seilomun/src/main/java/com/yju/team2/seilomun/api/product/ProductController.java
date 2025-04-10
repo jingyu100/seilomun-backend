@@ -26,14 +26,11 @@ public class ProductController {
     private final SellerService sellerService;
 
     //상품 상세 조회
-    @GetMapping("/list/{id}/{sellerid}")
-    public ResponseEntity<ApiResponseJson> getProductById(@PathVariable Long id,
-                                                          @PathVariable(name = "sellerid") Long seid) {
-
-        Seller seller = sellerService.getSellerById(seid);
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponseJson> getProductById(@PathVariable Long id) {
 
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Products", productService.getProductById(id, seller),
+                Map.of("Products", productService.getProductById(id),
                         "Message", "상품 상세 조회가 되었습니다")));
     }
 

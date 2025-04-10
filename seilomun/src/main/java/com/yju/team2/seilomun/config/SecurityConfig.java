@@ -56,9 +56,8 @@ public class SecurityConfig {
                                 "/ws/**",        // WebSocket 엔드포인트 허용
                                 "/ws/info/**",   // SockJS 정보 경로 허용
                                 "/ws/websocket/**",
-                                "/login/**",
-                                "/oauth2/authorization/**",//네이버로그인
-                                "/login/oauth2/code/**"
+                                "/login/**", // 인가코드 처리
+                                "/oauth2/authorization/**"//네이버로그인
                         ).permitAll()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")

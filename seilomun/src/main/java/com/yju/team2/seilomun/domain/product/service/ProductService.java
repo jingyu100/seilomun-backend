@@ -115,18 +115,13 @@ public class ProductService {
 //    }
 
     // 상품 상세 조회
-    public ProductDto getProductById(Long id, Seller seller) {
-        return productRepository.findById(id)
-                .map(product -> {
-                    Integer currentDiscountRate = getCurrentDiscountRate(id);
+    public ProductDto getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다"));
 
-                    ProductDto productDto = ProductDto.fromEntity(product, currentDiscountRate);
+        Integer discountRate = calculateDiscountRate(id);
 
-                    productDto.setSeller(SellerInformationDto.toDto(seller));
-
-                    return productDto;
-                })
-                .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
+        return ProductDto.fromEntity(product, discountRate);
     }
 
     // 상품 등록

@@ -1,22 +1,18 @@
 package com.yju.team2.seilomun.api.customer;
 
 import com.yju.team2.seilomun.domain.auth.OauthService;
-import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.oauth.OauthAttribute;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.util.CookieUtil;
-import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -35,7 +31,11 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
     private final OauthService oauthService;
     private final CustomerRepository customerRepository;
 
-    //  카카오
+    // properties에 있는 값
+    @Value("${app.oauth.redirectUrl}")
+    private String redirectUrl;
+
+    //  Oauth Login 후 핸들러
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         log.info("Oauth 로그인 성공 !!");
@@ -84,6 +84,8 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
                     oauthAttr.getNickname(),
                     oauthAttr.getProfile()
             );
+            log.info("신규 회원 : {}",customer.getEmail());
+
 
         }
 
@@ -103,7 +105,6 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         // 로그인 성공 후 리다이렉트
-        String redirectUrl = "http://localhost:5173/oauth-success?accessToken=" + accessToken + "&refreshToken=" + refreshToken;
         log.info("로그인 완료: {}", oauthAttr.getEmail());
         response.sendRedirect(redirectUrl);
 
