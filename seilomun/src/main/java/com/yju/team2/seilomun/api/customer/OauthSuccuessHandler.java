@@ -59,7 +59,7 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
         log.info("이름 : {}", oauthAttr.getName());
 
         //생일
-        log.info("생일 : {}",oauthAttr.getBirthday().split("-"));
+        log.info("생일 : {}",oauthAttr.getBirthday());
 
         // 이메일
         log.info("이메일 : {} ", oauthAttr.getEmail());
