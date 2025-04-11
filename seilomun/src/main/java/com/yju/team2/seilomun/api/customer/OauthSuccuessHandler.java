@@ -79,7 +79,7 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
         }else {
             Customer customer = oauthService.registerCustomer(
                     oauthAttr.getName(),
-                    oauthAttr.getBirthday(),
+                    oauthAttr.getBirthday().replace("-",""),
                     oauthAttr.getEmail(),
                     oauthAttr.getNickname(),
                     oauthAttr.getProfile()
