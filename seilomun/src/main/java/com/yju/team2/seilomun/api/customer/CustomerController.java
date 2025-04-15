@@ -69,7 +69,7 @@ public class CustomerController {
                 )));
     }
 
-    @GetMapping("/favorites")
+    @GetMapping("/favorites ")
     public ResponseEntity<ApiResponseJson> getCustomerFavorite(@AuthenticationPrincipal JwtUserDetails userDetails) {
         Long customerId = userDetails.getId();
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
@@ -155,6 +155,22 @@ public class CustomerController {
             log.error("상품 좋아요 취소 중 에러 발생: {}", e.getMessage());
             throw new IllegalArgumentException("상품 좋아요 취소 중 에러가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    // 소비자 닉네임 조회
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponseJson> getCustomer(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        String username = userDetails.getUsername();
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of("username", username))));
+    }
+
+    // 소비자 정보 수정
+    @GetMapping
+    public ResponseEntity<ApiResponseJson> getCustomers(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        Customer customer = customerService.getUserDetailsByCustomerId(userDetails.getId());
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                "customer", customer
+        ))));
     }
 
 }
