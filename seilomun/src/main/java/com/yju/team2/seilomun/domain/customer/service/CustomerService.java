@@ -235,5 +235,9 @@ public class CustomerService {
         Wish wish = optionalWish.get();
         wishRepository.delete(wish);
     }
+
+    public Customer getUserDetailsByCustomerId(Long id) {
+        return customerRepository.findById(id).orElse(null);
+    }
 }
 
