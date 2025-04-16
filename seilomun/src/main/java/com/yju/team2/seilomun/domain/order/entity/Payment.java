@@ -1,7 +1,6 @@
 package com.yju.team2.seilomun.domain.order.entity;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
-import com.yju.team2.seilomun.dto.OrderDto;
 import com.yju.team2.seilomun.dto.PaymentResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -36,8 +35,6 @@ public class Payment {
     @Column(nullable = false, name = "pay_name")
     private String payName;
 
-    private boolean paySuccessYN;
-
     @Column(name = "paid_at" , nullable = false)
     @CreationTimestamp
     private LocalDateTime paidAt;
@@ -49,15 +46,19 @@ public class Payment {
     @JoinColumn(name = "or_id")
     private Order order;
 
-
-    // 일단 넣어놓음
+    // 결제 성공 여부
+    @Column
+    private boolean paySuccessYN;
+    // 실패하면 사유
     @Column
     private String failReason;
+    // 결제 취소 여부
     @Column
     private boolean cancelYN;
-
+    // 결제키
     @Column
     private String paymentKey;
+
     public PaymentResDto toPaymentResDto(Customer customer ) { // DB에 저장하게 될 결제 관련 정보들
         return PaymentResDto.builder()
                 .payType(paymentMethod)
@@ -71,5 +72,14 @@ public class Payment {
                 .failReason(failReason)
                 .build();
     }
-
+    public void successPayment(String paymentKey){
+        this.paymentKey = paymentKey;
+        this.paySuccessYN = true;
+     }
+     public void failPayment(boolean paySuccessYN){
+        this.paySuccessYN = paySuccessYN;
+     }
+     public void insertFailReason(String failReason){
+        this.failReason = failReason;
+     }
 }

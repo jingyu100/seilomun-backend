@@ -92,8 +92,7 @@ public class CustomerController {
             throw new IllegalArgumentException("매장 즐겨찾기 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
-
-    @DeleteMapping("/favorites/{CustomerId}")
+    @DeleteMapping("/favorites/{id}")
     public ResponseEntity<ApiResponseJson> customerFavoriteDelete(@PathVariable Long id,
                                                                   BindingResult bindingResult,
                                                                   @AuthenticationPrincipal JwtUserDetails userDetails) {
@@ -121,7 +120,8 @@ public class CustomerController {
         ))));
     }
 
-    @PostMapping("/wishes/{customerId}")
+    // 상품id
+    @PostMapping("/wishes/{id}")
     public ResponseEntity<ApiResponseJson> customerWishes(@Valid @PathVariable Long id,
                                                           @AuthenticationPrincipal JwtUserDetails userDetails) {
 
@@ -136,8 +136,8 @@ public class CustomerController {
             throw new IllegalArgumentException("상품 좋아요 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
-
-    @DeleteMapping("/wishes/{customerId}")
+    // 상품id
+    @DeleteMapping("/wishes/{id}")
     public ResponseEntity<ApiResponseJson> customerWishesDelete(@Valid @PathVariable Long id,
                                                                 BindingResult bindingResult,
                                                                 @AuthenticationPrincipal JwtUserDetails userDetails) {

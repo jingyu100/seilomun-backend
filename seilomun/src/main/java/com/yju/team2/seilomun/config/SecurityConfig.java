@@ -58,7 +58,11 @@ public class SecurityConfig {
                                 "/ws/websocket/**",
                                 "/login/**",
                                 "/oauth2/authorization/**",//네이버로그인
-                                "/login/oauth2/code/**"
+                                "/login/oauth2/code/**",
+                                "/api/orders/buy",
+                                "/api/orders/test/buy",
+                                "/api/orders/toss/success",  // Toss 결제 성공 콜백
+                                "/api/orders/toss/fail"  // 정적 리소스로 사용할 경우
                         ).permitAll()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
