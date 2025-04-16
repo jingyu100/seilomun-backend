@@ -91,4 +91,8 @@ public class Product {
         this.createdAt = productDto.getCreatedAt();
         this.productCategory = productDto.getProductCategory();
     }
+
+    public void updateStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
 }

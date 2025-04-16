@@ -57,7 +57,12 @@ public class SecurityConfig {
                                 "/ws/info/**",   // SockJS 정보 경로 허용
                                 "/ws/websocket/**",
                                 "/login/**", // 인가코드 처리
-                                "/oauth2/authorization/**"//네이버로그인
+                                "/oauth2/authorization/**",//네이버로그인
+                                "/login/oauth2/code/**",
+                                "/api/orders/buy",
+                                "/api/orders/test/buy",
+                                "/api/orders/toss/success",  // Toss 결제 성공 콜백
+                                "/api/orders/toss/fail"  // 정적 리소스로 사용할 경우
                         ).permitAll()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
