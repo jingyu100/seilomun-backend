@@ -14,7 +14,6 @@ import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
-import com.yju.team2.seilomun.dto.CustomerLoginDto;
 import com.yju.team2.seilomun.dto.CustomerRegisterDto;
 import com.yju.team2.seilomun.dto.FavoriteSellerDto;
 import com.yju.team2.seilomun.dto.WishProductDto;
@@ -80,36 +79,6 @@ public class CustomerService {
         }
         log.info("비밀번호 정책 미달");
         throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
-    }
-
-    //소비자 로그인
-    public Map<String, String> customerLogin(CustomerLoginDto customerLoginDto) {
-
-        Optional<Customer> optionalCustomer = customerRepository.findByEmail(customerLoginDto.getEmail());
-
-        if (optionalCustomer.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 이메일입니다.");
-        }
-
-        Customer customer = optionalCustomer.get();
-
-        if (!passwordEncoder.matches(customerLoginDto.getPassword(), customer.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치 하지 않습니다.");
-        }
-
-        // RefreshToken 생성 및 Redis에 저장
-        String refreshToken = jwtUtil.generateRefreshToken(customer.getEmail(), "CUSTOMER");
-        refreshTokenService.saveRefreshToken(customer.getEmail(), "CUSTOMER", refreshToken);
-
-        // AccessToken 생성 및 반환
-        String accessToken = jwtUtil.generateAccessToken(customer.getEmail(), "CUSTOMER");
-
-        // 두 토큰을 맵에 담아 반환
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshToken);
-
-        return tokens;
     }
 
     // 소비자 매장 즐겨찾기 보여주기

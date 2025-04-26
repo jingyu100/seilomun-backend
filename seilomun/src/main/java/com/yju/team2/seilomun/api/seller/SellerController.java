@@ -4,7 +4,6 @@ import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import com.yju.team2.seilomun.dto.*;
-import com.yju.team2.seilomun.util.CookieUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.util.Map;
 
 @RestController
@@ -40,32 +38,6 @@ public class SellerController {
                 "email", seller.getEmail(),
                 "username", seller.getStoreName()
         ));
-    }
-
-    // 로그인
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponseJson> sellerLogin(@Valid @RequestBody SellerLoginDto sellerLoginDto,
-                                                       BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
-        }
-
-        Map<String, String> tokens = sellerService.sellerLogin(sellerLoginDto);
-        String accessToken = tokens.get("accessToken");
-        String refreshToken = tokens.get("refreshToken");
-
-        // 액세스 토큰용 쿠키 설정 (2시간 만료)
-        ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(accessToken);
-
-        // 리프레시 토큰용 쿠키 설정 (14일 만료)
-        ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
-                .body(new ApiResponseJson(HttpStatus.OK, Map.of(
-                        "message", "로그인 성공"
-                )));
     }
 
     // 매장 정보 수정
