@@ -22,6 +22,12 @@ public class RefreshTokenService {
         redisTemplate.opsForValue().set(key, refreshToken, REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.SECONDS);
     }
 
+    // RefreshToken 교체
+    public void rotateRefreshToken(String username, String userType, String newRefreshToken) {
+        String key = generateKey(username, userType);
+        redisTemplate.opsForValue().set(key, newRefreshToken, REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.SECONDS);
+    }
+
 
     // RefreshToken 조회
     public String getRefreshToken(String username) {

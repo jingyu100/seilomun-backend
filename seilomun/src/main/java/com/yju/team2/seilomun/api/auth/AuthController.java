@@ -33,7 +33,7 @@ public class AuthController {
     private static final String TOKEN_REFRESH_SUCCESS = "액세스 토큰이 성공적으로 갱신되었습니다.";
     private static final String LOGOUT_SUCCESS = "로그아웃이 성공적으로 처리되었습니다.";
 
-     // RefreshToken을 사용하여 새로운 AccessToken을 발급
+    // RefreshToken을 사용하여 새로운 AccessToken을 발급
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponseJson> refreshToken(@RequestBody RefreshTokenRequestDto request) {
         String username = request.getUsername();
@@ -66,13 +66,22 @@ public class AuthController {
             String newAccessToken = jwtUtil.generateAccessToken(username, userType);
             log.info("새 액세스 토큰 발급 성공 - 사용자: {}", username);
 
+            // 새 RefreshToken 생성 (Token Rotation)
+            String newRefreshToken = jwtUtil.generateRefreshToken(username, userType);
+
+            // 새 RefreshToken을 Redis에 저장하고 이전 토큰 무효화
+            refreshTokenService.rotateRefreshToken(username, userType, newRefreshToken);
+
             // 쿠키 설정 및 응답 생성
             ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(newAccessToken);
+            ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(newRefreshToken);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                    .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                     .body(new ApiResponseJson(HttpStatus.OK, Map.of(
                             "accessToken", newAccessToken,
+                            "refreshToken", newRefreshToken,
                             "message", TOKEN_REFRESH_SUCCESS
                     )));
         } catch (Exception e) {
@@ -81,7 +90,7 @@ public class AuthController {
         }
     }
 
-     // 사용자 로그아웃을 처리
+    // 사용자 로그아웃을 처리
     @PostMapping("/logout")
     public ResponseEntity<ApiResponseJson> logout(@RequestBody RefreshTokenRequestDto request) {
         String username = request.getUsername();
