@@ -5,7 +5,7 @@ import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.auth.LoginRequestDto;
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
-import com.yju.team2.seilomun.dto.RefreshTokenRequestDto;
+import com.yju.team2.seilomun.domain.auth.dto.RefreshTokenRequestDto;
 import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;

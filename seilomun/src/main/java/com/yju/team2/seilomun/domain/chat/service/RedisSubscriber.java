@@ -1,7 +1,7 @@
 package com.yju.team2.seilomun.domain.chat.service;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.yju.team2.seilomun.dto.ChatMessageDto;
+import com.yju.team2.seilomun.domain.chat.dto.ChatMessageDto;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;

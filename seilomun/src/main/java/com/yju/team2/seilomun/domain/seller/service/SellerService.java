@@ -2,15 +2,14 @@ package com.yju.team2.seilomun.domain.seller.service;
 
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
-import com.yju.team2.seilomun.domain.seller.entity.SellerCategory;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerCategoryRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
-import com.yju.team2.seilomun.dto.DeliveryFeeDto;
-import com.yju.team2.seilomun.dto.SellerInformationDto;
-import com.yju.team2.seilomun.dto.SellerRegisterDto;
+import com.yju.team2.seilomun.domain.seller.dto.DeliveryFeeDto;
+import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
+import com.yju.team2.seilomun.domain.seller.dto.SellerRegisterDto;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 

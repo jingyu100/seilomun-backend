@@ -2,7 +2,7 @@ package com.yju.team2.seilomun.domain.customer.service;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
-import com.yju.team2.seilomun.dto.CustomerRegisterDto;
+import com.yju.team2.seilomun.domain.customer.dto.CustomerRegisterDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

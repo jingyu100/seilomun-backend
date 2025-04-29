@@ -1,13 +1,10 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.order.dto;
 
-import com.yju.team2.seilomun.domain.order.entity.Payment;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor

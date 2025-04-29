@@ -1,6 +1,5 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.seller.dto;
 
-import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;

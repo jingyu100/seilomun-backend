@@ -2,9 +2,7 @@ package com.yju.team2.seilomun.domain.auth;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
-import com.yju.team2.seilomun.dto.CustomerRegisterDto;
 import com.yju.team2.seilomun.util.JwtUtil;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

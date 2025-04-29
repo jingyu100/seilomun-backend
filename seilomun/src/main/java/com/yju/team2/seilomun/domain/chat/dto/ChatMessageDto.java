@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.chat.dto;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

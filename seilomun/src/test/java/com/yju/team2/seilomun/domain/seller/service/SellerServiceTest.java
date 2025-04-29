@@ -3,7 +3,7 @@ package com.yju.team2.seilomun.domain.seller.service;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.dto.SellerLoginDto;
-import com.yju.team2.seilomun.dto.SellerRegisterDto;
+import com.yju.team2.seilomun.domain.seller.dto.SellerRegisterDto;
 import com.yju.team2.seilomun.util.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

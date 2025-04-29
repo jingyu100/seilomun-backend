@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.customer.dto;
 
 import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.validation.constraints.Email;

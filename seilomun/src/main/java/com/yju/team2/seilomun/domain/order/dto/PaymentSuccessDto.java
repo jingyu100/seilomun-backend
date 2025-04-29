@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.order.dto;
 
 import lombok.Data;
 

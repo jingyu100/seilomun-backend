@@ -1,9 +1,8 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.product.dto;
 
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
-import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
-import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
 import lombok.*;
 
 import java.time.LocalDateTime;

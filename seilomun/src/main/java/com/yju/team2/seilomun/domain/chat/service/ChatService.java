@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.yju.team2.seilomun.dto.ChatMessageDto;
-import com.yju.team2.seilomun.dto.ChatRoomDto;
+import com.yju.team2.seilomun.domain.chat.dto.ChatMessageDto;
+import com.yju.team2.seilomun.domain.chat.dto.ChatRoomDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.stereotype.Service;

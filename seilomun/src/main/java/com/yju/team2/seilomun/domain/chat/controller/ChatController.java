@@ -3,8 +3,8 @@ package com.yju.team2.seilomun.domain.chat.controller;
 import java.util.List;
 import java.util.Map;
 
-import com.yju.team2.seilomun.dto.ChatMessageDto;
-import com.yju.team2.seilomun.dto.ChatRoomDto;
+import com.yju.team2.seilomun.domain.chat.dto.ChatMessageDto;
+import com.yju.team2.seilomun.domain.chat.dto.ChatRoomDto;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;

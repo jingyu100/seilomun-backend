@@ -6,17 +6,13 @@ import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
-import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
-import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
-import com.yju.team2.seilomun.dto.ProductDto;
-import com.yju.team2.seilomun.dto.SellerInformationDto;
+import com.yju.team2.seilomun.domain.product.dto.ProductDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

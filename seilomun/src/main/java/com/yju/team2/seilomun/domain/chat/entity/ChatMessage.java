@@ -1,6 +1,5 @@
 package com.yju.team2.seilomun.domain.chat.entity;
 
-import com.yju.team2.seilomun.dto.ChatMessageDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

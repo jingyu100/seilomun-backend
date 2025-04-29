@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.customer.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.customer.dto.CustomerRegisterDto;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.service.CustomerService;
 import com.yju.team2.seilomun.dto.*;

@@ -1,7 +1,7 @@
 package com.yju.team2.seilomun.domain.order.entity;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
-import com.yju.team2.seilomun.dto.PaymentResDto;
+import com.yju.team2.seilomun.domain.order.dto.PaymentResDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

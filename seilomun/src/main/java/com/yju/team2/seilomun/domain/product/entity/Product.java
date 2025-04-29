@@ -3,14 +3,12 @@ package com.yju.team2.seilomun.domain.product.entity;
 import com.yju.team2.seilomun.domain.customer.entity.Wish;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.order.entity.OrderItem;
-import com.yju.team2.seilomun.dto.ProductDto;
+import com.yju.team2.seilomun.domain.product.dto.ProductDto;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

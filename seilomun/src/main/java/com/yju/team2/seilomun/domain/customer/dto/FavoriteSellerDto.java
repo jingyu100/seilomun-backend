@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.domain.customer.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

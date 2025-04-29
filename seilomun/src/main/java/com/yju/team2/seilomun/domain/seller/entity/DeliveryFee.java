@@ -1,7 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.entity;
 
-import com.yju.team2.seilomun.dto.DeliveryFeeDto;
-import com.yju.team2.seilomun.dto.SellerInformationDto;
+import com.yju.team2.seilomun.domain.seller.dto.DeliveryFeeDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
