@@ -80,4 +80,7 @@ public class Customer {
     @Builder.Default
     private List<Wish> wishes = new ArrayList<>();
 
+    public void buyProductAddPoint(Integer point) {
+        this.points += point;
+    }
 }
