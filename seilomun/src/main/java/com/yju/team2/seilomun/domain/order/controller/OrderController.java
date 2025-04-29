@@ -1,11 +1,10 @@
-package com.yju.team2.seilomun.api.order;
+package com.yju.team2.seilomun.domain.order.controller;
 
 import com.yju.team2.seilomun.config.TossPaymentConfig;
 import com.yju.team2.seilomun.domain.auth.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.order.service.OrderService;
 import com.yju.team2.seilomun.dto.*;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

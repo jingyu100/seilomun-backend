@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.auth;
+package com.yju.team2.seilomun.domain.auth.controller;
 
 import com.yju.team2.seilomun.domain.auth.AuthService;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;

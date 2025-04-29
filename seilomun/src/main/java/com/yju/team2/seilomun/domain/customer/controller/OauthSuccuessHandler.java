@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.customer;
+package com.yju.team2.seilomun.domain.customer.controller;
 
 import com.yju.team2.seilomun.domain.auth.OauthService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;

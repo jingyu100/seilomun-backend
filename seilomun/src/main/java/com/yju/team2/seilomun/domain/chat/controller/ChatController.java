@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.chat;
+package com.yju.team2.seilomun.domain.chat.controller;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.product;
+package com.yju.team2.seilomun.domain.product.controller;
 
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
 import com.yju.team2.seilomun.domain.product.enums.ProductFilterType;

@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.seller;
+package com.yju.team2.seilomun.domain.seller.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;

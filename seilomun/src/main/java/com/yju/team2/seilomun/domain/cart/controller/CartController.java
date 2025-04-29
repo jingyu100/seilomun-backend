@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.api.cart;
+package com.yju.team2.seilomun.domain.cart.controller;
 
 import com.yju.team2.seilomun.domain.auth.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
