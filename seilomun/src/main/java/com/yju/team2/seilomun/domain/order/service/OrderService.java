@@ -3,7 +3,9 @@ package com.yju.team2.seilomun.domain.order.service;
 import com.yju.team2.seilomun.config.TossPaymentConfig;
 import com.yju.team2.seilomun.domain.auth.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.customer.entity.PointHistory;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
+import com.yju.team2.seilomun.domain.customer.repository.PointHistoryRepository;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.order.entity.OrderItem;
 import com.yju.team2.seilomun.domain.order.entity.Payment;
@@ -40,6 +42,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
     private final ProductService productService;
+    private final PointHistoryRepository pointHistoryRepository;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
     private final PaymentRepository paymentRepository;
@@ -52,28 +55,28 @@ public class OrderService {
         }
         return stringBuilder.toString();
     }
+
     // 한가지 상품 바로 구매하기(장바구니에서 x)
     @Transactional
     public PaymentResDto buyProduct(OrderDto orderDto, Long customerId) {
         Optional<Product> optionalProduct = productRepository.findById(orderDto.getProductId());
-        if (optionalProduct.isEmpty()){
+        if (optionalProduct.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 상품입니다.");
         }
         Product product = optionalProduct.get();
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
-        if (optionalCustomer.isEmpty()){
+        if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 회원입니다.");
         }
         Customer customer = optionalCustomer.get();
 
-        if (product.getStockQuantity() < orderDto.getQuantity()){
+        if (product.getStockQuantity() < orderDto.getQuantity()) {
             throw new IllegalArgumentException("구매 하려는 상품의 수량이 초과하였습니다.");
         }
         String orderName;
         do {
             orderName = generateOrderNumber();
         } while (orderRepository.existsByOrderName(orderName));
-
         Order order = Order.builder().
                 customer(customer).
                 seller(product.getSeller()).
@@ -95,8 +98,8 @@ public class OrderService {
                 .unitPrice(orderDto.getPrice()).build();
         orderItemRepository.save(orderItem);
 
-        if (orderDto.getIsDelivery().equals("Y")){
-            if (orderDto.getTotalAmount() < Integer.parseInt( order.getSeller().getMinOrderAmount())){
+        if (orderDto.getIsDelivery().equals("Y")) {
+            if (orderDto.getTotalAmount() < Integer.parseInt(order.getSeller().getMinOrderAmount())) {
                 throw new IllegalArgumentException("배달 최소 주문금액에 부합되지 않습니다.");
             }
         }
@@ -111,24 +114,26 @@ public class OrderService {
         paymentRepository.save(payment);
         return payment.toPaymentResDto(customer);
     }
+
     // 상품 바로구매 할때 정보 페이지로 가져가기
-    public OrderProductDto getBuyProduct(CartItemRequestDto cartItemRequestDto, Long customerId){
+    public OrderProductDto getBuyProduct(CartItemRequestDto cartItemRequestDto, Long customerId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
-        if (optionalCustomer.isEmpty()){
+        if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자입니다.");
         }
         Optional<Product> optionalProduct = productRepository.findById(cartItemRequestDto.getProductId());
-        if (optionalProduct.isEmpty()){
+        if (optionalProduct.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 상품입니다.");
         }
         Product product = optionalProduct.get();
         Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
         Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
-        OrderProductDto orderProductDto = new OrderProductDto(product.getId(),cartItemRequestDto.getQuantity(),discountPrice);
+        OrderProductDto orderProductDto = new OrderProductDto(product.getId(), cartItemRequestDto.getQuantity(), discountPrice);
         return orderProductDto;
     }
+
     // 요청 헤더에 토스에서 제공해준 시크릿 키를 시크릿 키를 Basic Authorization 방식으로 base64를 이용하여 인코딩하여 꼭 보내야함
-    private HttpHeaders getHeaders(){
+    private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         String encodedAuthKey = new String(
                 Base64.getEncoder().encode((tossPaymentConfig.getTestSecreteKey() + ":").getBytes(StandardCharsets.UTF_8)));
@@ -149,22 +154,24 @@ public class OrderService {
 
         String tossPaymentUrl = "https://api.tosspayments.com/v1/payments/" + paymentKey;
         PaymentSuccessDto result = null;
-        try{
-            result = restTemplate.postForObject(tossPaymentUrl ,
+        try {
+            result = restTemplate.postForObject(tossPaymentUrl,
                     new HttpEntity<>(params, headers), PaymentSuccessDto.class);
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
     }
+
     public Payment verifyPayment(String orderId, Integer amount) {
         Payment payment = paymentRepository.findByTransactionId(orderId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제입니다."));
-        if (!payment.getTotalAmount().equals(amount)){
+        if (!payment.getTotalAmount().equals(amount)) {
             throw new IllegalArgumentException("같은 상품 결제가 아닙니다.");
         }
         return payment;
     }
+
     @Transactional
     public PaymentSuccessDto tossPaymentSuccess(String paymentKey, String orderId, Integer amount) {
         Payment payment = verifyPayment(orderId, amount);
@@ -174,28 +181,46 @@ public class OrderService {
         paymentRepository.save(payment);
         // 결제 성공하면 상품에서 물량 수량 빼기
         Optional<Order> orederOptional = orderRepository.findById(payment.getOrder().getOrId());
-        if (orederOptional.isEmpty()){
+        if (orederOptional.isEmpty()) {
             throw new IllegalArgumentException("주문 테이블이 존재 하지 않습니다");
         }
         Order order = orederOptional.get();
         Optional<OrderItem> orderItemOptional = orderItemRepository.findById(order.getOrId());
-        if (orderItemOptional.isEmpty()){
+        if (orderItemOptional.isEmpty()) {
             throw new IllegalArgumentException("주문 아이템이 존재 하지 않습니다");
         }
         OrderItem orderItem = orderItemOptional.get();
         Optional<Product> optionalProduct = productRepository.findById(orderItem.getId());
-        if (optionalProduct.isEmpty()){
+        if (optionalProduct.isEmpty()) {
             throw new IllegalArgumentException("상품이 존재 하지 않습니다");
         }
         Product product = optionalProduct.get();
         product.updateStockQuantity(product.getStockQuantity() - orderItem.getQuantity());
         productRepository.save(product);
+
+        //결제 성공하면 유저 point 1퍼센트 증가
+        Optional<Customer> optionalCustomer = customerRepository.findById(order.getCustomer().getId());
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("사용자가 존재 하지 않습니다.");
+        }
+        Customer customer = optionalCustomer.get();
+        Integer getPoint = payment.getTotalAmount() / 100;
+        customer.buyProductAddPoint(getPoint);
+        customerRepository.save(customer);
+
+        PointHistory pointHistory = PointHistory.builder().
+                type('A').  // ADD
+                amount(getPoint).
+                order(order).
+                customer(customer).
+                build();
+        pointHistoryRepository.save(pointHistory);
         return paymentSuccessDto;
     }
 
     //결제 실패시
     @Transactional
-    public PaymentFailDto tossPaymentFail(String code,String message, String orderId){
+    public PaymentFailDto tossPaymentFail(String code, String message, String orderId) {
         Payment payment = paymentRepository.findByTransactionId(orderId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 결제입니다."));
         payment.failPayment(false);
         payment.insertFailReason(message);

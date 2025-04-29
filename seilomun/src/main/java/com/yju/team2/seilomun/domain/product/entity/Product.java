@@ -94,5 +94,9 @@ public class Product {
 
     public void updateStockQuantity(Integer stockQuantity) {
         this.stockQuantity = stockQuantity;
+        if (this.stockQuantity == 0) {
+            //End의 E
+            this.status = 'E';
+        }
     }
 }
