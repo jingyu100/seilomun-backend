@@ -145,4 +145,12 @@ public class CustomerController {
         ))));
     }
 
+    @GetMapping("/orders")
+    public ResponseEntity<ApiResponseJson> getOrders(
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                "customer", customerService.getOrderList(userDetails.getId())
+        ))));
+    }
+
 }

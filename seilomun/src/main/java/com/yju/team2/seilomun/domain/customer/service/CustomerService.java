@@ -1,12 +1,17 @@
 package com.yju.team2.seilomun.domain.customer.service;
 
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
+import com.yju.team2.seilomun.domain.customer.dto.OrderListResponseDto;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.Favorite;
 import com.yju.team2.seilomun.domain.customer.entity.Wish;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
 import com.yju.team2.seilomun.domain.customer.repository.WishRepository;
+import com.yju.team2.seilomun.domain.order.entity.Order;
+import com.yju.team2.seilomun.domain.order.entity.OrderItem;
+import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
+import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
@@ -42,6 +47,8 @@ public class CustomerService {
     private final ProductRepository productRepository;
     private final FavoriteRepository favoriteRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
@@ -207,6 +214,35 @@ public class CustomerService {
 
     public Customer getUserDetailsByCustomerId(Long id) {
         return customerRepository.findById(id).orElse(null);
+    }
+
+    public List<OrderListResponseDto> getOrderList(Long customerId) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
+        }
+        Customer customer = optionalCustomer.get();
+        List<Order> listOrders = orderRepository.findByCustomer(customer);
+        List<OrderListResponseDto> orderListResponseDtoList = new ArrayList<>();
+        for (Order order : listOrders) {
+            List<String> productNames = new ArrayList<>();
+            List<OrderItem> orderItemList = orderItemRepository.findByOrder(order);
+
+            for (OrderItem orderItem : orderItemList) {
+                productNames.add(orderItem.getProduct().getName());
+            }
+
+            OrderListResponseDto orderListResponseDto = OrderListResponseDto.builder().
+                    orderId(order.getOrId()).
+                    sellerName(order.getSeller().getStoreName()).
+                    totalAmount(order.getTotalAmount()).
+                    photoUrl("Customer_photo_URL"). // photoUrl
+                    orderStatus(order.getOrderStatus()).
+                    orderItems(productNames).
+                    build();
+            orderListResponseDtoList.add(orderListResponseDto);
+        }
+        return orderListResponseDtoList;
     }
 }
 
