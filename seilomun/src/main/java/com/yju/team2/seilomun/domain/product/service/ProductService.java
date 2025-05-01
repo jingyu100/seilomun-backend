@@ -69,46 +69,34 @@ public class ProductService {
 
         //현재 시간이 만료일을 지났는지 확인
         LocalDateTime now = LocalDateTime.now();
+
+        // 만료일이 지나면 최소할인율
         if (now.isAfter(product.getExpiryDate())) {
             return product.getMinDiscountRate();
         }
 
-        long totalDays = Duration.between(now, product.getExpiryDate()).toDays();
-        log.info("유통기한까지 남은 일수 계산 : " + totalDays);
+        long totalPeriod = Duration.between(product.getCreatedAt(), product.getExpiryDate()).toDays();
+        long remainingDays = Duration.between(now, product.getExpiryDate()).toDays();
 
-        if (totalDays < 0)
-            totalDays = 0;
-        if (totalDays <= 3)
+        if (remainingDays < 0)
+            remainingDays = 0;
+        if (totalPeriod <= 0)
             return product.getMaxDiscountRate();
-        else {
-            double discountRate = product.getMinDiscountRate() + (double) (product.getMaxDiscountRate() - product.getMinDiscountRate()) * (1.0 - (double) totalDays / (double) totalDaysInMonth(product.getExpiryDate()));
+        if (totalPeriod <= 3)
+            return product.getMaxDiscountRate();
 
-            discountRate = Math.max(product.getMinDiscountRate(), Math.min(product.getMaxDiscountRate(), discountRate));
+        double ratio = 1.0 - ((double) remainingDays / (double) totalPeriod); // 경과 비율
+        int interpolatedRate = (int) Math.round(
+                product.getMinDiscountRate() +
+                        (product.getMaxDiscountRate() - product.getMinDiscountRate()) * ratio
+        );
 
-            return (int) Math.round(discountRate);
-        }
+        log.info("할인율 계산: 전체기간={}일, 남은기간={}일, 경과비율={}, 할인율={}",
+                totalPeriod, remainingDays, String.format("%.2f", ratio), interpolatedRate);
+
+        return interpolatedRate;
 
     }
-
-    // 유통기한이 있는 달의 마지막 날까지의 총 일수 계산
-    private long totalDaysInMonth(LocalDateTime expiryDate) {
-        log.info("유통기한의 마지막 날 : " + (expiryDate.toLocalDate().lengthOfMonth()));
-        return expiryDate.toLocalDate().lengthOfMonth();
-    }
-    // 30분 마다 할인율 조정
-//    @Scheduled(fixedRate = 30 * 60 * 1000)
-//    @Transactional
-//    public void updateDiscountPrices() {
-//        List<Product> products = productRepository.findAll();
-//        for (Product product : products) {
-//            String currentDiscountRateKey = DISCOUNT_RATE_KEY + product.getId();
-//            String discountPriceKey = DISCOUNT_PRICE_KEY + product.getId();
-//
-//            Integer currentDiscountRate = product.calculateDiscountRate();
-//
-//            redisTemplate.opsForValue().set(currentDiscountRateKey, String.valueOf(currentDiscountRate), CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS);
-//        }
-//    }
 
     // 상품 상세 조회
     public ProductDto getProductById(Long id) {
@@ -194,6 +182,10 @@ public class ProductService {
         // 상품 사진 삭제
         productPhotoRepository.deleteByProduct(product);
 
+        // 레디스 삭제
+        redisTemplate.delete(DISCOUNT_RATE_KEY + id);
+        redisTemplate.delete(DISCOUNT_RATE_KEY + id);
+
         // 상품 삭제
         productRepository.delete(product);
     }
@@ -216,6 +208,13 @@ public class ProductService {
         // ElasticSearch 문서 업데이트
         ProductDocument productDoc = ProductDocument.from(product);
         productSearchRepository.save(productDoc);
+
+
+        String currentDiscountRateKey = DISCOUNT_RATE_KEY + id;
+        String discountPriceKey = DISCOUNT_PRICE_KEY + id;
+
+        redisTemplate.delete(currentDiscountRateKey);
+        redisTemplate.delete(discountPriceKey);
 
         productRepository.save(product);
 

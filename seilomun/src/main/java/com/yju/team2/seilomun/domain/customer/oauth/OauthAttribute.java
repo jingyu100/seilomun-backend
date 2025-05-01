@@ -37,7 +37,7 @@ public class OauthAttribute {
         String birthday = "";
         String email = attributes.get("email").toString();
         String name = attributes.get("name").toString();
-        String nickName = "google_"+providerId;
+        String nickName = "G_"+name + (providerId.hashCode() % 1000);
         String profile = attributes.get("picture").toString();
 
         log.info("구글 Oauth 정보 - 이메일 : {}, 이름 : {} , 프로필 : {}, 생일 : {}", email,name,profile,birthday);
@@ -52,7 +52,7 @@ public class OauthAttribute {
         String providerId = response.get("id").toString();
         String email = (String) response.get("email");
         String name = (String) response.get("name");
-        String nickName = "naver_" + providerId;
+        String nickName = "N_" + name + (providerId.hashCode() % 1000);
         String birthday = (String) response.get("birthday");
         String profile = "";
 
@@ -74,7 +74,7 @@ public class OauthAttribute {
         // 카카오 이메일
         String email = kakaoAccount.get("email").toString();
         // 카카오 닉네임
-        String nickname = "kakao_" + providerId;
+        String nickname = "K_" + name + (providerId.hashCode() % 1000);
         // 카카오 이미지사진
         String profileImage = profile.get("profile_image_url").toString();
 
