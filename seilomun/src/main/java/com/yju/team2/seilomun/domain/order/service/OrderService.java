@@ -16,6 +16,10 @@ import com.yju.team2.seilomun.domain.order.repository.PaymentRepository;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
+import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
+import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
+import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
@@ -28,10 +32,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,8 @@ public class OrderService {
     private final CustomerRepository customerRepository;
     private final ProductService productService;
     private final PointHistoryRepository pointHistoryRepository;
+    private final SellerRepository sellerRepository;
+    private final DeliveryFeeRepository deliveryFeeRepository;
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final SecureRandom RANDOM = new SecureRandom();
     private final PaymentRepository paymentRepository;
@@ -66,7 +69,7 @@ public class OrderService {
         Product product = optionalProduct.get();
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 회원입니다.");
+            throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
         }
         Customer customer = optionalCustomer.get();
 
@@ -77,13 +80,64 @@ public class OrderService {
         do {
             orderName = generateOrderNumber();
         } while (orderRepository.existsByOrderName(orderName));
+
+        Optional<Seller> optionalSeller = sellerRepository.findById(product.getSeller().getId());
+        if (optionalSeller.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 판매자 입니다.");
+        }
+        Seller seller = optionalSeller.get();
+        //배달비 목록
+        List<DeliveryFee> deliveryFees = deliveryFeeRepository.findBySeller(seller);
+        // 상품 구매하는 총 가격과 초기화한 배달비 값 생성
+        Integer productTotalAmount = orderDto.getPrice() * orderDto.getQuantity();
+        Integer deliveryFee = 0;
+        // 배달 선택시 배달비 계산
+        if (orderDto.getIsDelivery().equals('Y')){
+            // 판매자 배달 가능 여부 확인
+            if (seller.getDeliveryAvailable() != 'Y') {
+                throw new IllegalArgumentException("해당 판매자는 배달 서비스를 제공하지 않습니다.");
+            }
+            // 최소 주문 금액 확인
+            if (seller.getMinOrderAmount() != null && productTotalAmount < Integer.parseInt(seller.getMinOrderAmount())) {
+                throw new IllegalArgumentException("배달 최소 주문금액(" + seller.getMinOrderAmount() + "원)에 부합되지 않습니다.");
+            }
+
+            // 배달비 찾기
+            DeliveryFee applicableFee = null;
+            // 오름차순으로 정렬
+            List<DeliveryFee> sortedFees = new ArrayList<>(deliveryFees);
+            sortedFees.sort(Comparator.comparing(DeliveryFee::getOrdersMoney));
+
+            // 주문 금액보다 작거나 같은 가장 큰 ordersMoney 찾기
+            for (int i = sortedFees.size() - 1; i >= 0; i--) {
+                DeliveryFee fee = sortedFees.get(i);
+                if (fee.getOrdersMoney() <= productTotalAmount) {
+                    applicableFee = fee;
+                    break;
+                }
+            }
+
+            if (applicableFee != null) {
+                deliveryFee = applicableFee.getDeliveryTip();
+            } else {
+                // 적용 가능한 구간이 없으면 가장 낮은 구간 적용
+                if (!sortedFees.isEmpty()) {
+                    deliveryFee = sortedFees.get(0).getDeliveryTip();
+                }
+            }
+
+        }
+
+        // 최종 주문 금액에 배달비 추가
+        Integer totalAmount = productTotalAmount + deliveryFee;
+
         Order order = Order.builder().
                 customer(customer).
                 seller(product.getSeller()).
                 orderName(orderName).
                 memo(orderDto.getMemo()).
                 usedPoints(orderDto.getUsedPoints()).
-                totalAmount(orderDto.getPrice() * orderDto.getQuantity()).
+                totalAmount(totalAmount).
                 isDelivery(orderDto.getIsDelivery()).
                 deliveryAddress(orderDto.getDeliveryAddress()).
                 deliveryStatus('N').
@@ -97,17 +151,14 @@ public class OrderService {
                 discountRate(orderDto.getCurrentDiscountRate())
                 .unitPrice(orderDto.getPrice()).build();
         orderItemRepository.save(orderItem);
+        // 주문 가격이랑 포인트를 합산한채로 결제
+        Integer totalAmountMinusPoint = order.getTotalAmount() - order.getUsedPoints();
 
-        if (orderDto.getIsDelivery().equals("Y")) {
-            if (orderDto.getTotalAmount() < Integer.parseInt(order.getSeller().getMinOrderAmount())) {
-                throw new IllegalArgumentException("배달 최소 주문금액에 부합되지 않습니다.");
-            }
-        }
         Payment payment = Payment.builder().
                 paymentMethod(orderDto.getPayType()).
                 transactionId(UUID.randomUUID().toString()).
                 payName(orderDto.getOrderName()).
-                totalAmount(order.getTotalAmount()).
+                totalAmount(totalAmountMinusPoint).
                 order(order).
                 refundStatus("N").
                 paySuccessYN(false).build();

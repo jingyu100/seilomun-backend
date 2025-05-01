@@ -1,13 +1,14 @@
 package com.yju.team2.seilomun.domain.customer.service;
 
 import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
-import com.yju.team2.seilomun.domain.customer.dto.OrderListResponseDto;
+import com.yju.team2.seilomun.domain.customer.dto.*;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.Favorite;
 import com.yju.team2.seilomun.domain.customer.entity.Wish;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
 import com.yju.team2.seilomun.domain.customer.repository.WishRepository;
+import com.yju.team2.seilomun.domain.order.dto.OrderItemDto;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.order.entity.OrderItem;
 import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
@@ -19,9 +20,6 @@ import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
-import com.yju.team2.seilomun.domain.customer.dto.CustomerRegisterDto;
-import com.yju.team2.seilomun.domain.customer.dto.FavoriteSellerDto;
-import com.yju.team2.seilomun.domain.customer.dto.WishProductDto;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -216,6 +214,7 @@ public class CustomerService {
         return customerRepository.findById(id).orElse(null);
     }
 
+    // 주문 목록 보기
     public List<OrderListResponseDto> getOrderList(Long customerId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
@@ -236,13 +235,58 @@ public class CustomerService {
                     orderId(order.getOrId()).
                     sellerName(order.getSeller().getStoreName()).
                     totalAmount(order.getTotalAmount()).
-                    photoUrl("Customer_photo_URL"). // photoUrl
+                    photoUrl("seller_photo_URL"). // photoUrl
                     orderStatus(order.getOrderStatus()).
                     orderItems(productNames).
                     build();
             orderListResponseDtoList.add(orderListResponseDto);
         }
         return orderListResponseDtoList;
+    }
+    
+    // 상세 주문 보기
+    public OrderDetailResponseDto getOrderDetail(Long customerId,Long orderId) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
+        }
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 주문 입니다.");
+        }
+        Order order = optionalOrder.get();
+        List<OrderItem> orderItemList = orderItemRepository.findByOrder(order);
+        // 상품 정보 가져오기
+        List<OrderItemDto> orderItemDtos = new ArrayList<>();
+        for (OrderItem item : orderItemList) {
+            Product product = item.getProduct();
+            String photoUrl = null;
+            List<ProductPhoto> photos = productPhotoRepository.findByProduct(product);
+
+            if (!photos.isEmpty()) {
+                photoUrl = photos.get(0).getPhotoUrl();
+            }
+            
+            OrderItemDto dto = OrderItemDto.builder()
+                    .productName(product.getName())
+                    .expiryDate(product.getExpiryDate())
+                    .quantity(item.getQuantity())
+                    .unitPrice(item.getUnitPrice())
+                    .discountRate(item.getDiscountRate())
+                    .photoUrl(photoUrl)
+                    .build();
+            orderItemDtos.add(dto);
+        }
+        return OrderDetailResponseDto.builder().
+                storeName(order.getSeller().getStoreName()).
+                orderDate(order.getCreatedAt()).
+                orderName(order.getOrderName()).
+                orderItems(orderItemDtos).
+                totalAmount(order.getTotalAmount()).
+                usedPoint(order.getUsedPoints()).
+                address(order.getDeliveryAddress()).
+                deliveryRequest(order.getMemo()).
+                build();
     }
 }
 

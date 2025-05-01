@@ -144,12 +144,22 @@ public class CustomerController {
                 "customer", customer
         ))));
     }
-
+    // 주문목록 보기
     @GetMapping("/orders")
     public ResponseEntity<ApiResponseJson> getOrders(
             @AuthenticationPrincipal JwtUserDetails userDetails) {
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "customer", customerService.getOrderList(userDetails.getId())
+                "주문 목록", customerService.getOrderList(userDetails.getId())
+        ))));
+    }
+    
+    // 주문 상세 보기
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<ApiResponseJson> getOrdersDetails(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @PathVariable Long orderId) {
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                "주문 상세 보기", customerService.getOrderDetail(userDetails.getId(), orderId)
         ))));
     }
 
