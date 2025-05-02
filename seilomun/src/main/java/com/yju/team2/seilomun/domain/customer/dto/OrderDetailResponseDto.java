@@ -21,6 +21,7 @@ public class OrderDetailResponseDto {
     List<OrderItemDto> orderItems;
     Integer totalAmount;
     Integer usedPoint;
+    Integer deliveryFee;
     String address;
     // 배달 요청
     String deliveryRequest;
