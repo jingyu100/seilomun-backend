@@ -57,12 +57,16 @@ public class Customer {
     @Column(name = "status", nullable = false, length = 1)
     private Character status;
 
+    @Column(name = "type", nullable = false)
+    private Character type;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default

@@ -70,6 +70,7 @@ public class CustomerService {
                 .birthDate(customerRegisterDto.getBirthdate())
                 .gender(customerRegisterDto.getGender())
                 .profileImageUrl("default.png")
+                .type('L')
                 .points(0)
                 .status('0')
                 .deletedAt(null)
@@ -285,6 +286,7 @@ public class CustomerService {
                 totalAmount(order.getTotalAmount()).
                 usedPoint(order.getUsedPoints()).
                 address(order.getDeliveryAddress()).
+                deliveryFee(order.getDeliveryFee()).
                 deliveryRequest(order.getMemo()).
                 build();
     }

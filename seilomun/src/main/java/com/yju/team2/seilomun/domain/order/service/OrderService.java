@@ -141,6 +141,7 @@ public class OrderService {
                 isDelivery(orderDto.getIsDelivery()).
                 deliveryAddress(orderDto.getDeliveryAddress()).
                 deliveryStatus('N').
+                deliveryFee(deliveryFee).
                 isReivewed('N').
                 orderStatus('N').build();
         orderRepository.save(order);

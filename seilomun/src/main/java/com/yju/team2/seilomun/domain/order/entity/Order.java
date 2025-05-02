@@ -50,6 +50,9 @@ public class Order {
     @Column(name = "order_status",nullable = false)
     private Character orderStatus;
 
+    @Column(name = "delivery_fee")
+    private Integer deliveryFee;
+
     @CreationTimestamp
     @Column(name = "created_at",nullable = false)
     private LocalDateTime createdAt;
