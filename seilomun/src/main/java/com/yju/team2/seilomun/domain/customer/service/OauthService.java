@@ -58,6 +58,7 @@ public class OauthService {
                     .gender('U')
                     .points(0)
                     .status('0')
+                    .type('U')
                     .deletedAt(null)
                     .build();
             log.info("신규 회원 저장 - email: {}, nickname: {}, profileImage: {}",
