@@ -1,14 +1,11 @@
 package com.yju.team2.seilomun.domain.review.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
-@Setter
+@Builder
 @Table(name = "review_photos")
 @NoArgsConstructor
 @AllArgsConstructor

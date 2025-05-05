@@ -132,4 +132,9 @@ public class Seller {
         this.phone = sellerInformationDto.getPhone();
         this.pickupTime = sellerInformationDto.getPickupTime();
     }
+    
+    // 별점 업데이트용
+    public void updateRating(Float rating) {
+        this.rating = rating;
+    }
 }

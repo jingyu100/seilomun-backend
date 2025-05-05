@@ -2,19 +2,19 @@ package com.yju.team2.seilomun.domain.review.entity;
 
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "reviews")
 public class Review {
 
@@ -30,7 +30,12 @@ public class Review {
     private String content;
 
     @Column(name = "created_at",nullable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ReviewPhoto> reviewPhotos = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "or_id")

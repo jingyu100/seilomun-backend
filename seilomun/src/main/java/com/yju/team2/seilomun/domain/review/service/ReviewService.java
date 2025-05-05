@@ -1,0 +1,85 @@
+package com.yju.team2.seilomun.domain.review.service;
+
+import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
+import com.yju.team2.seilomun.domain.order.entity.Order;
+import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
+import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
+import com.yju.team2.seilomun.domain.review.entity.Review;
+import com.yju.team2.seilomun.domain.review.entity.ReviewPhoto;
+import com.yju.team2.seilomun.domain.review.repository.ReviewPhotoRepository;
+import com.yju.team2.seilomun.domain.review.repository.ReviewRepository;
+import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Slf4j
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class ReviewService {
+    private final ReviewRepository reviewRepository;
+    private final CustomerRepository customerRepository;
+    private final SellerRepository sellerRepository;
+    private final OrderRepository orderRepository;
+    private final ReviewPhotoRepository reviewPhotoRepository;
+
+    @Transactional
+    public ReviewRequestDto postReview(Long customerId,Long orderId ,ReviewRequestDto reviewRequestDto) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+        }
+        Customer customer = optionalCustomer.get();
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 주문 입니다.");
+        }
+        Order order = optionalOrder.get();
+        if (!order.getCustomer().getId().equals(customer.getId())) {
+            throw new IllegalArgumentException("해당 주문에 접근 권한이 없습니다.");
+        }
+        // 리뷰 생성
+        Review review = Review.builder().
+                content(reviewRequestDto.getReviewContent()).
+                rating(reviewRequestDto.getRating()).
+                order(order).
+                build();
+        reviewRepository.save(review);
+        // 리뷰 사진 등록
+        if (reviewRequestDto.getReviewPhotos() != null && !reviewRequestDto.getReviewPhotos().isEmpty()) {
+            reviewRequestDto.getReviewPhotos().forEach(url -> {
+                reviewPhotoRepository.save(ReviewPhoto.builder()
+                        .review(review)
+                        .photo_url(url)
+                        .build());
+            });
+        }
+        // 별점 계산
+        Seller seller = order.getSeller();
+        List<Review> sellerReviews = reviewRepository.findAllByOrder_SellerId(seller.getId());
+
+        float totalRating = 0f;
+        for (Review sellerReview : sellerReviews) {
+            totalRating += sellerReview.getRating();
+        }
+        float averageRating;
+        if (sellerReviews.isEmpty()) {
+            averageRating = 0f;
+        } else {
+            averageRating = totalRating / sellerReviews.size();
+            // 소수점 첫째 자리까지 반올림
+            averageRating = Math.round(averageRating * 10) / 10.0f;
+        }
+        seller.updateRating(averageRating);
+        return reviewRequestDto;
+    }
+
+
+}
