@@ -1,13 +1,14 @@
 package com.yju.team2.seilomun.domain.customer.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.customer.dto.CustomerRegisterDto;
+import com.yju.team2.seilomun.domain.customer.dto.*;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.service.CustomerService;
 import com.yju.team2.seilomun.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -134,6 +135,42 @@ public class CustomerController {
     public ResponseEntity<ApiResponseJson> getCustomer(@AuthenticationPrincipal JwtUserDetails userDetails) {
         String username = userDetails.getUsername();
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of("username", username))));
+    }
+    
+    //소비자 정보 조회
+    @GetMapping("/mypage")
+    public ResponseEntity<ApiResponseJson> getCustomerPage(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        LocalUserViewDto customer = customerService.getLocalUserDto(userDetails.getId());
+
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+            "customer", customer
+        ))));
+    }
+
+    //소비자 정보 수정
+    @PutMapping("/mypage/local")
+    public ResponseEntity<ApiResponseJson> updateLocalCustomer(@AuthenticationPrincipal JwtUserDetails userDetails,
+                                                               @RequestBody @Valid LocalUserUpdateRequest request) {
+        Long id = userDetails.getId();
+        log.info("사용자의 정보 : {}",request.toString());
+        customerService.localUserUpdateDto(id,request.getUpdateDto(),request.getPasswordChangeDto());
+
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+             "Message","사용자 정보가 수정되었습니다."
+        ))));
+    }
+
+    //소비자 정보 수정
+    @PutMapping("/mypage/social")
+    public ResponseEntity<ApiResponseJson> updateSocialCustomer(@AuthenticationPrincipal JwtUserDetails userDetails,
+                                                                 @RequestBody @Valid SocialUserUpdateDto updateDto) {
+
+        Long customerId = userDetails.getId();
+        customerService.socialUserUpdateDto(customerId,updateDto);
+
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                "Message","사용자 정보가 수정되었습니다."
+        ))));
     }
 
     // 소비자 정보 수정

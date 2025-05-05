@@ -1,6 +1,9 @@
 package com.yju.team2.seilomun.domain.customer.entity;
 
+import com.yju.team2.seilomun.domain.customer.dto.LocalUserUpdateDto;
+import com.yju.team2.seilomun.domain.customer.dto.SocialUserUpdateDto;
 import com.yju.team2.seilomun.domain.order.entity.Order;
+import com.yju.team2.seilomun.validation.PasswordValidator;
 import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -86,5 +89,25 @@ public class Customer {
 
     public void buyProductAddPoint(Integer point) {
         this.points += point;
+    }
+
+    public void UpdateLocalCustomer(LocalUserUpdateDto dto,String newPassword) {
+        this.email = dto.getEmail();
+        this.name = dto.getName();
+        this.phone = dto.getPhone();
+        this.nickname = dto.getNickname();
+        this.birthDate = dto.getBirthDate();
+        this.gender = dto.getGender();
+        this.profileImageUrl = dto.getProfileImageUrl();
+        this.password = newPassword;
+    }
+
+    public void UpdateSocialCustomer(SocialUserUpdateDto dto) {
+        this.name = dto.getName();
+        this.phone = dto.getPhone();
+        this.nickname = dto.getNickname();
+        this.birthDate = dto.getBirthDate();
+        this.gender = dto.getGender();
+        this.profileImageUrl = dto.getProfileImageUrl();
     }
 }

@@ -43,7 +43,7 @@ public class SecurityConfig {
                                 "/api/customers/login",
                                 "/api/auth/login",
                                 "/api/sellers",
-                                "/api/customers",
+                                "/api/customers/*",
                                 "/refresh-token",
                                 "/api/auth/logout",
                                 "/h2-console/**",

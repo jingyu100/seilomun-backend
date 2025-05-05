@@ -21,9 +21,11 @@ import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.util.JwtUtil;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -237,16 +239,16 @@ public class CustomerService {
                     sellerName(order.getSeller().getStoreName()).
                     totalAmount(order.getTotalAmount()).
                     photoUrl("seller_photo_URL"). // photoUrl
-                    orderStatus(order.getOrderStatus()).
+                            orderStatus(order.getOrderStatus()).
                     orderItems(productNames).
                     build();
             orderListResponseDtoList.add(orderListResponseDto);
         }
         return orderListResponseDtoList;
     }
-    
+
     // 상세 주문 보기
-    public OrderDetailResponseDto getOrderDetail(Long customerId,Long orderId) {
+    public OrderDetailResponseDto getOrderDetail(Long customerId, Long orderId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
@@ -267,7 +269,7 @@ public class CustomerService {
             if (!photos.isEmpty()) {
                 photoUrl = photos.get(0).getPhotoUrl();
             }
-            
+
             OrderItemDto dto = OrderItemDto.builder()
                     .productName(product.getName())
                     .expiryDate(product.getExpiryDate())
@@ -289,6 +291,77 @@ public class CustomerService {
                 deliveryFee(order.getDeliveryFee()).
                 deliveryRequest(order.getMemo()).
                 build();
+    }
+
+    // 소비자 정보 조회
+    public LocalUserViewDto getLocalUserDto(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
+        return LocalUserViewDto.from(customer);
+    }
+
+    // 로컬 소비자 정보 수정
+    public void localUserUpdateDto(Long customerId, LocalUserUpdateDto updateDto, PasswordChangeDto passwordChangeDto) {
+        if(updateDto == null) {
+            throw new IllegalArgumentException("사용자 정보가 제공되지 않았습니다");
+        }
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+        if (customerRepository.existsByEmail(updateDto.getEmail())) {
+            log.info("이미 존재하는 이메일입니다.");
+            throw new IllegalArgumentException("이미 등록된 이메일입니다.");
+        }
+
+        if (customerRepository.existsByNickname(updateDto.getNickname())) {
+            log.info("이미 존재하는 닉네임입니다.");
+            throw new IllegalArgumentException("이미 등록된 닉네임입니다.");
+        }
+
+        System.out.println("newPassword : " + passwordChangeDto.getNewPassword());
+        System.out.println("confirmPassword : " + passwordChangeDto.getConfirmPassword());
+        // 현재 비밀번호 검증
+        if(!passwordEncoder.matches(passwordChangeDto.getCurrentPassword(), customer.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 현재 비밀번호와 새로운 비밀번호 검증
+        if(passwordChangeDto.isValidPassword()) {
+            throw new IllegalArgumentException("현재 비밀번호와 일치하므로 변경 바랍니다.");
+        }
+
+        // 새로운 비밀번호 검증
+        if(!passwordChangeDto.isNewPasswordValid()) {
+            throw new IllegalArgumentException("새로운 비밀번호와 비밀번호 확인이 일치하지 않습니다");
+        }
+
+        checkPasswordStrength(passwordChangeDto.getNewPassword());
+        String newPassword = passwordEncoder.encode(passwordChangeDto.getNewPassword());
+
+        customer.UpdateLocalCustomer(updateDto,newPassword);
+
+        customerRepository.save(customer);
+    }
+    
+    // 소셜 소비자 정보 수정
+    public void socialUserUpdateDto(Long customerId, SocialUserUpdateDto updateDto) {
+        if(updateDto == null) {
+            throw new IllegalArgumentException("사용자 정보가 제공되지 않았습니다");
+        }
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
+
+        if(customerRepository.existsByNickname(updateDto.getNickname())) {
+            log.info("이미 존재하는 닉네임입니다.");
+            throw new IllegalArgumentException("이미 등록된 닉네임입니다.");
+        }
+
+        customer.UpdateSocialCustomer(updateDto);
+
+        customerRepository.save(customer);
     }
 }
 
