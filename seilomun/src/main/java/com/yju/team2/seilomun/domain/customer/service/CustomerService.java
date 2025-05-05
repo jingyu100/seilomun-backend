@@ -1,6 +1,6 @@
 package com.yju.team2.seilomun.domain.customer.service;
 
-import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
+import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.dto.*;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.Favorite;

@@ -39,8 +39,6 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/sellers/login",
-                                "/api/customers/login",
                                 "/api/auth/login",
                                 "/api/sellers",
                                 "/api/customers",
@@ -58,6 +56,8 @@ public class SecurityConfig {
                                 "/login/**", // 인가코드 처리
                                 "/oauth2/authorization/**",//네이버로그인
                                 "/login/oauth2/code/**",
+                                "/api/auth/email",
+                                "/api/auth/verifyEmail",
                                 "/api/orders/buy",
                                 "/api/orders/test/buy",
                                 "/api/orders/toss/success",  // Toss 결제 성공 콜백

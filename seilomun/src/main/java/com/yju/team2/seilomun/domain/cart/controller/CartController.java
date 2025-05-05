@@ -1,6 +1,6 @@
 package com.yju.team2.seilomun.domain.cart.controller;
 
-import com.yju.team2.seilomun.domain.auth.CartItemRequestDto;
+import com.yju.team2.seilomun.domain.auth.dto.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.cart.service.CartService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;

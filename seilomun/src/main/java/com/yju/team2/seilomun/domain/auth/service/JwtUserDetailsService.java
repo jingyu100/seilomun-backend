@@ -1,5 +1,6 @@
-package com.yju.team2.seilomun.domain.auth;
+package com.yju.team2.seilomun.domain.auth.service;
 
+import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;

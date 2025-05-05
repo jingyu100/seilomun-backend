@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.domain.auth;
+package com.yju.team2.seilomun.domain.auth.service;
 
 import com.yju.team2.seilomun.util.JwtUtil;
 import lombok.RequiredArgsConstructor;

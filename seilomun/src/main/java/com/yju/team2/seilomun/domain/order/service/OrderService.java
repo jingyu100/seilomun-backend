@@ -1,7 +1,7 @@
 package com.yju.team2.seilomun.domain.order.service;
 
 import com.yju.team2.seilomun.config.TossPaymentConfig;
-import com.yju.team2.seilomun.domain.auth.CartItemRequestDto;
+import com.yju.team2.seilomun.domain.auth.dto.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.PointHistory;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
