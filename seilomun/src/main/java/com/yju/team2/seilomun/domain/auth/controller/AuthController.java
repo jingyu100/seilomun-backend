@@ -1,9 +1,12 @@
 package com.yju.team2.seilomun.domain.auth.controller;
 
-import com.yju.team2.seilomun.domain.auth.AuthService;
+import com.yju.team2.seilomun.domain.auth.dto.EmailVerificationCodeDto;
+import com.yju.team2.seilomun.domain.auth.dto.EmailVerificationRequestDto;
+import com.yju.team2.seilomun.domain.auth.service.AuthService;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.auth.LoginRequestDto;
-import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
+import com.yju.team2.seilomun.domain.auth.dto.LoginRequestDto;
+import com.yju.team2.seilomun.domain.auth.service.MailService;
+import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.dto.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.dto.RefreshTokenRequestDto;
 import com.yju.team2.seilomun.util.CookieUtil;
@@ -32,6 +35,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final AuthService authService;
+    private final MailService mailService;
 
     private static final String TOKEN_MISMATCH_ERROR = "사용자 유형이 일치하지 않습니다.";
     private static final String INVALID_TOKEN_ERROR = "리프레시 토큰이 유효하지 않거나 만료되었습니다.";
@@ -160,6 +164,56 @@ public class AuthController {
             )));
         }
         return createErrorResponse(HttpStatus.UNAUTHORIZED, "인증되지 않은 요청입니다");
+    }
+
+    @PostMapping("/email")
+    public ResponseEntity<ApiResponseJson> sendVerificationEmail(@Valid @RequestBody EmailVerificationRequestDto requestDto,
+                                                                 BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    bindingResult.getFieldError().getDefaultMessage()
+            );
+        }
+
+        try {
+            // 사용자 이메일로 인증 메일 발송
+            mailService.sendAuthMail(requestDto.getEmail());
+
+            return ResponseEntity.ok()
+                    .body(new ApiResponseJson(HttpStatus.OK, Map.of(
+                            "message", "인증 메일이 발송되었습니다",
+                            "email", requestDto.getEmail()
+                    )));
+        } catch (Exception e) {
+            log.error("이메일 인증 코드 발송 중 오류 발생: {}", e.getMessage(), e);
+            return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "이메일 발송 중 오류가 발생했습니다");
+        }
+    }
+
+    @PostMapping("/verifyEmail")
+    public ResponseEntity<ApiResponseJson> verifyEmail(@Valid @RequestBody EmailVerificationCodeDto requestDto,
+                                                        BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    bindingResult.getFieldError().getDefaultMessage()
+            );
+        }
+
+        boolean isVerified = mailService.verifyEmailAuth(
+                requestDto.getEmail(),
+                requestDto.getAuthNumber());
+
+        if (isVerified) {
+            return ResponseEntity.ok()
+                    .body(new ApiResponseJson(HttpStatus.OK, Map.of(
+                            "message", "이메일 인증이 완료되었습니다",
+                            "verified", true
+                    )));
+        } else {
+            return createErrorResponse(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않거나 만료되었습니다");
+        }
     }
 
     // 오류 응답 생성

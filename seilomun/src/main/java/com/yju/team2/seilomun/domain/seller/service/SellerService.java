@@ -1,6 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.service;
 
-import com.yju.team2.seilomun.domain.auth.RefreshTokenService;
+import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerCategoryRepository;

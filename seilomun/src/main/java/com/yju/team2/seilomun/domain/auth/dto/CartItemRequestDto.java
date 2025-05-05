@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.domain.auth;
+package com.yju.team2.seilomun.domain.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
