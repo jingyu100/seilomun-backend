@@ -1,6 +1,5 @@
-package com.yju.team2.seilomun.dto;
+package com.yju.team2.seilomun.common;
 
-import com.yju.team2.seilomun.common.ResponseStatusCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;

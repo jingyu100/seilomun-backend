@@ -3,7 +3,7 @@ package com.yju.team2.seilomun.domain.review.controller;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
 import com.yju.team2.seilomun.domain.review.service.ReviewService;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

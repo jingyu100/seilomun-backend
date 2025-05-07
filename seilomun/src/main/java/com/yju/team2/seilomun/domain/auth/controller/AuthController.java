@@ -7,7 +7,7 @@ import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.auth.dto.LoginRequestDto;
 import com.yju.team2.seilomun.domain.auth.service.MailService;
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.dto.RefreshTokenRequestDto;
 import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;

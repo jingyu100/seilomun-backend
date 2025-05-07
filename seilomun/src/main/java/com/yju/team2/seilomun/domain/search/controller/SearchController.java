@@ -5,7 +5,7 @@ import com.yju.team2.seilomun.domain.search.dto.AutoCompleteResponseDto;
 import com.yju.team2.seilomun.domain.search.dto.PopularKeywordDto;
 import com.yju.team2.seilomun.domain.search.dto.SearchHistoryDto;
 import com.yju.team2.seilomun.domain.search.service.SearchService;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

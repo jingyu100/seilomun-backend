@@ -1,11 +1,11 @@
 package com.yju.team2.seilomun.domain.seller.controller;
 
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
 import com.yju.team2.seilomun.domain.seller.dto.SellerRegisterDto;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
-import com.yju.team2.seilomun.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

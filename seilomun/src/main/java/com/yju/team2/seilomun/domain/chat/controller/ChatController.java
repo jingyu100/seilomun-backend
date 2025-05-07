@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.chat.service.ChatService;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.common.ApiResponseJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

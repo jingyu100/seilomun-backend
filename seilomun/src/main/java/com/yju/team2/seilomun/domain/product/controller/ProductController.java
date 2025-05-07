@@ -3,7 +3,7 @@ package com.yju.team2.seilomun.domain.product.controller;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
-import com.yju.team2.seilomun.dto.ApiResponseJson;
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.product.dto.ProductDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
