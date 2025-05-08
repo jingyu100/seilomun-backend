@@ -4,11 +4,14 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
+import com.yju.team2.seilomun.domain.review.dto.ReviewCommentRequestDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewPaginationDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewResponseDto;
 import com.yju.team2.seilomun.domain.review.entity.Review;
+import com.yju.team2.seilomun.domain.review.entity.ReviewComment;
 import com.yju.team2.seilomun.domain.review.entity.ReviewPhoto;
+import com.yju.team2.seilomun.domain.review.repository.ReviewCommentRepository;
 import com.yju.team2.seilomun.domain.review.repository.ReviewPhotoRepository;
 import com.yju.team2.seilomun.domain.review.repository.ReviewRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
@@ -36,6 +39,8 @@ public class ReviewService {
     private final SellerRepository sellerRepository;
     private final OrderRepository orderRepository;
     private final ReviewPhotoRepository reviewPhotoRepository;
+    private final ReviewCommentRepository commentRepository;
+    private final ReviewCommentRepository reviewCommentRepository;
 
     @Transactional
     public ReviewRequestDto postReview(Long customerId,Long orderId ,ReviewRequestDto reviewRequestDto) {
@@ -109,5 +114,29 @@ public class ReviewService {
                 .hasNext(reviewPage.hasNext())
                 .totalElements(reviewPage.getTotalElements())
                 .build();
+    }
+
+    @Transactional
+    public ReviewCommentRequestDto postComment(Long sellerID, Long reviewId, ReviewCommentRequestDto reviewCommentRequestDto) {
+        Optional<Seller> optionalSeller = sellerRepository.findById(sellerID);
+        if (optionalSeller.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 판매자 입니다.");
+        }
+        Seller seller = optionalSeller.get();
+        Optional<Review> optionalReview = reviewRepository.findById(reviewId);
+        if (optionalReview.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 리뷰 입니다.");
+        }
+        Review review = optionalReview.get();
+        if (!review.getOrder().getSeller().getId().equals(seller.getId())) {
+            throw new IllegalArgumentException("해당 리뷰에 접근 권한이 없습니다.");
+        }
+        ReviewComment reviewComment = ReviewComment.builder().
+                content(reviewCommentRequestDto.getReviewComment()).
+                review(review).
+                seller(seller).
+                build();
+        reviewCommentRepository.save(reviewComment);
+        return reviewCommentRequestDto;
     }
 }

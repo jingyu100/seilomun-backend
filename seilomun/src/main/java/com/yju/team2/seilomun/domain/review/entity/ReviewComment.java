@@ -2,17 +2,14 @@ package com.yju.team2.seilomun.domain.review.entity;
 
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "review_comments")
