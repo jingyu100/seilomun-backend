@@ -1,29 +1,26 @@
 package com.yju.team2.seilomun.domain.auth.controller;
 
-import com.yju.team2.seilomun.domain.auth.dto.EmailVerificationCodeDto;
-import com.yju.team2.seilomun.domain.auth.dto.EmailVerificationRequestDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yju.team2.seilomun.domain.auth.dto.*;
 import com.yju.team2.seilomun.domain.auth.service.AuthService;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.auth.dto.LoginRequestDto;
+import com.yju.team2.seilomun.domain.auth.service.BusinessVerificationService;
 import com.yju.team2.seilomun.domain.auth.service.MailService;
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.common.ApiResponseJson;
-import com.yju.team2.seilomun.domain.auth.dto.RefreshTokenRequestDto;
 import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.web.client.RestTemplate;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +33,7 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final AuthService authService;
     private final MailService mailService;
+    private final BusinessVerificationService businessVerificationService;
 
     private static final String TOKEN_MISMATCH_ERROR = "사용자 유형이 일치하지 않습니다.";
     private static final String INVALID_TOKEN_ERROR = "리프레시 토큰이 유효하지 않거나 만료되었습니다.";
@@ -193,7 +191,7 @@ public class AuthController {
 
     @PostMapping("/verifyEmail")
     public ResponseEntity<ApiResponseJson> verifyEmail(@Valid @RequestBody EmailVerificationCodeDto requestDto,
-                                                        BindingResult bindingResult) {
+                                                       BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return createErrorResponse(
                     HttpStatus.BAD_REQUEST,
@@ -214,6 +212,19 @@ public class AuthController {
         } else {
             return createErrorResponse(HttpStatus.BAD_REQUEST, "인증번호가 일치하지 않거나 만료되었습니다");
         }
+    }
+
+    @PostMapping("/businessVerification")
+    public ResponseEntity<ApiResponseJson> verifyBusiness(@RequestBody BusinessVerificationRequestDto requestDto) {
+        // 서비스를 통해 사업자 검증 수행
+        Map<String, Object> resultMap = businessVerificationService.verifyBusiness(requestDto);
+
+        // 응답 상태 코드 추출
+        HttpStatus status = (HttpStatus) resultMap.remove("status");
+
+        // 에러가 없는 경우
+        return ResponseEntity.status(status)
+                .body(new ApiResponseJson(status, resultMap));
     }
 
     // 오류 응답 생성
