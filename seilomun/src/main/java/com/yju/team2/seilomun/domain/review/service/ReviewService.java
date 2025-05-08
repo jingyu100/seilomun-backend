@@ -4,7 +4,9 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
+import com.yju.team2.seilomun.domain.review.dto.ReviewPaginationDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
+import com.yju.team2.seilomun.domain.review.dto.ReviewResponseDto;
 import com.yju.team2.seilomun.domain.review.entity.Review;
 import com.yju.team2.seilomun.domain.review.entity.ReviewPhoto;
 import com.yju.team2.seilomun.domain.review.repository.ReviewPhotoRepository;
@@ -14,8 +16,13 @@ import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,5 +88,26 @@ public class ReviewService {
         return reviewRequestDto;
     }
 
+    // 리뷰 조회하기
+    public ReviewPaginationDto getReviews(Long sellerId, int page, int size) {
+        Optional<Seller> optionalSeller = sellerRepository.findById(sellerId);
+        if (optionalSeller.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 판매자 입니다.");
+        }
+        Seller seller = optionalSeller.get();
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Review> reviewPage = reviewRepository.findAllBySellerIdWithPagination(sellerId, pageable);
+
+        List<ReviewResponseDto> reviewResponseDtos = new ArrayList<>();
+        for (Review review : reviewPage.getContent()) {
+            reviewResponseDtos.add(ReviewResponseDto.fromEntity(review));
+        }
+
+        return ReviewPaginationDto.builder()
+                .reviews(reviewResponseDtos)
+                .hasNext(reviewPage.hasNext())
+                .totalElements(reviewPage.getTotalElements())
+                .build();
+    }
 }

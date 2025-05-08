@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.review.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.review.dto.ReviewPaginationDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
 import com.yju.team2.seilomun.domain.review.service.ReviewService;
 import com.yju.team2.seilomun.common.ApiResponseJson;
@@ -28,6 +29,18 @@ public class ReviewController {
             @RequestBody @Valid ReviewRequestDto reviewRequestDto) {
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
                 "리뷰 작성 완료", reviewService.postReview(userDetails.getId(), orderId, reviewRequestDto)
+        ))));
+    }
+    
+    //리뷰 불러오기
+    @GetMapping("/{sellerId}")
+    public ResponseEntity<ApiResponseJson> getReview(
+            @PathVariable Long sellerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        ReviewPaginationDto reviews = reviewService.getReviews(sellerId, page, size);
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                "리뷰 조회" , reviews
         ))));
     }
 }
