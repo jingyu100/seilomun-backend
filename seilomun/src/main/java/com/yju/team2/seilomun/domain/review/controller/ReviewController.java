@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.review.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.review.dto.ReviewCommentRequestDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewPaginationDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
 import com.yju.team2.seilomun.domain.review.service.ReviewService;
@@ -42,5 +43,20 @@ public class ReviewController {
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
                 "리뷰 조회" , reviews
         ))));
+    }
+
+    //사장님 리뷰 답글
+    @PostMapping("/comment/{reviewId}")
+    public ResponseEntity<ApiResponseJson> addComment(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @PathVariable Long reviewId,
+            @RequestBody ReviewCommentRequestDto reviewCommentRequestDto){
+        if (userDetails.isSeller()){
+            return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "댓글 작성" , reviewService.postComment(userDetails.getId(), reviewId, reviewCommentRequestDto)
+            ))));
+        } else {
+            return ResponseEntity.ok((new ApiResponseJson(HttpStatus.FORBIDDEN, Map.of())));
+        }
     }
 }
