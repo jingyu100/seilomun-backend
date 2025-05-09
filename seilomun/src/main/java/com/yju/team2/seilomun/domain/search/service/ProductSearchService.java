@@ -1,9 +1,9 @@
-package com.yju.team2.seilomun.domain.product.service;
+package com.yju.team2.seilomun.domain.search.service;
 
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
-import com.yju.team2.seilomun.domain.product.enums.ProductFilterType;
-import com.yju.team2.seilomun.domain.product.enums.ProductSortType;
-import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
+import com.yju.team2.seilomun.domain.search.enums.ProductFilterType;
+import com.yju.team2.seilomun.domain.search.enums.ProductSortType;
+import com.yju.team2.seilomun.domain.search.repository.ProductSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +32,7 @@ public class ProductSearchService {
     private final ElasticsearchOperations elasticsearchOperations;
 
     // 키워드 + 필터링 + 정렬 + 페이징
-    public Page<ProductDocument> advancedSearch(String keyword, ProductFilterType filterType,
+    public Page<ProductDocument> searchProducts(String keyword, ProductFilterType filterType,
                                                 ProductSortType sortType, int page, int size) {
         // 기본 검색 조건 생성
         Criteria criteria = new Criteria();
@@ -102,6 +102,16 @@ public class ProductSearchService {
 
         // Page 객체로 변환하여 반환
         return new PageImpl<>(productDocuments, pageable, searchHits.getTotalHits());
+    }
+
+    // 상품 정보를 Elasticsearch에 인덱싱
+    public void indexProductDocument(ProductDocument productDocument) {
+        productSearchRepository.save(productDocument);
+    }
+
+    // 상품 정보를 Elasticsearch에서 삭제
+    public void deleteProductDocument(String productId) {
+        productSearchRepository.deleteById(productId);
     }
 
 }

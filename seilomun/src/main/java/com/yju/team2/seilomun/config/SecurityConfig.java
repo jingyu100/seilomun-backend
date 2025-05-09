@@ -41,8 +41,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/businessVerification",
                                 "/api/auth/login",
-                                "/api/sellers",
-                                "/api/customers/*",
+                                "/api/sellers/**",
+                                "/api/customers/**",
                                 "/refresh-token",
                                 "/api/auth/logout",
                                 "/h2-console/**",

@@ -97,4 +97,8 @@ public class Product {
             this.status = 'E';
         }
     }
+
+    public void updateStatus(Character status) {
+        this.status = status;
+    }
 }

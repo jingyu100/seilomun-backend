@@ -1,9 +1,9 @@
-package com.yju.team2.seilomun.domain.product.controller;
+package com.yju.team2.seilomun.domain.search.controller;
 
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
-import com.yju.team2.seilomun.domain.product.enums.ProductFilterType;
-import com.yju.team2.seilomun.domain.product.enums.ProductSortType;
-import com.yju.team2.seilomun.domain.product.service.ProductSearchService;
+import com.yju.team2.seilomun.domain.search.enums.ProductFilterType;
+import com.yju.team2.seilomun.domain.search.enums.ProductSortType;
+import com.yju.team2.seilomun.domain.search.service.ProductSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public class ProductSearchController {
                                                                 @RequestParam(required = false, defaultValue = "LATEST") ProductSortType sortType,
                                                                 @RequestParam(required = false, defaultValue = "0") int page,
                                                                 @RequestParam(required = false, defaultValue = "10") int size) {
-        Page<ProductDocument> results = productSearchService.advancedSearch(keyword, filterType, sortType, page, size);
+        Page<ProductDocument> results = productSearchService.searchProducts(keyword, filterType, sortType, page, size);
         return ResponseEntity.ok(results);
     }
 
