@@ -50,7 +50,8 @@ public class SellerService {
                 .storeName(sellerRegisterDto.getStoreName())
                 .addressDetail(sellerRegisterDto.getAddressDetail())
                 .phone(sellerRegisterDto.getPhone())
-                //여기서부턴 임시
+                // 여기서부턴 임시
+                .storeDescription("가게 설명")
                 .sellerCategory(null)
                 .status('1')
                 .postCode("11111")

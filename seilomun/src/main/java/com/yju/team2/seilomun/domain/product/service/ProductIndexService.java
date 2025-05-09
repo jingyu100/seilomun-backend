@@ -6,6 +6,7 @@ import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.search.repository.ProductSearchRepository;
+import com.yju.team2.seilomun.domain.search.service.ProductSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,6 +25,7 @@ public class ProductIndexService {
     private final ProductRepository productRepository;
     private final ProductSearchRepository productSearchRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final ProductSearchService productSearchService;
 
     // 새로운 상품 정보를 인덱싱
     @Transactional(readOnly = true)
@@ -36,8 +38,7 @@ public class ProductIndexService {
             if (firstPhoto.isPresent()) {
                 productDocument.setThumbnailUrl(firstPhoto.get().getPhotoUrl());
             }
-
-            productSearchRepository.save(productDocument);
+            productSearchService.indexProductDocument(productDocument);
             log.info("상품 정보 인덱싱 완료: id={}, name={}", product.getId(), product.getName());
         } catch (Exception e) {
             log.error("상품 정보 인덱싱 중 오류 발생: {}", e.getMessage(), e);
@@ -47,7 +48,7 @@ public class ProductIndexService {
     // 상품 정보 인덱스 삭제
     public void deleteProduct(Long productId) {
         try {
-            productSearchRepository.deleteById(productId.toString());
+            productSearchService.deleteProductDocument(productId.toString());
             log.info("상품 정보 인덱스 삭제 완료: id={}", productId);
         } catch (Exception e) {
             log.error("상품 정보 인덱스 삭제 중 오류 발생: {}", e.getMessage(), e);
