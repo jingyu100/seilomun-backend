@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.entity;
 
+import com.yju.team2.seilomun.domain.seller.enums.SellerCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,13 +13,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SellerCategory {
+public class SellerCategoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "sc_id")
     private Long id;
 
-    @Column(name = "category_name", nullable = false, length = 10)
-    private String categoryName;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category_name", nullable = false, length = 20)
+    private SellerCategory categoryName;
 
 }

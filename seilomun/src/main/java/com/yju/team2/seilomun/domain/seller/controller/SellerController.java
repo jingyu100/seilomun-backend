@@ -67,4 +67,14 @@ public class SellerController {
         }
     }
 
+    // 가게 상세 조회
+    @GetMapping("/{sellerId}")
+    public ResponseEntity<ApiResponseJson> getSellerInformation(@PathVariable Long sellerId) {
+        SellerInformationDto sellerInformationDto = sellerService.getSellerById(sellerId);
+
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "seller", sellerInformationDto,
+                "Message","가게 정보가 조회되었습니다."
+        )));
+    }
 }

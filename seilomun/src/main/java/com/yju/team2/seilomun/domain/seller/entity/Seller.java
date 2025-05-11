@@ -115,13 +115,13 @@ public class Seller {
     @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL /*fetch = FetchType.LAZY*/)
     private ReviewComment reviewComment;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sc_id")
-    private SellerCategory sellerCategory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sc_id",unique = false)
+    private SellerCategoryEntity sellerCategory;
 
 
     // 업데이트용 메서드
-    public void updateInformation(SellerInformationDto sellerInformationDto) {
+    public void updateInformation(SellerInformationDto sellerInformationDto,SellerCategoryEntity sellerCategory) {
         this.storeName = sellerInformationDto.getStoreName();
         this.storeDescription = sellerInformationDto.getStoreDescription();
         this.notification = sellerInformationDto.getNotification();
@@ -131,6 +131,7 @@ public class Seller {
         this.operatingHours = sellerInformationDto.getOperatingHours();
         this.phone = sellerInformationDto.getPhone();
         this.pickupTime = sellerInformationDto.getPickupTime();
+        this.sellerCategory = sellerCategory;
     }
     
     // 별점 업데이트용
