@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.dto;
 
+import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
 import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -24,6 +25,9 @@ public class SellerRegisterDto {
 
     @NotEmpty
     private String storeName;
+
+    @NotEmpty
+    private Long categoryId;
 
     //우편번호는 비워놓았습니다.
     @NotEmpty

@@ -35,7 +35,7 @@ public class SellerInformationDto {
     private String operatingHours;
 
     @NotEmpty
-//    private Long categoryId;
+    private Long categoryId;
 
     @NotEmpty
     private String phone;
@@ -68,7 +68,7 @@ public class SellerInformationDto {
                 deliveryFeeDto,
                 seller.getDeliveryArea(),
                 seller.getOperatingHours(),
-//                categoryId,
+                seller.getSellerCategory().getId(),
                 seller.getPhone(),
                 seller.getPickupTime()
         );

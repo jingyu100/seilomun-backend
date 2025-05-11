@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.seller.service;
 
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
+import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerCategoryRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
@@ -47,6 +48,9 @@ public class SellerService {
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
         }
 
+        SellerCategoryEntity category = sellerCategoryRepository.findById(sellerRegisterDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 카테고리입니다"));
+
         Seller seller = Seller.builder()
                 .email(sellerRegisterDto.getEmail())
                 .password(passwordEncoder.encode(sellerRegisterDto.getPassword()))
@@ -55,7 +59,7 @@ public class SellerService {
                 .addressDetail(sellerRegisterDto.getAddressDetail())
                 .phone(sellerRegisterDto.getPhone())
                 //여기서부턴 임시
-                .sellerCategory(null)
+                .sellerCategory(category)
                 .status('1')
                 .postCode("11111")
                 .operatingHours("12")
@@ -81,7 +85,10 @@ public class SellerService {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
 
-        seller.updateInformation(sellerInformationDto);
+        SellerCategoryEntity sellerCategory = sellerCategoryRepository.findById(sellerInformationDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        seller.updateInformation(sellerInformationDto,sellerCategory);
 
         List<DeliveryFeeDto> deliveryFeeDtos = sellerInformationDto.getDeliveryFeeDtos();
         if (deliveryFeeDtos != null && !deliveryFeeDtos.isEmpty()) {
@@ -123,9 +130,11 @@ public class SellerService {
         return sellerRepository.save(seller);
     }
 
-    public Seller getSellerById(Long id) {
-        return sellerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("가게를 찾지 못했습니다"));
+    public SellerInformationDto getSellerById(Long id) {
+        Seller seller = sellerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("가게 정보를 찾지 못했습니다."));
+
+        return SellerInformationDto.toDto(seller);
     }
 
 }
