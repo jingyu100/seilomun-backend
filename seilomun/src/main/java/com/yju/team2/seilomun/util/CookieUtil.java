@@ -13,7 +13,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
-                .maxAge(Duration.ofMinutes(60 * 2))  // 2시간
+                .maxAge(Duration.ofMinutes(30))  // 30분
                 .path("/")
                 .build();
     }
@@ -25,7 +25,7 @@ public class CookieUtil {
                 .secure(false)
                 .sameSite("Lax")
                 .maxAge(Duration.ofDays(14))  // 14일
-                .path("/api/auth/refresh")  // 리프레시 엔드포인트로 경로 제한
+                .path("/")
                 .build();
     }
 
@@ -47,7 +47,7 @@ public class CookieUtil {
                 .secure(false)
                 .sameSite("Lax")
                 .maxAge(0)  // 즉시 만료
-                .path("/api/auth/refresh")  // 리프레시 토큰 경로와 일치시켜야 함
+                .path("/")
                 .build();
     }
 }
