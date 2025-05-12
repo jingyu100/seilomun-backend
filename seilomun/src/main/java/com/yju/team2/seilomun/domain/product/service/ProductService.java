@@ -1,8 +1,10 @@
 package com.yju.team2.seilomun.domain.product.service;
 
 import com.yju.team2.seilomun.domain.product.entity.Product;
+import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
+import com.yju.team2.seilomun.domain.product.repository.ProductCategoryRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
@@ -29,6 +31,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductPhotoRepository productPhotoRepository;
+    private final ProductCategoryRepository productCategoryRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final SellerRepository sellerRepository;
     private final ProductSearchRepository productSearchRepository;
@@ -116,6 +119,9 @@ public class ProductService {
 
         log.info("상품 등록: 판매자 ID {}, 상품명 {}", seller.getId(), productDto.getName());
 
+        ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("유효하지 않은 카테고리입니다."));
+
         Product product = productRepository.save(Product.builder()
                 .name(productDto.getName())
                 .description(productDto.getDescription())
@@ -127,6 +133,7 @@ public class ProductService {
                 .maxDiscountRate((productDto.getMaxDiscountRate()))
                 .createdAt(productDto.getCreatedAt())
                 .seller(seller)
+                .productCategory(productCategory)
                 .build());
 
         Integer currentDiscountRate = getCurrentDiscountRate(product.getId());
@@ -203,7 +210,10 @@ public class ProductService {
             throw new IllegalArgumentException("수정 할 권한이 없습니다");
         }
 
-        product.updateProudct(productDto);
+        ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
+                        .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+
+        product.updateProudct(productDto,productCategory);
 
         // ElasticSearch 문서 업데이트
         ProductDocument productDoc = ProductDocument.from(product);
@@ -228,10 +238,12 @@ public class ProductService {
         LocalDateTime now = LocalDateTime.now();
         List<Product> expiredProducts = productRepository.findByExpiryDateBeforeAndStatusNot(now, '0');
         productDto.setStatus('0');
+        ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
         if (!expiredProducts.isEmpty()) {
             for (Product product : expiredProducts) {
                 // 유통기한 다되면 상태를 변화 지금은 임시로 0 차후에 뭘로 할지 상의
-                product.updateProudct(productDto);
+                product.updateProudct(productDto,productCategory);
                 productRepository.save(product);
 
                 String currentDiscountRateKey = DISCOUNT_RATE_KEY + product.getId();

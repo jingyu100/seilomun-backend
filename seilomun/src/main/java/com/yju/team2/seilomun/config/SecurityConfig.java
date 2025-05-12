@@ -42,6 +42,7 @@ public class SecurityConfig {
                                 "/api/auth/businessVerification",
                                 "/api/auth/login",
                                 "/api/sellers",
+                                "/api/customers",
                                 "/api/customers/*",
                                 "/refresh-token",
                                 "/api/auth/logout",
