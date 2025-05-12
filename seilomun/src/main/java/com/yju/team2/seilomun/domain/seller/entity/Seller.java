@@ -116,7 +116,7 @@ public class Seller {
     private ReviewComment reviewComment;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sc_id",unique = false)
+    @JoinColumn(name = "sc_id")
     private SellerCategoryEntity sellerCategory;
 
 

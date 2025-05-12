@@ -27,7 +27,7 @@ public class ProductDto {
     private LocalDateTime createdAt;
     private List<String> photoUrl;
     private SellerInformationDto seller;
-    private ProductCategory productCategory;
+    private Long categoryId;
 
     public static ProductDto fromEntity(Product product, Integer currentDiscountRate) {
         return ProductDto.builder()
@@ -43,7 +43,7 @@ public class ProductDto {
                 .currentDiscountRate(currentDiscountRate)
                 .createdAt(product.getCreatedAt())
                 .seller(SellerInformationDto.toDto(product.getSeller()))
-                .productCategory(product.getProductCategory())
+                .categoryId(product.getProductCategory().getId())
                 .build();
     }
 }

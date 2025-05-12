@@ -72,12 +72,12 @@ public class Product {
     private List<OrderItem> orderItems = new ArrayList<>();
 
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pc_id")
     private ProductCategory productCategory;
 
 
-    public void updateProudct(ProductDto productDto) {
+    public void updateProudct(ProductDto productDto,ProductCategory productCategory) {
         this.name = productDto.getName();
         this.description = productDto.getDescription();
         this.originalPrice = productDto.getOriginalPrice();
@@ -87,7 +87,7 @@ public class Product {
         this.minDiscountRate = productDto.getMinDiscountRate();
         this.maxDiscountRate = productDto.getMaxDiscountRate();
         this.createdAt = productDto.getCreatedAt();
-        this.productCategory = productDto.getProductCategory();
+        this.productCategory = productCategory;
     }
 
     public void updateStockQuantity(Integer stockQuantity) {
