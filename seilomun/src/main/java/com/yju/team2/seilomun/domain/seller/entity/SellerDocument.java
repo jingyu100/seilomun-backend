@@ -54,8 +54,6 @@ public class SellerDocument {
     private LocalDateTime createdAt;
 
     public static SellerDocument from(Seller seller) {
-        String categoryName = seller.getSellerCategory() != null ?
-                seller.getSellerCategory().getCategoryName() : null;
 
         return SellerDocument.builder()
                 .id(seller.getId().toString())
@@ -68,7 +66,7 @@ public class SellerDocument {
                 .rating(seller.getRating())
                 .isOpen(seller.getIsOpen())
                 .status(seller.getStatus())
-                .categoryName(categoryName)
+                .categoryName(seller.getSellerCategory().toString())
                 .createdAt(seller.getCreatedAt())
                 .build();
     }
