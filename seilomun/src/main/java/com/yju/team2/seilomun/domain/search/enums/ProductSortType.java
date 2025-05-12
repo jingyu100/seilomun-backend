@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.domain.product.enums;
+package com.yju.team2.seilomun.domain.search.enums;
 
 public enum ProductSortType {
     LATEST,         // 최신순

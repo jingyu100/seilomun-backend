@@ -5,7 +5,7 @@ import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
-import com.yju.team2.seilomun.domain.product.repository.ProductSearchRepository;
+import com.yju.team2.seilomun.domain.search.repository.ProductSearchRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.product.dto.ProductDto;
@@ -32,12 +32,13 @@ public class ProductService {
     private final RedisTemplate<String, String> redisTemplate;
     private final SellerRepository sellerRepository;
     private final ProductSearchRepository productSearchRepository;
+    private final ProductIndexService productIndexService;
 
     private static final String DISCOUNT_RATE_KEY = "Product:currentDiscountRate";
     private static final String DISCOUNT_PRICE_KEY = "Product:discountPrice";
     private static final long CACHE_EXPIRATION_SECONDS = 30 * 60; // 30분 캐싱
 
-    //할인율 조회
+    // 할인율 조회
     public Integer getCurrentDiscountRate(Long id) {
         String redisKey = DISCOUNT_RATE_KEY + id;
 
@@ -58,7 +59,7 @@ public class ProductService {
         return currentDiscountRate;
     }
 
-    //할인율 계산메서드
+    // 할인율 계산메서드
     public Integer calculateDiscountRate(Long id) {
 
         Product product = productRepository.findById(id)
@@ -114,9 +115,7 @@ public class ProductService {
         Seller seller = sellerRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
 
-        log.info("상품 등록: 판매자 ID {}, 상품명 {}", seller.getId(), productDto.getName());
-
-        Product product = productRepository.save(Product.builder()
+        Product product = Product.builder()
                 .name(productDto.getName())
                 .description(productDto.getDescription())
                 .originalPrice(productDto.getOriginalPrice())
@@ -127,40 +126,25 @@ public class ProductService {
                 .maxDiscountRate((productDto.getMaxDiscountRate()))
                 .createdAt(productDto.getCreatedAt())
                 .seller(seller)
-                .build());
-
-        Integer currentDiscountRate = getCurrentDiscountRate(product.getId());
-
-        // Elasticsearch에 저장
-        ProductDocument productDoc = ProductDocument.builder()
-                .id(product.getId().toString())
-                .name(product.getName())
-                .description(product.getDescription())
-                .originalPrice(product.getOriginalPrice())
-                .stockQuantity(product.getStockQuantity())
-                .status(product.getStatus())
-                .sellerId(product.getSeller().getId())
-                .createdAt(productDto.getCreatedAt()) // 추가
-                .expiryDate(productDto.getExpiryDate()) // 추가
-                .averageRating(0.0) // 기본값 설정 (필요하면 별도 로직 추가)
                 .build();
 
-        productSearchRepository.save(productDoc);
+        Product savedProduct = productRepository.save(product);
+        Integer currentDiscountRate = getCurrentDiscountRate(savedProduct.getId());
 
+        // ProductIndexService를 사용하여 Elasticsearch에 인덱싱
+        productIndexService.indexProduct(savedProduct);
 
-        ProductDto productdto = ProductDto.fromEntity(product, currentDiscountRate);
-
-
+        // 상품 사진 저장
         if (productDto.getPhotoUrl() != null && !productDto.getPhotoUrl().isEmpty()) {
             productDto.getPhotoUrl().forEach(url -> {
                 productPhotoRepository.save(ProductPhoto.builder()
-                        .product(product)
+                        .product(savedProduct)
                         .photoUrl(url)
                         .build());
             });
         }
 
-        return productdto;
+        return ProductDto.fromEntity(savedProduct, currentDiscountRate);
     }
 
     // 상품 삭제
@@ -176,21 +160,21 @@ public class ProductService {
             throw new IllegalArgumentException("삭제 할 권한이 없습니다");
         }
 
-        // ElasticSearch에서 삭제
-        productSearchRepository.deleteById(String.valueOf(product.getId()));
+        // ProductIndexService를 사용하여 Elasticsearch에서 삭제
+        productIndexService.deleteProduct(product.getId());
 
         // 상품 사진 삭제
         productPhotoRepository.deleteByProduct(product);
 
         // 레디스 삭제
         redisTemplate.delete(DISCOUNT_RATE_KEY + id);
-        redisTemplate.delete(DISCOUNT_RATE_KEY + id);
+        redisTemplate.delete(DISCOUNT_PRICE_KEY + id);
 
         // 상품 삭제
         productRepository.delete(product);
     }
 
-    //상품 수정
+    // 상품 수정
     public ProductDto updateProductDto(Long id, ProductDto productDto, String sellerEmail) {
 
         Seller seller = sellerRepository.findByEmail(sellerEmail)
@@ -204,23 +188,20 @@ public class ProductService {
         }
 
         product.updateProudct(productDto);
+        Product updatedProduct = productRepository.save(product);
 
-        // ElasticSearch 문서 업데이트
-        ProductDocument productDoc = ProductDocument.from(product);
-        productSearchRepository.save(productDoc);
+        // ProductIndexService를 사용하여 Elasticsearch 문서 업데이트
+        productIndexService.indexProduct(updatedProduct);
 
-
+        // 캐시 삭제
         String currentDiscountRateKey = DISCOUNT_RATE_KEY + id;
         String discountPriceKey = DISCOUNT_PRICE_KEY + id;
-
         redisTemplate.delete(currentDiscountRateKey);
         redisTemplate.delete(discountPriceKey);
 
-        productRepository.save(product);
-
         Integer currentDiscountRate = getCurrentDiscountRate(id);
 
-        return ProductDto.fromEntity(product, currentDiscountRate);
+        return ProductDto.fromEntity(updatedProduct, currentDiscountRate);
     }
 
     // 유통기한이 현재시간이 되면 상태변화 메서드

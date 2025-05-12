@@ -33,7 +33,7 @@ public class ProductController {
                         "Message", "상품 상세 조회가 되었습니다")));
     }
 
-    //상품 등록
+    // 상품 등록
     @PostMapping
     public ResponseEntity<ApiResponseJson> createProductDto(@RequestBody ProductDto productDto,
                                                             BindingResult bindingResult,

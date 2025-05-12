@@ -35,9 +35,7 @@ public class SellerService {
     private final DeliveryFeeRepository deliveryFeeRepository;
     private final SellerCategoryRepository sellerCategoryRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final RefreshTokenService refreshTokenService;
-
+    private final SellerIndexService sellerIndexService;
 
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
@@ -60,6 +58,7 @@ public class SellerService {
                 .phone(sellerRegisterDto.getPhone())
                 //여기서부턴 임시
                 .sellerCategory(category)
+                .storeDescription("가게 설명")
                 .status('1')
                 .postCode("11111")
                 .operatingHours("12")
@@ -68,16 +67,13 @@ public class SellerService {
                 .pickupTime("30분")
                 .isOpen('0')
                 .build();
-        return sellerRepository.save(seller);
-    }
 
-    // 비밀번호 정규식 검사
-    private void checkPasswordStrength(String password) {
-        if (PASSWORD_PATTERN.matcher(password).matches()) {
-            return;
-        }
-        log.info("비밀번호 정책 미달");
-        throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
+        Seller savedSeller = sellerRepository.save(seller);
+
+        // Elasticsearch에 가게 정보 인덱싱
+        sellerIndexService.indexSeller(savedSeller);
+
+        return savedSeller;
     }
 
     // 유저 정보 업데이트 (사진 추가는 아직 x)
@@ -127,7 +123,13 @@ public class SellerService {
                 }
             }
         }
-        return sellerRepository.save(seller);
+
+        Seller updatedSeller = sellerRepository.save(seller);
+
+        // Elasticsearch에 가게 정보 인덱싱 업데이트
+        sellerIndexService.indexSeller(updatedSeller);
+
+        return updatedSeller;
     }
 
     public SellerInformationDto getSellerById(Long id) {
@@ -135,6 +137,15 @@ public class SellerService {
                 .orElseThrow(() -> new IllegalArgumentException("가게 정보를 찾지 못했습니다."));
 
         return SellerInformationDto.toDto(seller);
+    }
+
+    // 비밀번호 정규식 검사
+    private void checkPasswordStrength(String password) {
+        if (PASSWORD_PATTERN.matcher(password).matches()) {
+            return;
+        }
+        log.info("비밀번호 정책 미달");
+        throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
     }
 
 }
