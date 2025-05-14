@@ -148,4 +148,15 @@ public class SellerService {
         throw new IllegalArgumentException("비밀번호 최소 8자에 영어, 숫자, 특수문자를 포함해야 합니다.");
     }
 
+
+    public void updateSellerStatus(String email, Character isOpen) {
+        Seller seller = sellerRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+
+        // isOpen 상태 업데이트 (Seller 엔티티에 메서드 추가 필요)
+        seller.updateIsOpen(isOpen);
+        sellerRepository.save(seller);
+
+        log.info("판매자 영업 상태 변경: {} -> {}", email, isOpen);
+    }
 }

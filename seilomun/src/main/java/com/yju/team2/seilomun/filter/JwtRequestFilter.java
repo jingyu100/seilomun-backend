@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.filter;
 
 import com.yju.team2.seilomun.domain.auth.service.JwtUserDetailsService;
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
+import com.yju.team2.seilomun.domain.auth.service.UserStatusService;
 import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -30,7 +31,7 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
     private final JwtUtil jwtUtil;
     private final JwtUserDetailsService userDetailsService;
     private final RefreshTokenService refreshTokenService;
-
+    private final UserStatusService userStatusService;
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response, // 모든 HTTP 요청에 대해 토큰 검증 및 자동 갱신을 수행
@@ -78,6 +79,7 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
                 String username = jwtUtil.extractUsername(refreshToken);
                 String userType = jwtUtil.extractUserType(refreshToken);
 
+                userStatusService.updateOnlineStatus(username, userType);
                 // 3. 새 액세스 토큰 생성
                 String newAccessToken = jwtUtil.generateAccessToken(username, userType);
 
@@ -119,7 +121,8 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
         // 토큰에서 사용자 정보 추출
         String email = jwtUtil.extractUsername(token);
         String userType = jwtUtil.extractUserType(token);
-
+        // API 요청시마다 온라인 상태 갱신
+        userStatusService.updateOnlineStatus(email, userType);
         // SecurityContext에 이미 인증 정보가 없는 경우에만 설정
         if (email != null && userType != null &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
