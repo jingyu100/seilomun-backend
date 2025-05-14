@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.product.service;
 
+import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
@@ -34,8 +35,8 @@ public class ProductService {
     private final ProductCategoryRepository productCategoryRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final SellerRepository sellerRepository;
-    private final ProductSearchRepository productSearchRepository;
     private final ProductIndexService productIndexService;
+    private final NotificationService notificationService;
 
     private static final String DISCOUNT_RATE_KEY = "Product:currentDiscountRate";
     private static final String DISCOUNT_PRICE_KEY = "Product:discountPrice";
@@ -56,7 +57,7 @@ public class ProductService {
 
         Integer currentDiscountRate = calculateDiscountRate(id);
 
-        //레디스에서 조회
+        // 레디스에서 조회
         redisTemplate.opsForValue().set(redisKey, String.valueOf(currentDiscountRate), CACHE_EXPIRATION_SECONDS, TimeUnit.SECONDS);
 
         return currentDiscountRate;
@@ -120,8 +121,21 @@ public class ProductService {
 
         log.info("상품 등록: 판매자 ID {}, 상품명 {}", seller.getId(), productDto.getName());
 
+        // categoryId null 체크
+        if (productDto.getCategoryId() == null) {
+            throw new IllegalArgumentException("카테고리 ID는 필수입니다");
+        }
+
+        log.info("카테고리 ID: {}", productDto.getCategoryId());
+
         ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("유효하지 않은 카테고리입니다."));
+
+        log.info("카테고리 조회 완료: {}", productCategory.getCategoryName());
+
+        // null 체크 추가
+        LocalDateTime createdAt = productDto.getCreatedAt() != null ? productDto.getCreatedAt() : LocalDateTime.now();
+        LocalDateTime expiryDate = productDto.getExpiryDate() != null ? productDto.getExpiryDate() : LocalDateTime.now().plusDays(7);
 
         Product product = Product.builder()
                 .name(productDto.getName())
@@ -130,17 +144,39 @@ public class ProductService {
                 .stockQuantity(productDto.getStockQuantity())
                 .expiryDate(productDto.getExpiryDate())
                 .minDiscountRate((productDto.getMinDiscountRate()))
-                .status('1') // 상품등록하면 1
+                .status('1')
                 .maxDiscountRate((productDto.getMaxDiscountRate()))
                 .createdAt(productDto.getCreatedAt())
                 .seller(seller)
+                .productCategory(productCategory)  // 이 줄을 추가해야 합니다
                 .build();
 
         Product savedProduct = productRepository.save(product);
+        log.info("상품 저장 완료: productId={}", savedProduct.getId());
+
         Integer currentDiscountRate = getCurrentDiscountRate(savedProduct.getId());
 
         // ProductIndexService를 사용하여 Elasticsearch에 인덱싱
-        productIndexService.indexProduct(savedProduct);
+        try {
+            if (productIndexService != null) {
+                productIndexService.indexProduct(savedProduct);
+                log.info("Elasticsearch 인덱싱 완료");
+            }
+        } catch (Exception e) {
+            // 인덱싱 실패해도 상품 등록은 계속 진행
+            log.error("Elasticsearch 인덱싱 실패", e);
+        }
+
+        // 즐겨찾기한 고객들에게 알림 전송
+        try {
+            if (notificationService != null) {
+                notificationService.notifyNewProduct(savedProduct);
+                log.info("알림 전송 완료");
+            }
+        } catch (Exception e) {
+            log.error("알림 전송 실패", e);
+            // 알림 전송 실패해도 상품 등록은 계속 진행
+        }
 
         // 상품 사진 저장
         if (productDto.getPhotoUrl() != null && !productDto.getPhotoUrl().isEmpty()) {

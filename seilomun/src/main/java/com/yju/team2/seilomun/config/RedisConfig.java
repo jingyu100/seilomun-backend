@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yju.team2.seilomun.domain.chat.service.RedisSubscriber;
+import com.yju.team2.seilomun.domain.notification.service.NotificationSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -23,7 +24,7 @@ public class RedisConfig {
         redisTemplate.setValueSerializer(new StringRedisSerializer());
         return redisTemplate;
     }
-    
+
     //채팅 떄문에 만듬 ㅠㅠ
     @Bean
     public RedisTemplate<String, Object> chatRedisTemplate(RedisConnectionFactory connectionFactory) {
@@ -36,11 +37,12 @@ public class RedisConfig {
         redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }
+
     // Redis Pub/Sub 리스너 컨테이너 (Redis 메시지 수신을 관리하는 컨테이너)
     @Bean
     public RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory connectionFactory,
-                                                            MessageListenerAdapter listenerAdapter,
-                                                            ChannelTopic channelTopic) {
+                                                                       MessageListenerAdapter listenerAdapter,
+                                                                       ChannelTopic channelTopic) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(listenerAdapter, channelTopic);
@@ -57,5 +59,15 @@ public class RedisConfig {
     @Bean
     public ChannelTopic channelTopic() {
         return new ChannelTopic("chatroom");
+    }
+
+    // sse 메세지 리스너
+    @Bean
+    public RedisMessageListenerContainer notificationListenerContainer(RedisConnectionFactory connectionFactory,
+                                                                       NotificationSubscriber subscriber) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(new MessageListenerAdapter(subscriber), new ChannelTopic("notification:channel"));
+        return container;
     }
 }

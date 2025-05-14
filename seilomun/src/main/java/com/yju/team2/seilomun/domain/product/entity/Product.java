@@ -71,11 +71,9 @@ public class Product {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pc_id")
     private ProductCategory productCategory;
-
 
     public void updateProudct(ProductDto productDto,ProductCategory productCategory) {
         this.name = productDto.getName();

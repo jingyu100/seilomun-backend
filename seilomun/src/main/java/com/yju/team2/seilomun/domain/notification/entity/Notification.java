@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.domain.nofitication.entity;
+package com.yju.team2.seilomun.domain.notification.entity;
 
 
 import jakarta.persistence.*;
@@ -26,19 +26,19 @@ public class Notification {
     private String content;
 
     //알림상태 보임 안보임
-    @Column(name = "is_visible",nullable = false)
+    @Column(name = "is_visible", nullable = false)
     private Character isVisible;
 
     @Column(name = "recipient_type", nullable = false)
     private Character recipientType;
 
-    @Column(name = "recipient_id",nullable = false)
+    @Column(name = "recipient_id", nullable = false)
     private Long recipientId;
 
     @Column(name = "sender_type", nullable = false)
     private Character senderType;
 
-    @Column(name = "sender_id",nullable = false)
+    @Column(name = "sender_id", nullable = false)
     private Long senderId;
 
     @Column(name = "is_read", nullable = false)
@@ -47,4 +47,8 @@ public class Notification {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public void updateIsRead(Character isRead) {
+        this.isRead = isRead;
+    }
 }

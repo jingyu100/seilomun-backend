@@ -1,4 +1,4 @@
-package com.yju.team2.seilomun.domain.nofitication.entity;
+package com.yju.team2.seilomun.domain.notification.entity;
 
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import jakarta.persistence.*;
