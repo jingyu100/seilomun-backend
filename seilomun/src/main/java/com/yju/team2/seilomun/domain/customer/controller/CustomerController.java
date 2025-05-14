@@ -64,6 +64,7 @@ public class CustomerController {
             throw new IllegalArgumentException("매장 즐겨찾기 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
+
     @DeleteMapping("/favorites/{id}")
     public ResponseEntity<ApiResponseJson> customerFavoriteDelete(@PathVariable Long id,
                                                                   BindingResult bindingResult,
@@ -108,6 +109,7 @@ public class CustomerController {
             throw new IllegalArgumentException("상품 좋아요 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
+
     // 상품id
     @DeleteMapping("/wishes/{id}")
     public ResponseEntity<ApiResponseJson> customerWishesDelete(@Valid @PathVariable Long id,
@@ -135,14 +137,14 @@ public class CustomerController {
         String username = userDetails.getUsername();
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of("username", username))));
     }
-    
+
     //소비자 정보 조회
     @GetMapping("/mypage")
     public ResponseEntity<ApiResponseJson> getCustomerPage(@AuthenticationPrincipal JwtUserDetails userDetails) {
         LocalUserViewDto customer = customerService.getLocalUserDto(userDetails.getId());
 
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-            "customer", customer
+                "customer", customer
         ))));
     }
 
@@ -151,24 +153,24 @@ public class CustomerController {
     public ResponseEntity<ApiResponseJson> updateLocalCustomer(@AuthenticationPrincipal JwtUserDetails userDetails,
                                                                @RequestBody @Valid LocalUserUpdateRequest request) {
         Long id = userDetails.getId();
-        log.info("사용자의 정보 : {}",request.toString());
-        customerService.localUserUpdateDto(id,request.getUpdateDto(),request.getPasswordChangeDto());
+        log.info("사용자의 정보 : {}", request.toString());
+        customerService.localUserUpdateDto(id, request.getUpdateDto(), request.getPasswordChangeDto());
 
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-             "Message","사용자 정보가 수정되었습니다."
+                "Message", "사용자 정보가 수정되었습니다."
         ))));
     }
 
     //소비자 정보 수정
     @PutMapping("/mypage/social")
     public ResponseEntity<ApiResponseJson> updateSocialCustomer(@AuthenticationPrincipal JwtUserDetails userDetails,
-                                                                 @RequestBody @Valid SocialUserUpdateDto updateDto) {
+                                                                @RequestBody @Valid SocialUserUpdateDto updateDto) {
 
         Long customerId = userDetails.getId();
-        customerService.socialUserUpdateDto(customerId,updateDto);
+        customerService.socialUserUpdateDto(customerId, updateDto);
 
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "Message","사용자 정보가 수정되었습니다."
+                "Message", "사용자 정보가 수정되었습니다."
         ))));
     }
 
@@ -180,6 +182,7 @@ public class CustomerController {
                 "customer", customer
         ))));
     }
+
     // 주문목록 보기
     @GetMapping("/orders")
     public ResponseEntity<ApiResponseJson> getOrders(
@@ -188,7 +191,7 @@ public class CustomerController {
                 "주문 목록", customerService.getOrderList(userDetails.getId())
         ))));
     }
-    
+
     // 주문 상세 보기
     @GetMapping("/orders/{orderId}")
     public ResponseEntity<ApiResponseJson> getOrdersDetails(

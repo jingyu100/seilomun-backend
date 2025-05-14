@@ -1,13 +1,20 @@
 package com.yju.team2.seilomun.domain.notification.controller;
 
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.notification.entity.Notification;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -36,5 +43,13 @@ public class NotificationController {
     public void markAsRead(@PathVariable Long notificationId,
                            @AuthenticationPrincipal JwtUserDetails userDetails) {
         notificationService.markAsRead(notificationId, userDetails.getId());
+    }
+
+    // 알림 목록 출력
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponseJson> getNotifications(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        List<Notification> notificationList = notificationService.getNotifications(userDetails.getId(), userDetails.getUserType());
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "list", notificationList)));
     }
 }

@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.Favorite;
 import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
@@ -13,6 +14,7 @@ import com.yju.team2.seilomun.domain.product.entity.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -146,5 +148,20 @@ public class NotificationService {
 
         notification.updateIsRead('Y');
         notificationRepository.save(notification);
+    }
+
+    public List<Notification> getNotifications(Long userId, String userType) {
+        Character CharUserType = null;
+        switch (userType) {
+            case "CUSTOMER":
+                CharUserType = 'C';
+                break;
+            case "SELLER":
+                CharUserType = 'S';
+                break;
+            default:
+                break;
+        }
+        return notificationRepository.findAllByRecipientIdAndRecipientType(userId, CharUserType);
     }
 }
