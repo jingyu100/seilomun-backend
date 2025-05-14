@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.customer.controller;
 
+import com.yju.team2.seilomun.domain.auth.service.UserStatusService;
 import com.yju.team2.seilomun.domain.customer.service.OauthService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.oauth.OauthAttribute;
@@ -30,6 +31,7 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
 
     private final OauthService oauthService;
     private final CustomerRepository customerRepository;
+    private final UserStatusService userStatusService;
 
     // properties에 있는 값
     @Value("${app.oauth.redirectUrl}")
@@ -94,6 +96,8 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
 
         String accessToken = tokens.get("accessToken");
         String refreshToken = tokens.get("refreshToken");
+        // 소셜 로그인시 온라인 설정
+        userStatusService.updateOnlineStatus(oauthAttr.getEmail(), "CUSTOMER");
 
         // 액세스 토큰용 쿠키 설정 (2시간 만료)
         ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(accessToken);

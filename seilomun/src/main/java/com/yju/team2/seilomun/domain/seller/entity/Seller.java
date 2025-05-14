@@ -138,4 +138,8 @@ public class Seller {
     public void updateRating(Float rating) {
         this.rating = rating;
     }
+
+    public void updateIsOpen(Character isOpen) {
+        this.isOpen = isOpen;
+    }
 }

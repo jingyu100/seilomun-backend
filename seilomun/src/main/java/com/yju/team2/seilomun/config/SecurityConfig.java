@@ -61,7 +61,9 @@ public class SecurityConfig {
                                 "/api/orders/buy",
                                 "/api/orders/test/buy",
                                 "/api/orders/toss/success",  // Toss 결제 성공 콜백
-                                "/api/orders/toss/fail"  // 정적 리소스로 사용할 경우
+                                "/api/orders/toss/fail",  // 정적 리소스로 사용할 경우
+                                "/api/chat/**",
+                                "/api/users/**"
                         ).permitAll()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
