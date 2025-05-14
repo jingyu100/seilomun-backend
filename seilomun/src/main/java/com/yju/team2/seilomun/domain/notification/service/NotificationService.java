@@ -10,6 +10,7 @@ import com.yju.team2.seilomun.domain.notification.dto.NotificationMessage;
 import com.yju.team2.seilomun.domain.notification.entity.Notification;
 import com.yju.team2.seilomun.domain.notification.repository.NotificationRepository;
 import com.yju.team2.seilomun.domain.notification.repository.SseEmitterRepository;
+import com.yju.team2.seilomun.domain.notification.util.NotificationUtil;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,24 +85,15 @@ public class NotificationService {
             Customer customer = favorite.getCustomer();
             Long customerId = customer.getId();
 
-            // 알림 저장
-            Notification notification = Notification.builder()
-                    .content(String.format("%s 매장에 새로운 상품 '%s'이(가) 등록되었습니다.",
-                            product.getSeller().getStoreName(), product.getName()))
-                    .isVisible('Y')
-                    .recipientType('C')
-                    .recipientId(customerId)
-                    .senderType('S')
-                    .senderId(sellerId)
-                    .isRead('N')
-                    .build();
+            // 알림 생성
+            Notification newProductNotification = NotificationUtil.createNewProductNotification(product, customerId, sellerId);
 
-            notificationRepository.save(notification);
+            notificationRepository.save(newProductNotification);
 
             // Redis Pub/Sub으로 알림 메시지 발행
             NotificationMessage message = NotificationMessage.builder()
                     .customerId(customerId)
-                    .notification(NotificationDto.fromEntity(notification))
+                    .notification(NotificationDto.fromEntity(newProductNotification))
                     .build();
 
             publishNotification(message);
