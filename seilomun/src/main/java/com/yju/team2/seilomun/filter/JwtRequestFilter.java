@@ -79,15 +79,11 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
         // 1. 리프레시 토큰 추출
         String refreshToken = extractTokenFromCookie(request, "refresh_token");
 
-        log.info("refreshToken 추출 : {}", refreshToken);
-
         if (refreshToken != null && jwtUtil.validateRefreshToken(refreshToken)) {
             try {
                 // 2. 리프레시 토큰에서 사용자 정보 추출
                 String username = jwtUtil.extractUsername(refreshToken);
                 String userType = jwtUtil.extractUserType(refreshToken);
-
-                log.info("refreshToken 확인 후 AccessToken 재발급 시도");
 
                 // Redis에 저장된 토큰과 비교
                 String storedToken = refreshTokenService.getRefreshToken(username, userType);
@@ -120,8 +116,6 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                log.info("AccessToken 재발급 완료");
 
             } catch (Exception e) {
                 log.info("토큰 자동 갱신 실패: ", e);
