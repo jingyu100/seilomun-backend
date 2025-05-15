@@ -42,7 +42,6 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
         // 1. 액세스 토큰 추출
         String accessToken = extractTokenFromCookie(request, "access_token");
         String refreshToken = extractTokenFromCookie(request, "refresh_token");
-        System.out.println("accessToken = " + accessToken);
         if (accessToken != null) {
             try {
                 // 2. 액세스 토큰 검증
@@ -63,6 +62,9 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
             } catch (Exception e) {
                 logger.error("JWT 처리 중 오류 발생: ", e);
             }
+        } else if (refreshToken != null) {
+            handleExpiredToken(request, response, filterChain);
+            return;
         }
 
         filterChain.doFilter(request, response);
