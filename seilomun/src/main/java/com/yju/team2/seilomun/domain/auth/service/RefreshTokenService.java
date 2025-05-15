@@ -24,8 +24,10 @@ public class RefreshTokenService {
 
     // RefreshToken 교체
     public void rotateRefreshToken(String username, String userType, String newRefreshToken) {
-        String key = generateKey(username, userType);
-        redisTemplate.opsForValue().set(key, newRefreshToken, REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.SECONDS);
+        // 기존 토큰 삭제
+        deleteRefreshToken(username, userType);
+        // 새 토큰 저장
+        saveRefreshToken(username, userType, newRefreshToken);
     }
 
     // RefreshToken 조회

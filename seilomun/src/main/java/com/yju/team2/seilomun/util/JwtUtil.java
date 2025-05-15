@@ -99,8 +99,10 @@ public class JwtUtil {
     public boolean validateRefreshToken(String token) {
         try {
             String username = extractUsername(token);
-            return !isTokenExpired(token);
+            String userType = extractUserType(token);
+            return username != null && userType != null && !isTokenExpired(token);
         } catch (Exception e) {
+            log.error("RefreshToken 검증 실패: {}", e.getMessage());
             return false;
         }
     }
