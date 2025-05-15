@@ -10,10 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class JwtUtil {
 
     @Value("${jwt.secret}")
@@ -88,7 +90,8 @@ public class JwtUtil {
         } catch (ExpiredJwtException e) {
             return true;
         } catch (Exception e) {
-            return true;
+            log.error("토큰 만료 확인 중 오류 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid token format");
         }
     }
 

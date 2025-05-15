@@ -26,12 +26,12 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필터 클래스
-                                                             // 모든 HTTP 요청마다 실행되어 JWT 토큰을 검증하고 자동 갱신을 처리
 
     private final JwtUtil jwtUtil;
     private final JwtUserDetailsService userDetailsService;
     private final RefreshTokenService refreshTokenService;
     private final UserStatusService userStatusService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response, // 모든 HTTP 요청에 대해 토큰 검증 및 자동 갱신을 수행
@@ -56,6 +56,7 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
                 // 토큰이 만료된 경우
                 handleExpiredToken(request, response, filterChain);
                 return;
+
             } catch (Exception e) {
                 logger.error("JWT 처리 중 오류 발생: ", e);
             }
@@ -118,22 +119,41 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
     // 유효한 토큰 처리 로직
     // 토큰에서 사용자 정보를 추출하고 Spring Security Context에 설정
     private void processValidToken(String token, HttpServletRequest request) {
+
         // 토큰에서 사용자 정보 추출
         String email = jwtUtil.extractUsername(token);
         String userType = jwtUtil.extractUserType(token);
+
+        // 토큰 유효성 검증 추가
+        if (email != null && userType != null &&
+                jwtUtil.validateToken(token, email) && // 검증 추가
+                SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            userStatusService.updateOnlineStatus(email, userType);
+            UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(email, userType);
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
         // API 요청시마다 온라인 상태 갱신
         userStatusService.updateOnlineStatus(email, userType);
+
         // SecurityContext에 이미 인증 정보가 없는 경우에만 설정
         if (email != null && userType != null &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
 
             // 사용자 상세 정보 로드
             UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(email, userType);
+
             // Spring Security 인증 토큰 생성
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
             // 요청 상세 정보 설정
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
             // SecurityContext에 인증 정보 저장
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

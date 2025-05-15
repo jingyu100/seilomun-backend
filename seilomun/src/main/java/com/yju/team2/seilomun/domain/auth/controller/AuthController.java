@@ -52,10 +52,10 @@ public class AuthController {
                 loginRequest.getUserType()
         );
 
+        userStatusService.updateOnlineStatus(loginRequest.getEmail(), loginRequest.getUserType());
+
         String accessToken = tokens.get("accessToken");
         String refreshToken = tokens.get("refreshToken");
-
-        userStatusService.updateOnlineStatus(loginRequest.getEmail(), loginRequest.getUserType());
 
         // 쿠키 설정
         ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(accessToken);
