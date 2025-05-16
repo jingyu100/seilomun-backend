@@ -2,11 +2,8 @@ package com.yju.team2.seilomun.domain.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yju.team2.seilomun.domain.auth.dto.*;
-import com.yju.team2.seilomun.domain.auth.service.AuthService;
+import com.yju.team2.seilomun.domain.auth.service.*;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.auth.service.BusinessVerificationService;
-import com.yju.team2.seilomun.domain.auth.service.MailService;
-import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;
@@ -34,6 +31,7 @@ public class AuthController {
     private final AuthService authService;
     private final MailService mailService;
     private final BusinessVerificationService businessVerificationService;
+    private final UserStatusService userStatusService;
 
     private static final String TOKEN_MISMATCH_ERROR = "사용자 유형이 일치하지 않습니다.";
     private static final String INVALID_TOKEN_ERROR = "리프레시 토큰이 유효하지 않거나 만료되었습니다.";
@@ -53,6 +51,8 @@ public class AuthController {
                 loginRequest.getPassword(),
                 loginRequest.getUserType()
         );
+
+        userStatusService.updateOnlineStatus(loginRequest.getEmail(), loginRequest.getUserType());
 
         String accessToken = tokens.get("accessToken");
         String refreshToken = tokens.get("refreshToken");
@@ -80,6 +80,7 @@ public class AuthController {
             // Redis에서 RefreshToken 삭제
             refreshTokenService.deleteRefreshToken(username);
 
+            userStatusService.removeOnlineStatus(username);
             // 만료된 쿠키 생성
             ResponseCookie accessTokenCookie = CookieUtil.createExpiredAccessTokenCookie();
             ResponseCookie refreshTokenCookie = CookieUtil.createExpiredRefreshTokenCookie();
