@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.product.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import com.yju.team2.seilomun.common.ApiResponseJson;
@@ -13,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -82,5 +84,8 @@ public class ProductController {
         }
     }
 
-
+    @GetMapping("/seller/{sellerId}")
+    public List<ProductDto> getProducts(@PathVariable Long sellerId) {
+        return productService.getProducts(sellerId);
+    }
 }

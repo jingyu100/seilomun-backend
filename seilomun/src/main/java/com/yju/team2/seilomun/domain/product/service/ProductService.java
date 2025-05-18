@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -281,5 +282,17 @@ public class ProductService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다: " + productId));
         return product.getStockQuantity();
+    }
+
+    public List<ProductDto> getProducts(Long sellerId) {
+        List<Product> products = productRepository.findBySellerId(sellerId);
+
+
+        return products.stream()
+                .map(product -> {
+                    Integer currentDiscountRate = getCurrentDiscountRate(product.getId());
+                    return ProductDto.fromEntity(product, currentDiscountRate);
+                })
+                .collect(Collectors.toList());
     }
 }
