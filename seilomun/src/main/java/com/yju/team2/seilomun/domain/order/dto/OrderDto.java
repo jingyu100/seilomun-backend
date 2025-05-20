@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OrderDto {
     @NotBlank
-    private Integer totalAmount;
     private Integer usedPoints;
     private String memo;
     @NotEmpty
