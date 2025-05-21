@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.dto;
 
+import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -43,6 +44,11 @@ public class SellerInformationDto {
     @NotEmpty
     private String pickupTime;
     
+    // 공지사진 추가
+    private List<String> notificationPhotos;
+    // 공지사진 삭제
+    private List<Long> notificationPhotoIds;
+    
     // 상세페이지에서 가게정보를 넘기기 위한 메서드
     public static SellerInformationDto toDto(Seller seller) {
         List<DeliveryFeeDto> deliveryFeeDto = new ArrayList<>();
@@ -59,6 +65,10 @@ public class SellerInformationDto {
         }
 
 
+        List<String> notificationPhotos = seller.getNotificationPhotos().stream()
+                .map(NotificationPhoto::getPhotoUrl)
+                .collect(Collectors.toList());
+
         return new SellerInformationDto(
                 seller.getStoreName(),
                 seller.getStoreDescription(),
@@ -70,7 +80,9 @@ public class SellerInformationDto {
                 seller.getOperatingHours(),
                 seller.getSellerCategory().getId(),
                 seller.getPhone(),
-                seller.getPickupTime()
+                seller.getPickupTime(),
+                notificationPhotos,
+                null
         );
     }
 }
