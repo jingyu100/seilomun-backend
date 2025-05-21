@@ -242,7 +242,7 @@ public class OrderService {
             throw new IllegalArgumentException("주문 아이템이 존재 하지 않습니다");
         }
         OrderItem orderItem = orderItemOptional.get();
-        Optional<Product> optionalProduct = productRepository.findById(orderItem.getId());
+        Optional<Product> optionalProduct = productRepository.findById(orderItem.getProduct().getId());
         if (optionalProduct.isEmpty()) {
             throw new IllegalArgumentException("상품이 존재 하지 않습니다");
         }
