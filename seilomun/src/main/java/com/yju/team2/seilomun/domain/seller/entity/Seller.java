@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.seller.entity;
 
 import com.yju.team2.seilomun.domain.chat.entity.ChatRoom;
 import com.yju.team2.seilomun.domain.event.entity.Event;
+import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.review.entity.ReviewComment;
@@ -119,6 +120,9 @@ public class Seller {
     @JoinColumn(name = "sc_id")
     private SellerCategoryEntity sellerCategory;
 
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
+    private List<NotificationPhoto> notificationPhotos = new ArrayList<>();
+
 
     // 업데이트용 메서드
     public void updateInformation(SellerInformationDto sellerInformationDto,SellerCategoryEntity sellerCategory) {
@@ -132,6 +136,22 @@ public class Seller {
         this.phone = sellerInformationDto.getPhone();
         this.pickupTime = sellerInformationDto.getPickupTime();
         this.sellerCategory = sellerCategory;
+
+        if(sellerInformationDto.getNotificationPhotoIds() != null && !sellerInformationDto.getNotificationPhotoIds().isEmpty()) {
+            this.notificationPhotos.removeIf(photo ->
+                    sellerInformationDto.getNotificationPhotoIds().contains(photo.getId()));
+
+        }
+
+        if(sellerInformationDto.getNotificationPhotos() != null && !sellerInformationDto.getNotificationPhotos().isEmpty()) {
+            for(String url : sellerInformationDto.getNotificationPhotos()) {
+                NotificationPhoto photo = NotificationPhoto.builder()
+                        .photoUrl(url)
+                        .seller(this)
+                        .build();
+                this.notificationPhotos.add(photo);
+            }
+        }
     }
     
     // 별점 업데이트용
@@ -142,4 +162,6 @@ public class Seller {
     public void updateIsOpen(Character isOpen) {
         this.isOpen = isOpen;
     }
+
+
 }

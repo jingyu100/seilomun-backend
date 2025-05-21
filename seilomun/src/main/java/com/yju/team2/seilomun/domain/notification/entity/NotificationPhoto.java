@@ -23,7 +23,7 @@ public class NotificationPhoto {
     @Column(name = "photo_url", nullable = false, length = 100)
     private String photoUrl;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="se_id")
     private Seller seller;
 }
