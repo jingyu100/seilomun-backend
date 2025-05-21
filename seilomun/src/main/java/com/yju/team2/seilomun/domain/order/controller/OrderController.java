@@ -8,6 +8,7 @@ import com.yju.team2.seilomun.domain.order.dto.OrderDto;
 import com.yju.team2.seilomun.domain.order.dto.PaymentResDto;
 import com.yju.team2.seilomun.domain.order.dto.PaymentSuccessDto;
 import com.yju.team2.seilomun.domain.order.service.OrderService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -47,15 +49,14 @@ public class OrderController {
     // 결제 성공시 콜백
     // 여기서 orderId는 결제테이블의 pk가 아닌 결제고유식별자를 의미함
     @GetMapping("/toss/success")
-    public ResponseEntity<ApiResponseJson> tossPaymentSuccess(@RequestParam String paymentKey,
-                                                              @RequestParam String orderId,
-                                                              @RequestParam Integer amount) {
+    public void tossPaymentSuccess(@RequestParam String paymentKey,
+                                   @RequestParam String orderId,
+                                   @RequestParam Integer amount,
+                                   HttpServletResponse response) throws IOException {
         PaymentSuccessDto paymentSuccessDto = orderService.tossPaymentSuccess(paymentKey, orderId, amount);
 
-        // ApiResponseJson 형태로 감싸서 반환
-        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("data", paymentSuccessDto,
-                        "message", "결제가 성공적으로 처리되었습니다.")));
+        // ApiResponseJson 형태로 감싸서 반환 , 나중에 프론트에서 리다이렉트하게 변경할수도 있음
+        response.sendRedirect("http://localhost:5173/");
     }
     // 결제 실패시 콜백
     @GetMapping("/toss/fail")
