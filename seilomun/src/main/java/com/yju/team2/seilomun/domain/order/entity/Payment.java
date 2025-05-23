@@ -82,4 +82,7 @@ public class Payment {
      public void insertFailReason(String failReason){
         this.failReason = failReason;
      }
+     public void cancelYN(boolean cancelYN){
+        this.cancelYN = cancelYN;
+     }
 }

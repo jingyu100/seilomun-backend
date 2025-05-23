@@ -80,4 +80,11 @@ public class OrderController {
                 Map.of("Update", paymentResDto,
                         "Message", "상품이 주문 되었습니다")));
     }
+    @PostMapping("/cancel/{orderId}")
+    public ResponseEntity<ApiResponseJson> cancelOrder(
+            @AuthenticationPrincipal JwtUserDetails customer,
+            @PathVariable Long orderId) {
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                orderService.cancelPayment(customer.getId(), orderId)));
+    }
 }

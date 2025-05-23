@@ -25,8 +25,8 @@ public class Order {
     @Column(name = "or_id")
     private Long orId;
 
-    @Column(name = "order_name", nullable = false, length = 100,unique = true)
-    private String orderName;
+    @Column(name = "order_number", nullable = false, length = 100,unique = true)
+    private String orderNumber;
 
     @Column(name = "total_amount",nullable = false)
     private Integer totalAmount;
@@ -70,4 +70,8 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    public void updateOrderStatus(Character status) {
+        this.orderStatus = status;
+    }
 }

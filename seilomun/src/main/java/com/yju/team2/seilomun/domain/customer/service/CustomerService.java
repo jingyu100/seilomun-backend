@@ -25,7 +25,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -283,7 +282,7 @@ public class CustomerService {
         return OrderDetailResponseDto.builder().
                 storeName(order.getSeller().getStoreName()).
                 orderDate(order.getCreatedAt()).
-                orderName(order.getOrderName()).
+                orderNumber(order.getOrderNumber()).
                 orderItems(orderItemDtos).
                 totalAmount(order.getTotalAmount()).
                 usedPoint(order.getUsedPoints()).

@@ -90,7 +90,9 @@ public class Customer {
     public void buyProductAddPoint(Integer point) {
         this.points += point;
     }
-
+    public void minusPoint(Integer point) {
+        this.points -= point;
+    }
     public void UpdateLocalCustomer(LocalUserUpdateDto dto,String newPassword) {
         this.email = dto.getEmail();
         this.name = dto.getName();

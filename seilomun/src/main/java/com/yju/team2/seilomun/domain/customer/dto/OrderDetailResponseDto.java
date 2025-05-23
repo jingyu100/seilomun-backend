@@ -1,7 +1,6 @@
 package com.yju.team2.seilomun.domain.customer.dto;
 
 import com.yju.team2.seilomun.domain.order.dto.OrderItemDto;
-import com.yju.team2.seilomun.domain.order.entity.OrderItem;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +16,7 @@ import java.util.List;
 public class OrderDetailResponseDto {
     String storeName;
     LocalDateTime orderDate;
-    String orderName;
+    String orderNumber;
     List<OrderItemDto> orderItems;
     Integer totalAmount;
     Integer usedPoint;
