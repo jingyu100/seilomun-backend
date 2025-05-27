@@ -30,11 +30,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
                                                               @Param("offset") int offset,
                                                               @Param("limit") int limit);
 
-    // 특정 기간 이전의 알림 조회 (정리용)
+    // 특정 기간 이전의 알림 조회
     @Query("SELECT n FROM Notification n WHERE n.createdAt < :cutoffDate")
     List<Notification> findNotificationsOlderThan(@Param("cutoffDate") java.time.LocalDateTime cutoffDate);
 
-    // 읽은 알림 중 오래된 것들 조회 (정리용)
+    // 읽은 알림 중 오래된 것들 조회 
     @Query("SELECT n FROM Notification n WHERE n.isRead = 'Y' AND n.createdAt < :cutoffDate")
     List<Notification> findReadNotificationsOlderThan(@Param("cutoffDate") java.time.LocalDateTime cutoffDate);
 }
