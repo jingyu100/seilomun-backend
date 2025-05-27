@@ -38,6 +38,19 @@ public class NotificationController {
         return notificationService.connect(userId);
     }
 
+    @GetMapping(value = "/Sconnect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter Sconnect(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        Long userId = userDetails.getId();
+        String userType = userDetails.getUserType();
+
+        if (!"SELLER".equals(userType)) {
+            throw new IllegalArgumentException("판매자만 알림을 구독할 수 있습니다.");
+        }
+
+        log.info("SSE 연결 요청: customerId={}", userId);
+        return notificationService.connect(userId);
+    }
+
     // 알림 읽음 처리
     @PutMapping("/{notificationId}/read")
     public void markAsRead(@PathVariable Long notificationId,

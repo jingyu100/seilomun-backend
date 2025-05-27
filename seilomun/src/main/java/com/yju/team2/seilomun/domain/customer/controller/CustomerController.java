@@ -41,12 +41,20 @@ public class CustomerController {
         ));
     }
 
-    @GetMapping("/favorites ")
-    public ResponseEntity<ApiResponseJson> getCustomerFavorite(@AuthenticationPrincipal JwtUserDetails userDetails) {
+    @GetMapping("/favorites")
+    public ResponseEntity<ApiResponseJson> getCustomerFavorite(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Long customerId = userDetails.getId();
-        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "즐겨찾기", customerService.getFavorite(customerId)
-        ))));
+        FavoritePaginationDto favorites = customerService.getFavorite(customerId, page, size);
+
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "favorites", favorites.getFavorites(),
+                "hasNext", favorites.isHasNext(),
+                "totalElements", favorites.getTotalElements(),
+                "message", "즐겨찾기 목록이 조회되었습니다."
+        )));
     }
 
     @PostMapping("/favorites/{id}")
@@ -86,11 +94,19 @@ public class CustomerController {
     }
 
     @GetMapping("/wishes")
-    public ResponseEntity<ApiResponseJson> getCustomerWishes(@AuthenticationPrincipal JwtUserDetails userDetails) {
+    public ResponseEntity<ApiResponseJson> getCustomerWishes(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         Long customerId = userDetails.getId();
-        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "즐겨찾기", customerService.getWishedProducts(customerId)
-        ))));
+        WishPaginationDto wishes = customerService.getWishedProducts(customerId, page, size);
+
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "wishes", wishes.getWishes(),
+                "hasNext", wishes.isHasNext(),
+                "totalElements", wishes.getTotalElements(),
+                "message", "위시리스트가 조회되었습니다."
+        )));
     }
 
     // 상품id
@@ -186,10 +202,17 @@ public class CustomerController {
     // 주문목록 보기
     @GetMapping("/orders")
     public ResponseEntity<ApiResponseJson> getOrders(
-            @AuthenticationPrincipal JwtUserDetails userDetails) {
-        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "주문 목록", customerService.getOrderList(userDetails.getId())
-        ))));
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        OrderPaginationDto orders = customerService.getOrderList(userDetails.getId(), page, size);
+
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "orders", orders.getOrders(),
+                "hasNext", orders.isHasNext(),
+                "totalElements", orders.getTotalElements(),
+                "message", "주문 목록이 조회되었습니다."
+        )));
     }
 
     // 주문 상세 보기

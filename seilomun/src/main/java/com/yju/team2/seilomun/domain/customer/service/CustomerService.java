@@ -25,6 +25,10 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -89,15 +93,19 @@ public class CustomerService {
     }
 
     // 소비자 매장 즐겨찾기 보여주기
-    public List<FavoriteSellerDto> getFavorite(Long customerId) {
+    public FavoritePaginationDto  getFavorite(Long customerId, int page, int size) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
         }
         Customer customer = optionalCustomer.get();
-        List<Favorite> customerList = favoriteRepository.findByCustomer(customer);
+
+        // 페이지네이션을 위한 Pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Favorite> favoritePage = favoriteRepository.findByCustomer(customer, pageable);
+
         List<FavoriteSellerDto> favoriteSellerDtoList = new ArrayList<>();
-        for (Favorite favorite : customerList) {
+        for (Favorite favorite : favoritePage.getContent()) {
             Seller seller = favorite.getSeller();
             favoriteSellerDtoList.add(new FavoriteSellerDto(
                     seller.getId(),
@@ -106,7 +114,12 @@ public class CustomerService {
                     seller.getRating()
             ));
         }
-        return favoriteSellerDtoList;
+
+        return FavoritePaginationDto.builder()
+                .favorites(favoriteSellerDtoList)
+                .hasNext(favoritePage.hasNext())
+                .totalElements(favoritePage.getTotalElements())
+                .build();
     }
 
     // 소비자 매장 즐겨찾기 추가
@@ -162,20 +175,22 @@ public class CustomerService {
     }
 
     // 좋아요한 상품 조회
-    public List<WishProductDto> getWishedProducts(Long customerId) {
+    public WishPaginationDto getWishedProducts(Long customerId, int page, int size) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
         }
         Customer customer = optionalCustomer.get();
+        // 페이지네이션을 위한 Pageable 객체 생성
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Wish> wishPage = wishRepository.findByCustomer(customer, pageable);
 
-        List<Wish> wishList = wishRepository.findByCustomer(customer);
         List<WishProductDto> wishProductDtoList = new ArrayList<>();
-        for (Wish wish : wishList) {
+        for (Wish wish : wishPage.getContent()) {
             Product product = wish.getProduct();
             Seller seller = product.getSeller();
             Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
-            //할인된 가격
+            // 할인된 가격
             Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
             // 첫 번째 사진 URL 가져오기
             String photoUrl = productPhotoRepository.findTopByProductOrderById(product)
@@ -195,7 +210,12 @@ public class CustomerService {
                     product.getStatus()
             ));
         }
-        return wishProductDtoList;
+
+        return WishPaginationDto.builder()
+                .wishes(wishProductDtoList)
+                .hasNext(wishPage.hasNext())
+                .totalElements(wishPage.getTotalElements())
+                .build();
     }
 
     //상품 좋아요 취소
@@ -217,15 +237,19 @@ public class CustomerService {
     }
 
     // 주문 목록 보기
-    public List<OrderListResponseDto> getOrderList(Long customerId) {
+    public OrderPaginationDto getOrderList(Long customerId, int page, int size) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
         }
         Customer customer = optionalCustomer.get();
-        List<Order> listOrders = orderRepository.findByCustomer(customer);
+        // 페이지네이션을 위한 Pageable 객체 생성 (최신순 정렬)
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findByCustomerIdWithPagination(customerId, pageable);
+
         List<OrderListResponseDto> orderListResponseDtoList = new ArrayList<>();
-        for (Order order : listOrders) {
+
+        for (Order order : orderPage.getContent()) {
             List<String> productNames = new ArrayList<>();
             List<OrderItem> orderItemList = orderItemRepository.findByOrder(order);
 
@@ -233,17 +257,22 @@ public class CustomerService {
                 productNames.add(orderItem.getProduct().getName());
             }
 
-            OrderListResponseDto orderListResponseDto = OrderListResponseDto.builder().
-                    orderId(order.getOrId()).
-                    sellerName(order.getSeller().getStoreName()).
-                    totalAmount(order.getTotalAmount()).
-                    photoUrl("seller_photo_URL"). // photoUrl
-                            orderStatus(order.getOrderStatus()).
-                    orderItems(productNames).
-                    build();
+            OrderListResponseDto orderListResponseDto = OrderListResponseDto.builder()
+                    .orderId(order.getOrId())
+                    .sellerName(order.getSeller().getStoreName())
+                    .totalAmount(order.getTotalAmount())
+                    .photoUrl("seller_photo_URL") // photoUrl
+                    .orderStatus(order.getOrderStatus())
+                    .orderItems(productNames)
+                    .build();
             orderListResponseDtoList.add(orderListResponseDto);
         }
-        return orderListResponseDtoList;
+
+        return OrderPaginationDto.builder()
+                .orders(orderListResponseDtoList)
+                .hasNext(orderPage.hasNext())
+                .totalElements(orderPage.getTotalElements())
+                .build();
     }
 
     // 상세 주문 보기
