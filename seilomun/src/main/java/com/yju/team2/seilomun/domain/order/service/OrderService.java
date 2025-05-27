@@ -7,15 +7,12 @@ import com.yju.team2.seilomun.domain.customer.entity.PointHistory;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.PointHistoryRepository;
 import com.yju.team2.seilomun.domain.order.dto.*;
-import com.yju.team2.seilomun.domain.order.entity.Order;
-import com.yju.team2.seilomun.domain.order.entity.OrderItem;
-import com.yju.team2.seilomun.domain.order.entity.Payment;
-import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
-import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
-import com.yju.team2.seilomun.domain.order.repository.PaymentRepository;
+import com.yju.team2.seilomun.domain.order.entity.*;
+import com.yju.team2.seilomun.domain.order.repository.*;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
+import com.yju.team2.seilomun.domain.review.entity.ReviewPhoto;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
@@ -50,6 +47,8 @@ public class OrderService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private final PaymentRepository paymentRepository;
     private final TossPaymentConfig tossPaymentConfig;
+    private final RefundPhotoRepository refundPhotoRepository;
+    private final RefundRepository refundRepository;
 
     private String generateOrderNumber() {
         StringBuilder stringBuilder = new StringBuilder(14);
@@ -336,5 +335,40 @@ public class OrderService {
             return tossPaymentCancel(payment.getPaymentKey(),"취소");
         }
         throw new IllegalArgumentException("결제 취소 실패");
+    }
+    @Transactional
+    public RefundRequestDto refundApplication(Long customerId, Long orderId, RefundRequestDto refundRequestDto) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("사용자가 존재 하지 않습니다.");
+        }
+        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalArgumentException("주문이 존재 하지 않습니다.");
+        }
+        Order order = optionalOrder.get();
+        Optional<Payment> optionalPayment = paymentRepository.findByOrderAndAndPaySuccessYN(order, true);
+        if (optionalPayment.isEmpty()) {
+            throw new IllegalArgumentException("결제가 존재 하지 않습니다.");
+        }
+        Payment payment = optionalPayment.get();
+        Refund refund  = Refund.builder().
+                refundType(refundRequestDto.getRefundType()).
+                title(refundRequestDto.getTitle()).
+                content(refundRequestDto.getContent()).
+                status('N'). // 판매자가 아직 환불 수락 전이기 때문에 N
+                payment(payment).
+                build();
+        refundRepository.save(refund);
+        // 리뷰 사진 등록
+        if (refundRequestDto.getRefundPhotos() != null && !refundRequestDto.getRefundPhotos().isEmpty()) {
+            refundRequestDto.getRefundPhotos().forEach(url -> {
+                refundPhotoRepository.save(RefundPhoto.builder()
+                        .refund(refund)
+                        .photoUrl(url)
+                        .build());
+            });
+        }
+        return refundRequestDto;
     }
 }

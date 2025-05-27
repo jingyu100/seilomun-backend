@@ -7,8 +7,10 @@ import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.order.dto.OrderDto;
 import com.yju.team2.seilomun.domain.order.dto.PaymentResDto;
 import com.yju.team2.seilomun.domain.order.dto.PaymentSuccessDto;
+import com.yju.team2.seilomun.domain.order.dto.RefundRequestDto;
 import com.yju.team2.seilomun.domain.order.service.OrderService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -86,5 +88,16 @@ public class OrderController {
             @PathVariable Long orderId) {
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                 orderService.cancelPayment(customer.getId(), orderId)));
+    }
+
+    @PostMapping("/refund/{orderId}")
+    public ResponseEntity<ApiResponseJson> refundOrder(
+            @AuthenticationPrincipal JwtUserDetails customer,
+            @PathVariable Long orderId,
+            @RequestBody @Valid RefundRequestDto refundRequestDto) {
+        RefundRequestDto requestDto = orderService.refundApplication(customer.getId(), orderId, refundRequestDto);
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("환불 신청 완료", requestDto.getTitle())
+                ));
     }
 }

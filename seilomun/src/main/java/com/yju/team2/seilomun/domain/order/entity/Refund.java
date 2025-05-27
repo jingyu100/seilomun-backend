@@ -38,7 +38,7 @@ public class Refund {
     @CreationTimestamp
     private LocalDateTime requestedAt;
 
-    @Column(name = "processed_at", nullable = false)
+    @Column(name = "processed_at")
     private LocalDateTime processedAt;
 
     @OneToOne
