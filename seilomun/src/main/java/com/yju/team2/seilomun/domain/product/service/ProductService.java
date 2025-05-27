@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.product.service;
 
+import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
@@ -171,11 +172,16 @@ public class ProductService {
         // 즐겨찾기한 고객들에게 알림 전송
         try {
             if (notificationService != null) {
-                notificationService.notifyNewProduct(savedProduct);
-                log.info("알림 전송 완료");
+                NewProductEvent productEvent = NewProductEvent.builder()
+                        .product(savedProduct)
+                        .eventId("NEW_PRODUCT_" + savedProduct.getId())
+                        .build();
+
+                notificationService.processNotification(productEvent);
+                log.info("상품 등록 알림 전송 완료");
             }
         } catch (Exception e) {
-            log.error("알림 전송 실패", e);
+            log.error("상품 등록 알림 전송 실패", e);
             // 알림 전송 실패해도 상품 등록은 계속 진행
         }
 

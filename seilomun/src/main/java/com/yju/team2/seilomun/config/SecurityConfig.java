@@ -65,6 +65,8 @@ public class SecurityConfig {
                                 "/api/chat/**",
                                 "/api/users/**"
                         ).permitAll()
+                        // 알림 관련 엔드포인트 - 인증된 사용자만 접근 허용
+                        .requestMatchers("/api/notifications/**").authenticated()
                         // 판매자만 접근 가능
                         .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
                         // 소비자만 접근 가능

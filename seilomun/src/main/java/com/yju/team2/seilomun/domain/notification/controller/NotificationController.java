@@ -24,8 +24,8 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    // SSE 연결
-    @GetMapping(value = "/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    // SSE 연결 - 고객용
+    @GetMapping(value = "/customer/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter connect(@AuthenticationPrincipal JwtUserDetails userDetails) {
         Long userId = userDetails.getId();
         String userType = userDetails.getUserType();
@@ -38,11 +38,33 @@ public class NotificationController {
         return notificationService.connect(userId);
     }
 
+    // SSE 연결 - 판매자용 (새로 추가)
+    @GetMapping(value = "/seller/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter connectSeller(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        Long userId = userDetails.getId();
+        String userType = userDetails.getUserType();
+
+        if (!"SELLER".equals(userType)) {
+            throw new IllegalArgumentException("판매자만 이 연결을 사용할 수 있습니다.");
+        }
+
+        log.info("판매자 SSE 연결 요청: sellerId={}", userId);
+        return notificationService.connectSeller(userId);
+    }
+
     // 알림 읽음 처리
     @PutMapping("/{notificationId}/read")
-    public void markAsRead(@PathVariable Long notificationId,
-                           @AuthenticationPrincipal JwtUserDetails userDetails) {
-        notificationService.markAsRead(notificationId, userDetails.getId());
+    public ResponseEntity<ApiResponseJson> markAsRead(@PathVariable Long notificationId,
+                                                      @AuthenticationPrincipal JwtUserDetails userDetails) {
+        try {
+            notificationService.markAsRead(notificationId, userDetails.getId());
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("message", "알림이 읽음 처리되었습니다.")));
+        } catch (Exception e) {
+            log.error("알림 읽음 처리 실패: notificationId={}", notificationId, e);
+            return ResponseEntity.badRequest().body(new ApiResponseJson(HttpStatus.BAD_REQUEST,
+                    Map.of("error", e.getMessage())));
+        }
     }
 
     // 알림 목록 출력
@@ -50,6 +72,30 @@ public class NotificationController {
     public ResponseEntity<ApiResponseJson> getNotifications(@AuthenticationPrincipal JwtUserDetails userDetails) {
         List<Notification> notificationList = notificationService.getNotifications(userDetails.getId(), userDetails.getUserType());
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
-                "list", notificationList)));
+                "notifications", notificationList,
+                "count", notificationList.size())));
+    }
+
+    // 읽지 않은 알림 개수 조회
+    @GetMapping("/unread/count")
+    public ResponseEntity<ApiResponseJson> getUnreadCount(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        int unreadCount = notificationService.getUnreadCount(userDetails.getId(), userDetails.getUserType());
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "unreadCount", unreadCount)));
+    }
+
+    // 모든 알림 읽음 처리
+    @PutMapping("/read-all")
+    public ResponseEntity<ApiResponseJson> markAllAsRead(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        try {
+            int updatedCount = notificationService.markAllAsRead(userDetails.getId(), userDetails.getUserType());
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "message", "모든 알림이 읽음 처리되었습니다.",
+                    "updatedCount", updatedCount)));
+        } catch (Exception e) {
+            log.error("모든 알림 읽음 처리 실패: userId={}", userDetails.getId(), e);
+            return ResponseEntity.badRequest().body(new ApiResponseJson(HttpStatus.BAD_REQUEST,
+                    Map.of("error", e.getMessage())));
+        }
     }
 }
