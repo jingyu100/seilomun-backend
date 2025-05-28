@@ -38,6 +38,6 @@ public class OrderOfferedEvent implements NotificationEvent {
 
     @Override
     public String getEventId() {
-        return eventId != null ? eventId : "ORDER_OFFERED_" + order.getOrId();
+        return eventId != null ? eventId : "ORDER_OFFERED_" + order.getId();
     }
 }

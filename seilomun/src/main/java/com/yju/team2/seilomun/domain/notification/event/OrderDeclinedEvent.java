@@ -37,6 +37,6 @@ public class OrderDeclinedEvent implements NotificationEvent {
 
     @Override
     public String getEventId() {
-        return eventId != null ? eventId : "ORDER_DECLINED_" + order.getOrId();
+        return eventId != null ? eventId : "ORDER_DECLINED_" + order.getId();
     }
 }
