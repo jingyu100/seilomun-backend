@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.customer.repository;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.Wish;
+import com.yju.team2.seilomun.domain.product.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,7 @@ public interface WishRepository extends JpaRepository<Wish, Long> {
     List<Wish> findByCustomer(Customer customer);
 
     Page<Wish> findByCustomer(Customer customer, Pageable pageable);
+
+
+    List<Wish> findByProduct(Product product);
 }
