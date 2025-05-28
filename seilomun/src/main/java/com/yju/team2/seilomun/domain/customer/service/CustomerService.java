@@ -134,6 +134,10 @@ public class CustomerService {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
         }
         Seller seller = optionalSeller.get();
+        Optional<Favorite> optionalFavorite = favoriteRepository.findByCustomerAndSeller(customer, seller);
+        if (!optionalFavorite.isEmpty()) {
+            throw new IllegalArgumentException("이미 존재하는 즐겨찾기 매장입니다.");
+        }
         Favorite favorite = Favorite.builder().
                 customer(customer).
                 seller(seller).
@@ -167,6 +171,10 @@ public class CustomerService {
             throw new IllegalArgumentException("존재하지 않는 상품 입니다.");
         }
         Product product = optionalProduct.get();
+        Optional<Wish> optionalWish = wishRepository.findByCustomerAndProduct(customer, product);
+        if (!optionalWish.isEmpty()) {
+            throw new IllegalArgumentException("존재하는 좋아요 상품 입니다.");
+        }
         Wish wish = Wish.builder()
                 .customer(customer)
                 .product(product)
@@ -261,6 +269,7 @@ public class CustomerService {
                     .orderId(order.getOrId())
                     .sellerName(order.getSeller().getStoreName())
                     .totalAmount(order.getTotalAmount())
+                    .orderDate(order.getCreatedAt())
                     .photoUrl("seller_photo_URL") // photoUrl
                     .orderStatus(order.getOrderStatus())
                     .orderItems(productNames)
