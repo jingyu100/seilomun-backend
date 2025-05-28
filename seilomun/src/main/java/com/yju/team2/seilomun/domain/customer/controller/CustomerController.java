@@ -215,4 +215,13 @@ public class CustomerController {
         ))));
     }
 
+
+    //문자인증
+    @PostMapping("/verificationCode")
+    public ResponseEntity<ApiResponseJson> sendVerificationCode(@RequestBody CustomerRegisterDto registerDto) {
+        customerService.sendValidationCode(registerDto.getPhone());
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+            "Message","인증 번호가 발생되었습니다"
+        ))));
+    }
 }

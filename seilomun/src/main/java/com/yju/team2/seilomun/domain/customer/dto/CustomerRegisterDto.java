@@ -37,4 +37,7 @@ public class CustomerRegisterDto {
 
     @NotEmpty
     private String birthdate;
+
+    @NotEmpty
+    private String verificationCode;
 }
