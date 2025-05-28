@@ -12,7 +12,6 @@ import java.util.List;
 @Entity
 @Table(name = "refunds")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -49,5 +48,7 @@ public class Refund {
     @Builder.Default
     private List<RefundPhoto> refundPhoto = new ArrayList<>();
 
-
+    public void insertProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
+    }
 }

@@ -37,6 +37,6 @@ public class OrderAcceptedEvent implements NotificationEvent {
 
     @Override
     public String getEventId() {
-        return eventId != null ? eventId : "ORDER_ACCEPTED_" + order.getOrId();
+        return eventId != null ? eventId : "ORDER_ACCEPTED_" + order.getId();
     }
 }

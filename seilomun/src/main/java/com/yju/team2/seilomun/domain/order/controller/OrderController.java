@@ -79,6 +79,18 @@ public class OrderController {
                 Map.of("message", "주문이 수락 되었습니다.")
                 ));
     }
+    
+    //판매자가 주문 거절
+    @PostMapping("/refuse/{orderId}")
+    public ResponseEntity<ApiResponseJson> refuseOrder(
+            @AuthenticationPrincipal JwtUserDetails seller,
+            @PathVariable Long orderId) {
+        orderService.refuseOrder(seller.getId(), orderId);
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("message", "주문이 거절 되었습니다.")
+        ));
+    }
+    //소비자가 하는 주문 취소
     @PostMapping("/cancel/{orderId}")
     public ResponseEntity<ApiResponseJson> cancelOrder(
             @AuthenticationPrincipal JwtUserDetails customer,
@@ -86,7 +98,7 @@ public class OrderController {
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                 orderService.cancelPayment(customer.getId(), orderId)));
     }
-
+    // 환불 신청
     @PostMapping("/refund/{orderId}")
     public ResponseEntity<ApiResponseJson> refundOrder(
             @AuthenticationPrincipal JwtUserDetails customer,
@@ -96,5 +108,15 @@ public class OrderController {
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                 Map.of("환불 신청 완료", requestDto.getTitle())
                 ));
+    }
+    // 환불 신청 수락
+    @PostMapping("/refund/acceptance/{refundId}")
+    public ResponseEntity<ApiResponseJson> refundAcceptOrder(
+            @AuthenticationPrincipal JwtUserDetails seller,
+            @PathVariable Long refundId) {
+        orderService.refundAcceptance(seller.getId(), refundId);
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("message", "환불 신청 수락 완료")
+        ));
     }
 }
