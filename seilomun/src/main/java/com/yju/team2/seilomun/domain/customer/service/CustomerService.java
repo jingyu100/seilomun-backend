@@ -21,13 +21,17 @@ import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.util.JwtUtil;
+import com.yju.team2.seilomun.util.SmsUtil;
+import com.yju.team2.seilomun.validation.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -51,15 +55,33 @@ public class CustomerService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final SmsUtil smsUtil;
+    private final ValidationUtil validationUtil;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private final ProductService productService;
 
     public Customer registerCustomer(CustomerRegisterDto customerRegisterDto) {
+        String key = customerRegisterDto.getPhone();
+        String storedCode = redisTemplate.opsForValue().get(key);
+
+        if(storedCode == null || !storedCode.equals(customerRegisterDto.getVerificationCode())) {
+            log.info("인증번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("인증번호가 일치하지 않습니다");
+        }
+
+        redisTemplate.delete(key);
+
         checkPasswordStrength(customerRegisterDto.getPassword());
 
         if (customerRepository.existsByEmail(customerRegisterDto.getEmail())) {
             log.info("이미 존재하는 이메일입니다.");
             throw new IllegalArgumentException("이미 등록된 이메일입니다.");
+        }
+
+        if(customerRepository.existsByPhone(customerRegisterDto.getPhone())) {
+            log.info("이미 존재하는 휴대폰번호입니다.");
+            throw new IllegalArgumentException("이미 등록된 휴대폰번호입니다.");
         }
 
         Customer customer = Customer.builder()
@@ -78,6 +100,17 @@ public class CustomerService {
                 .build();
 
         return customerRepository.save(customer);
+    }
+
+    public void sendValidationCode(String PhoneNumber) {
+        if(customerRepository.existsByPhone(PhoneNumber)) {
+            log.info("이미 존재하는 휴대폰번호입니다.");
+            throw new IllegalArgumentException("이미 존재하는 휴대폰번호입니다.");
+        }
+
+        String verificationCode = validationUtil.createCode();
+        smsUtil.sendOne(PhoneNumber, verificationCode);
+        redisTemplate.opsForValue().set(PhoneNumber, verificationCode, Duration.ofMinutes(5));
     }
 
     private void checkPasswordStrength(String password) {
