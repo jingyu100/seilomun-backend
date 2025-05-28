@@ -13,7 +13,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @Builder
 @Table(name = "orders")
 @NoArgsConstructor
@@ -23,7 +22,7 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "or_id")
-    private Long orId;
+    private Long id;
 
     @Column(name = "order_number", nullable = false, length = 100,unique = true)
     private String orderNumber;

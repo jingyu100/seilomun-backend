@@ -69,18 +69,15 @@ public class OrderController {
                 Map.of("실패", orderService.tossPaymentFail(code, message, orderId),
                         "message", "결제가 실패 되었습니다.")));
     }
-    //테스트 결제 할려고 만든거
-    @PostMapping("/test/buy")
-    public ResponseEntity<ApiResponseJson> testBuyProduct(@RequestBody OrderDto orderDto) {
-        Long testCustomerId = 1L;
-
-        PaymentResDto paymentResDto = orderService.buyProduct(orderDto, testCustomerId);
-        paymentResDto.setSuccessUrl(orderDto.getYourSuccessUrl() == null ? tossPaymentConfig.getSuccessUrl() : orderDto.getYourSuccessUrl());
-        paymentResDto.setFailUrl(orderDto.getYourFailUrl() == null ? tossPaymentConfig.getFailUrl() : orderDto.getYourFailUrl());
-
+    // 판매자가 주문 수락
+    @PostMapping("/acceptance/{orderId}")
+    public ResponseEntity<ApiResponseJson> acceptOrder(
+            @AuthenticationPrincipal JwtUserDetails seller,
+            @PathVariable Long orderId) {
+        orderService.acceptanceOrder(seller.getId(), orderId);
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Update", paymentResDto,
-                        "Message", "상품이 주문 되었습니다")));
+                Map.of("message", "주문이 수락 되었습니다.")
+                ));
     }
     @PostMapping("/cancel/{orderId}")
     public ResponseEntity<ApiResponseJson> cancelOrder(

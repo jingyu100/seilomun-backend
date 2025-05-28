@@ -21,4 +21,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId ORDER BY o.createdAt DESC")
     Page<Order> findByCustomerIdWithPagination(@Param("customerId") Long customerId, Pageable pageable);
+
+    Optional<Order> findByIdAndOrderStatus(Long orId, Character orderStatus);
 }

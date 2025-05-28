@@ -266,7 +266,7 @@ public class CustomerService {
             }
 
             OrderListResponseDto orderListResponseDto = OrderListResponseDto.builder()
-                    .orderId(order.getOrId())
+                    .orderId(order.getId())
                     .sellerName(order.getSeller().getStoreName())
                     .totalAmount(order.getTotalAmount())
                     .orderDate(order.getCreatedAt())

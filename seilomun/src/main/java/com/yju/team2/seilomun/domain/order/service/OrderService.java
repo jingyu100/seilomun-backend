@@ -227,12 +227,12 @@ public class OrderService {
     public PaymentSuccessDto tossPaymentSuccess(String paymentKey, String orderId, Integer amount) {
         Payment payment = verifyPayment(orderId, amount);
         // 결제 성공하면 상품에서 물량 수량 빼기
-        Optional<Order> orederOptional = orderRepository.findById(payment.getOrder().getOrId());
+        Optional<Order> orederOptional = orderRepository.findById(payment.getOrder().getId());
         if (orederOptional.isEmpty()) {
             throw new IllegalArgumentException("주문 테이블이 존재 하지 않습니다");
         }
         Order order = orederOptional.get();
-        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(order.getOrId());
+        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(order.getId());
         if (orderItemOptional.isEmpty()) {
             throw new IllegalArgumentException("주문 아이템이 존재 하지 않습니다");
         }
@@ -297,7 +297,7 @@ public class OrderService {
         return restTemplate.postForObject(TossPaymentConfig.URL + paymentKey + "/cancel",
                 new HttpEntity<>(params, headers),Map.class );
     }
-
+    // 결제 취소
     @Transactional
     public Map cancelPayment(Long customerId, Long orderId) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
@@ -336,6 +336,7 @@ public class OrderService {
         }
         throw new IllegalArgumentException("결제 취소 실패");
     }
+    //환불
     @Transactional
     public RefundRequestDto refundApplication(Long customerId, Long orderId, RefundRequestDto refundRequestDto) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
@@ -370,5 +371,29 @@ public class OrderService {
             });
         }
         return refundRequestDto;
+    }
+    
+    //판매자 주문 수락 메서드
+    @Transactional
+    public void acceptanceOrder(Long sellerId,Long orderId) {
+        //수락 전 인 것만 찾기
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId,'N');
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalArgumentException("주문이 존재 하지 않습니다.");
+        }
+        Order order = optionalOrder.get();
+        Optional<Seller> optionalSeller = sellerRepository.findById(sellerId);
+        if (optionalSeller.isEmpty()) {
+            throw new IllegalArgumentException("없는 판매자 입니다.");
+        }
+        if (!order.getSeller().getId().equals(sellerId)) {
+            throw new IllegalArgumentException("해당 주문에 대한 권한이 없습니다.");
+        }
+        Optional<Payment> optionalPayment = paymentRepository.findByOrderAndAndPaySuccessYN(order, true);
+        if (optionalPayment.isEmpty()) {
+            throw new IllegalArgumentException("성공한 결제가 아닙니다.");
+        }
+        order.updateOrderStatus('A'); //acceptance의 a
+        orderRepository.save(order);
     }
 }
