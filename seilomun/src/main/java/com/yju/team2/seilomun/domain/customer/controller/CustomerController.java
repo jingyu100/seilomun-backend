@@ -75,12 +75,7 @@ public class CustomerController {
 
     @DeleteMapping("/favorites/{id}")
     public ResponseEntity<ApiResponseJson> customerFavoriteDelete(@PathVariable Long id,
-                                                                  BindingResult bindingResult,
                                                                   @AuthenticationPrincipal JwtUserDetails userDetails) {
-
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
-        }
         try {
             String email = userDetails.getEmail();
             customerService.favoriteDelete(email, id);
@@ -129,12 +124,7 @@ public class CustomerController {
     // 상품id
     @DeleteMapping("/wishes/{id}")
     public ResponseEntity<ApiResponseJson> customerWishesDelete(@Valid @PathVariable Long id,
-                                                                BindingResult bindingResult,
                                                                 @AuthenticationPrincipal JwtUserDetails userDetails) {
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
-        }
-
         try {
             String email = userDetails.getEmail();
             customerService.wishDelete(email, id);
