@@ -6,6 +6,9 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.PointHistory;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.PointHistoryRepository;
+import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
+import com.yju.team2.seilomun.domain.notification.event.OrderAcceptedEvent;
+import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.order.dto.*;
 import com.yju.team2.seilomun.domain.order.entity.*;
 import com.yju.team2.seilomun.domain.order.repository.*;
@@ -49,6 +52,7 @@ public class OrderService {
     private final TossPaymentConfig tossPaymentConfig;
     private final RefundPhotoRepository refundPhotoRepository;
     private final RefundRepository refundRepository;
+    private final NotificationService notificationService;
 
     private String generateOrderNumber() {
         StringBuilder stringBuilder = new StringBuilder(14);
@@ -397,6 +401,23 @@ public class OrderService {
         }
         order.updateOrderStatus('A'); //acceptance의 a
         orderRepository.save(order);
+
+        // 결제한 고객에게 알림 전송
+        try {
+            if (notificationService != null) {
+                OrderAcceptedEvent orderAcceptedEvent = OrderAcceptedEvent.builder()
+                        .order(order)
+                        .eventId("ORDER_ACCEPTED_" + order.getId())
+                        .build();
+
+                notificationService.processNotification(orderAcceptedEvent);
+                log.info("주문 수락 알림 전송 완료");
+            }
+        } catch (Exception e) {
+            log.error("주문 수락 알림 전송 실패", e);
+            // 알림 전송 실패해도 상품 등록은 계속 진행
+        }
+
     }
 
     //판매자 주문 거절 메서드
