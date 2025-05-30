@@ -8,6 +8,8 @@ import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.PointHistoryRepository;
 import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
 import com.yju.team2.seilomun.domain.notification.event.OrderAcceptedEvent;
+import com.yju.team2.seilomun.domain.notification.event.OrderDeclinedEvent;
+import com.yju.team2.seilomun.domain.notification.event.OrderRefundAcceptedEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.order.dto.*;
 import com.yju.team2.seilomun.domain.order.entity.*;
@@ -349,9 +351,9 @@ public class OrderService {
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("사용자가 존재 하지 않습니다.");
         }
-        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId,'A');
         if (optionalOrder.isEmpty()) {
-            throw new IllegalArgumentException("주문이 존재 하지 않습니다.");
+            throw new IllegalArgumentException("판매자가 수락한 주문이 아닙니다");
         }
         Order order = optionalOrder.get();
         Optional<Payment> optionalPayment = paymentRepository.findByOrderAndPaySuccessYN(order, true);
@@ -415,7 +417,7 @@ public class OrderService {
             }
         } catch (Exception e) {
             log.error("주문 수락 알림 전송 실패", e);
-            // 알림 전송 실패해도 상품 등록은 계속 진행
+            // 알림 전송 실패해도
         }
 
     }
@@ -444,6 +446,22 @@ public class OrderService {
         cancelPayment(order.getCustomer().getId(), order.getId());
         order.updateOrderStatus('R'); //refuse의 r
         orderRepository.save(order);
+        
+        // 알림 전송
+        try {
+            if (notificationService != null) {
+                OrderDeclinedEvent orderDeclinedEvent = OrderDeclinedEvent.builder()
+                        .order(order)
+                        .eventId("ORDER_DECLINED_" + order.getId())
+                        .build();
+
+                notificationService.processNotification(orderDeclinedEvent);
+                log.info("주문 거절 알림 전송 완료");
+            }
+        } catch (Exception e) {
+            log.error("주문 거절 알림 전송 실패", e);
+            // 알림 전송 실패해도
+        }
     }
     
     //환불 수락
@@ -470,8 +488,25 @@ public class OrderService {
         //결제 취소
         cancelPayment(order.getCustomer().getId(), order.getId());
         refund.insertProcessedAt(LocalDateTime.now());
+        refund.updateStatus('A'); // 수락의 A
         order.updateOrderStatus('B');
         refundRepository.save(refund);
         orderRepository.save(order);
+
+        // 알림 전송
+        try {
+            if (notificationService != null) {
+                OrderRefundAcceptedEvent orderRefundAcceptedEvent = OrderRefundAcceptedEvent.builder()
+                        .refund(refund)
+                        .eventId("REFUND_ACCEPTED_" + refund.getId())
+                        .build();
+
+                notificationService.processNotification(orderRefundAcceptedEvent);
+                log.info("환불 수락 알림 전송 완료");
+            }
+        } catch (Exception e) {
+            log.error("환불 수락 알림 전송 실패", e);
+            // 알림 전송 실패
+        }
     }
 }

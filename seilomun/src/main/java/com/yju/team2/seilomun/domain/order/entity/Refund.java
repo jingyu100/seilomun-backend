@@ -51,4 +51,8 @@ public class Refund {
     public void insertProcessedAt(LocalDateTime processedAt) {
         this.processedAt = processedAt;
     }
+
+    public void updateStatus(Character status) {
+        this.status = status;
+    }
 }
