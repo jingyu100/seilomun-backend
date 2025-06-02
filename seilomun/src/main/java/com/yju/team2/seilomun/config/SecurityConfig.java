@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/api/sellers/**",
                                 "/api/customers/**",
                                 "/api/auth/logout",
+                                "/api/address/**",
                                 "/h2-console/**",
                                 "/error",
                                 "/favicon.ico",

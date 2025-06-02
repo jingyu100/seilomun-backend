@@ -33,4 +33,15 @@ public class Address {
     @ManyToOne
     @JoinColumn(name = "cu_id")
     private Customer customer;
+
+    public void updateAddress(String postCode, String detail, Character addressMain, String label) {
+        this.postCode = postCode;
+        this.addressDetail = detail;
+        this.addressMain = addressMain;
+        this.label = label;
+    }
+
+    public void updateMain(Character addressMain) {
+        this.addressMain = addressMain;
+    }
 }

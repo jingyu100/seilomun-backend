@@ -2,9 +2,11 @@ package com.yju.team2.seilomun.domain.customer.service;
 
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.dto.*;
+import com.yju.team2.seilomun.domain.customer.entity.Address;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.Favorite;
 import com.yju.team2.seilomun.domain.customer.entity.Wish;
+import com.yju.team2.seilomun.domain.customer.repository.AddressRepository;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
 import com.yju.team2.seilomun.domain.customer.repository.WishRepository;
@@ -64,6 +66,7 @@ public class CustomerService {
     private final RedisTemplate<String, String> redisTemplate;
 
     private final ProductService productService;
+    private final AddressRepository addressRepository;
 
     public Customer registerCustomer(CustomerRegisterDto customerRegisterDto) {
         String key = customerRegisterDto.getPhone();
@@ -432,6 +435,72 @@ public class CustomerService {
         customer.UpdateSocialCustomer(updateDto);
 
         customerRepository.save(customer);
+    }
+
+    // 소비자 주소 등록
+    public void addAddress(Long customerId, AddressRequestDto address) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+        if(address.getAddressMain() == '1') {
+            List<Address> addresses = addressRepository.findByCustomerId(customerId);
+            for(Address addr : addresses) {
+                if(addr.getAddressMain() == '1') {
+                    addr.updateMain('0');
+                    addressRepository.save(addr);
+                }
+            }
+        }
+
+        Address newAddress = Address.builder()
+                .postCode(address.getPostCode())
+                .addressDetail(address.getAddressDetail())
+                .addressMain(address.getAddressMain())
+                .label(address.getLabel())
+                .customer(customer)
+                .build();
+
+        addressRepository.save(newAddress);
+    }
+
+    //소비자 주소 수정
+    public void updateAddress(Long addressId, AddressRequestDto addressRequestDto) {
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("주소를 찾을 수 없습니다"));
+
+        if(addressRequestDto.getAddressMain() == '1') {
+            List<Address> addresses = addressRepository.findByCustomerId(address.getCustomer().getId());
+            for(Address addr : addresses) {
+                if(addr.getAddressMain() == '1' && !addr.getId().equals(addressId)) {
+                    addr.updateMain('0');
+                    addressRepository.save(addr);
+                }
+            }
+        }
+
+        address.updateAddress(
+                addressRequestDto.getPostCode(),
+                addressRequestDto.getAddressDetail(),
+                addressRequestDto.getAddressMain(),
+                addressRequestDto.getLabel()
+        );
+
+
+        addressRepository.save(address);
+    }
+
+    // 소비자 주소 조회
+    public List<Address> getAddresses(Long customerId) {
+        return addressRepository.findByCustomerId(customerId);
+    }
+
+    // 소비자 주소 삭제
+    public void deleteAddress(Long addressId) {
+        if(!addressRepository.existsById(addressId)) {
+            throw new RuntimeException("삭제할 주소가 존재하지 않습니다.");
+        }
+
+        addressRepository.deleteById(addressId);
     }
 }
 
