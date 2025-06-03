@@ -63,14 +63,16 @@ public class CustomerController {
 
         try {
             String email = userDetails.getEmail();
-            Long favoriteId = customerService.setFavorite(email, sellerId);
+            boolean isAdd = customerService.setFavorite(email, sellerId);
+
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                    Map.of("Message", "즐겨찾기가 되었습니다",
+                    Map.of("message", isAdd ? "즐겨찾기가 추가되었습니다" : "즐겨찾기가 취소되었습니다",
+                            "isAdd", isAdd,
                             "사용자", email,
-                            "즐겨찾기 id", favoriteId)));
+                            "sellerId", sellerId)));
         } catch (Exception e) {
-            log.error("매장 즐겨찾기 중 에러 발생: {}", e.getMessage());
-            throw new IllegalArgumentException("매장 즐겨찾기 중 에러가 발생했습니다: " + e.getMessage());
+            log.error("매장 즐겨찾기 토글 중 에러 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("매장 즐겨찾기 토글 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -112,14 +114,16 @@ public class CustomerController {
 
         try {
             String email = userDetails.getEmail();
-            Long wishId = customerService.setwishes(email, productId);
+            boolean isAdd = customerService.setWishes(email, productId);
+
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                    Map.of("Message", "상품 좋아요가 되었습니다",
+                    Map.of("message", isAdd ? "상품 좋아요가 추가되었습니다" : "상품 좋아요가 취소되었습니다",
+                            "isAdd", isAdd,
                             "사용자", email,
-                            "좋아요 ID",wishId)));
+                            "productId", productId)));
         } catch (Exception e) {
-            log.error("상품 좋아요 중 에러 발생: {}", e.getMessage());
-            throw new IllegalArgumentException("상품 좋아요 중 에러가 발생했습니다: " + e.getMessage());
+            log.error("상품 좋아요 토글 중 에러 발생: {}", e.getMessage());
+            throw new IllegalArgumentException("상품 좋아요 토글 중 에러가 발생했습니다: " + e.getMessage());
         }
     }
 

@@ -159,27 +159,36 @@ public class CustomerService {
     }
 
     // 소비자 매장 즐겨찾기 추가
-    public Long setFavorite(String email, Long id) {
+    public boolean setFavorite(String email, Long sellerId) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
         Customer customer = optionalCustomer.get();
-        Optional<Seller> optionalSeller = sellerRepository.findById(id);
+
+        Optional<Seller> optionalSeller = sellerRepository.findById(sellerId);
         if (optionalSeller.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+            throw new IllegalArgumentException("존재하지 않는 판매자입니다.");
         }
         Seller seller = optionalSeller.get();
+
+        // 기존 즐겨찾기가 있는지 확인
         Optional<Favorite> optionalFavorite = favoriteRepository.findByCustomerAndSeller(customer, seller);
-        if (!optionalFavorite.isEmpty()) {
-            throw new IllegalArgumentException("이미 존재하는 즐겨찾기 매장입니다.");
+
+        if (optionalFavorite.isPresent()) {
+            // 이미 즐겨찾기가 있으면 삭제
+            Favorite existingFavorite = optionalFavorite.get();
+            favoriteRepository.delete(existingFavorite);
+            return false;
+        } else {
+            // 즐겨찾기가 없으면 추가
+            Favorite favorite = Favorite.builder()
+                    .customer(customer)
+                    .seller(seller)
+                    .build();
+            favoriteRepository.save(favorite);
+            return true;
         }
-        Favorite favorite = Favorite.builder().
-                customer(customer).
-                seller(seller).
-                build();
-        Favorite save = favoriteRepository.save(favorite);
-        return save.getId();
     }
 
     // 즐겨찾기 취소
@@ -197,27 +206,36 @@ public class CustomerService {
     }
 
     // 상품 좋아요
-    public Long setwishes(String email, Long id) {
+    public boolean setWishes(String email, Long productId) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
         Customer customer = optionalCustomer.get();
-        Optional<Product> optionalProduct = productRepository.findById(id);
+
+        Optional<Product> optionalProduct = productRepository.findById(productId);
         if (optionalProduct.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 상품 입니다.");
+            throw new IllegalArgumentException("존재하지 않는 상품입니다.");
         }
         Product product = optionalProduct.get();
+
+        // 기존 좋아요가 있는지 확인
         Optional<Wish> optionalWish = wishRepository.findByCustomerAndProduct(customer, product);
-        if (!optionalWish.isEmpty()) {
-            throw new IllegalArgumentException("존재하는 좋아요 상품 입니다.");
+
+        if (optionalWish.isPresent()) {
+            // 이미 좋아요가 있으면 삭제
+            Wish existingWish = optionalWish.get();
+            wishRepository.delete(existingWish);
+            return false;
+        } else {
+            // 좋아요가 없으면 추가
+            Wish wish = Wish.builder()
+                    .customer(customer)
+                    .product(product)
+                    .build();
+            wishRepository.save(wish);
+            return true;
         }
-        Wish wish = Wish.builder()
-                .customer(customer)
-                .product(product)
-                .build();
-        Wish save = wishRepository.save(wish);
-        return save.getId();
     }
 
     // 좋아요한 상품 조회
