@@ -159,7 +159,7 @@ public class CustomerService {
     }
 
     // 소비자 매장 즐겨찾기 추가
-    public void setFavorite(String email, Long id) {
+    public Long setFavorite(String email, Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
@@ -178,7 +178,8 @@ public class CustomerService {
                 customer(customer).
                 seller(seller).
                 build();
-        favoriteRepository.save(favorite);
+        Favorite save = favoriteRepository.save(favorite);
+        return save.getId();
     }
 
     // 즐겨찾기 취소
@@ -196,7 +197,7 @@ public class CustomerService {
     }
 
     // 상품 좋아요
-    public void setwishes(String email, Long id) {
+    public Long setwishes(String email, Long id) {
         Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
@@ -215,7 +216,8 @@ public class CustomerService {
                 .customer(customer)
                 .product(product)
                 .build();
-        wishRepository.save(wish);
+        Wish save = wishRepository.save(wish);
+        return save.getId();
     }
 
     // 좋아요한 상품 조회
@@ -270,7 +272,7 @@ public class CustomerService {
         }
         Optional<Wish> optionalWish = wishRepository.findById(id);
         if (optionalWish.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 상품 입니다.");
+            throw new IllegalArgumentException("존재하지 않는 좋아요 상품 입니다.");
         }
         Wish wish = optionalWish.get();
         wishRepository.delete(wish);
