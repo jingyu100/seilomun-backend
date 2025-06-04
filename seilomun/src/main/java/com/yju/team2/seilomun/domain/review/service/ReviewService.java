@@ -49,7 +49,7 @@ public class ReviewService {
             throw new IllegalArgumentException("존재하지 않는 사용자 입니다.");
         }
         Customer customer = optionalCustomer.get();
-        Optional<Order> optionalOrder = orderRepository.findById(orderId);
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId,'A');
         if (optionalOrder.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 주문 입니다.");
         }

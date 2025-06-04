@@ -2,18 +2,16 @@ package com.yju.team2.seilomun.domain.report.entity;
 
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(name = "reports")
 public class Report {
 
@@ -31,6 +29,7 @@ public class Report {
     @Column(name = "target_type", nullable = false)
     private Character target_type;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime created_at;
 
