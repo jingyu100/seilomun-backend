@@ -403,16 +403,18 @@ public class CustomerService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
 
-        if (customerRepository.existsByEmail(updateDto.getEmail())) {
-            log.info("이미 존재하는 이메일입니다.");
-            throw new IllegalArgumentException("이미 등록된 이메일입니다.");
+        if (!customer.getEmail().equalsIgnoreCase(updateDto.getEmail())) {
+            if (customerRepository.existsByEmail(updateDto.getEmail().toLowerCase())) {
+                throw new IllegalArgumentException("이미 등록된 이메일입니다.");
+            }
         }
 
-        if (customerRepository.existsByNickname(updateDto.getNickname())) {
-            log.info("이미 존재하는 닉네임입니다.");
-            throw new IllegalArgumentException("이미 등록된 닉네임입니다.");
+        if (!customer.getNickname().equalsIgnoreCase(updateDto.getNickname())) {
+            if (customerRepository.existsByNickname(updateDto.getNickname())) {
+                log.info("이미 존재하는 닉네임입니다.");
+                throw new IllegalArgumentException("이미 등록된 닉네임입니다.");
+            }
         }
-
         System.out.println("newPassword : " + passwordChangeDto.getNewPassword());
         System.out.println("confirmPassword : " + passwordChangeDto.getConfirmPassword());
         // 현재 비밀번호 검증
