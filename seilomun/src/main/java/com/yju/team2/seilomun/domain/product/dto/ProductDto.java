@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ProductDto {
+    private Long id;
     private String name;
     private String description;
     private Integer originalPrice;
@@ -31,6 +32,7 @@ public class ProductDto {
 
     public static ProductDto fromEntity(Product product, Integer currentDiscountRate) {
         return ProductDto.builder()
+                .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
                 .originalPrice(product.getOriginalPrice())
