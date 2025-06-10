@@ -1,11 +1,15 @@
 package com.yju.team2.seilomun.config;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisMultiDBConfig {
@@ -73,5 +77,84 @@ public class RedisMultiDBConfig {
         factory.setDatabase(database);
         factory.afterPropertiesSet();
         return factory;
+    }
+
+    // 기본 RedisTemplate (DB 0)
+    @Primary
+    @Bean("defaultRedisTemplate")
+    public RedisTemplate<String, Object> defaultRedisTemplate(
+            @Qualifier("defaultRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // 캐시용 RedisTemplate (DB 1)
+    @Bean("cacheRedisTemplate")
+    public RedisTemplate<String, Object> cacheRedisTemplate(
+            @Qualifier("cacheRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // 세션용 RedisTemplate (DB 2)
+    @Bean("sessionRedisTemplate")
+    public RedisTemplate<String, Object> sessionRedisTemplate(
+            @Qualifier("sessionRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // 알림용 RedisTemplate (DB 3)
+    @Bean("notificationRedisTemplate")
+    public RedisTemplate<String, Object> notificationRedisTemplate(
+            @Qualifier("notificationRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // 검색용 RedisTemplate (DB 4)
+    @Bean("searchRedisTemplate")
+    public RedisTemplate<String, Object> searchRedisTemplate(
+            @Qualifier("searchRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // 장바구니용 RedisTemplate (DB 5)
+    @Bean("cartRedisTemplate")
+    public RedisTemplate<String, Object> cartRedisTemplate(
+            @Qualifier("cartRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // 채팅용 RedisTemplate (DB 6)
+    @Bean("chatRedisTemplate")
+    public RedisTemplate<String, Object> chatRedisTemplate(
+            @Qualifier("chatRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory);
+    }
+
+    // String RedisTemplate들
+    @Bean("defaultStringRedisTemplate")
+    public StringRedisTemplate defaultStringRedisTemplate(
+            @Qualifier("defaultRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(connectionFactory);
+        return template;
+    }
+
+    @Bean("searchStringRedisTemplate")
+    public StringRedisTemplate searchStringRedisTemplate(
+            @Qualifier("searchRedisConnectionFactory") RedisConnectionFactory connectionFactory) {
+        StringRedisTemplate template = new StringRedisTemplate();
+        template.setConnectionFactory(connectionFactory);
+        return template;
+    }
+
+    // RedisTemplate 생성 헬퍼 메서드
+    private RedisTemplate<String, Object> createRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new StringRedisSerializer());
+        template.afterPropertiesSet();
+        return template;
     }
 }
