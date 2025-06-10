@@ -110,6 +110,14 @@ public class SellerController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponseJson> getMySellers(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        String storeName = userDetails.getUsername();
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "storeName",storeName
+        )));
+    }
+
     private String getStatusMessage(Character isOpen) {
         switch (isOpen) {
             case '1': return "영업중";
