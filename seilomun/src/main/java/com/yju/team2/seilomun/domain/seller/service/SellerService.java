@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.seller.service;
 
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
+import com.yju.team2.seilomun.domain.seller.dto.SellerInformationResponseDto;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
@@ -132,11 +133,11 @@ public class SellerService {
         return updatedSeller;
     }
 
-    public SellerInformationDto getSellerById(Long id) {
+    public SellerInformationResponseDto getSellerById(Long id) {
         Seller seller = sellerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("가게 정보를 찾지 못했습니다."));
 
-        return SellerInformationDto.toDto(seller);
+        return SellerInformationResponseDto.toDto(seller);
     }
 
     // 비밀번호 정규식 검사

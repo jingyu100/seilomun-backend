@@ -3,6 +3,7 @@ package com.yju.team2.seilomun.domain.seller.controller;
 import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
+import com.yju.team2.seilomun.domain.seller.dto.SellerInformationResponseDto;
 import com.yju.team2.seilomun.domain.seller.dto.SellerRegisterDto;
 import com.yju.team2.seilomun.domain.seller.dto.SellerStatusUpdateDto;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
@@ -71,7 +72,7 @@ public class SellerController {
     // 가게 상세 조회
     @GetMapping("/{sellerId}")
     public ResponseEntity<ApiResponseJson> getSellerInformation(@PathVariable Long sellerId) {
-        SellerInformationDto sellerInformationDto = sellerService.getSellerById(sellerId);
+        SellerInformationResponseDto sellerInformationDto = sellerService.getSellerById(sellerId);
 
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
                 "seller", sellerInformationDto,
