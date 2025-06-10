@@ -51,7 +51,10 @@ public class SellerInformationResponseDto {
 
     @NotEmpty
     private String address;
-    
+
+    @NotEmpty
+    private Character isOpen;
+
     // 공지사진 추가
     private List<String> notificationPhotos;
     // 공지사진 삭제
@@ -91,6 +94,7 @@ public class SellerInformationResponseDto {
                 .pickupTime(seller.getPickupTime())
                 .postCode(seller.getPostCode())
                 .address(seller.getAddressDetail())
+                .isOpen(seller.getIsOpen())
                 .build();
     }
 }
