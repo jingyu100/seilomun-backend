@@ -211,7 +211,7 @@ public class OrderService {
         Product product = optionalProduct.get();
         Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
         Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
-        OrderProductDto orderProductDto = new OrderProductDto(product.getId(), cartItemRequestDto.getQuantity(), discountPrice,currentDiscountRate);
+        OrderProductDto orderProductDto = new OrderProductDto(product.getId(), cartItemRequestDto.getQuantity(), discountPrice, currentDiscountRate);
         return orderProductDto;
     }
 
@@ -327,7 +327,7 @@ public class OrderService {
 
         PointHistory pointHistory = PointHistory.builder().
                 type('A').  // ADD
-                amount(getPoint).
+                        amount(getPoint).
                 order(order).
                 customer(customer).
                 build();
@@ -452,7 +452,7 @@ public class OrderService {
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("사용자가 존재 하지 않습니다.");
         }
-        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId,'A');
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId, 'A');
         if (optionalOrder.isEmpty()) {
             throw new IllegalArgumentException("판매자가 수락한 주문이 아닙니다");
         }
@@ -548,7 +548,7 @@ public class OrderService {
         order.updateOrderStatus('R'); //refuse의 r
         restoreStock(order);
         orderRepository.save(order);
-        
+
         // 알림 전송
         try {
             if (notificationService != null) {
@@ -565,16 +565,16 @@ public class OrderService {
             // 알림 전송 실패해도
         }
     }
-    
+
     //환불 수락
     @Transactional
-    public void refundAcceptance(Long sellerId, Long refundId){
+    public void refundAcceptance(Long sellerId, Long refundId) {
         Optional<Refund> optionalRefund = refundRepository.findByIdAndStatus(refundId, 'N');
         if (optionalRefund.isEmpty()) {
             throw new IllegalArgumentException("환불 신청이 존재 하지 않습니다.");
         }
         Refund refund = optionalRefund.get();
-        Optional<Payment> optionalPayment = paymentRepository.findByIdAndPaySuccessYN(refund.getPayment().getId(),true);
+        Optional<Payment> optionalPayment = paymentRepository.findByIdAndPaySuccessYN(refund.getPayment().getId(), true);
         if (optionalPayment.isEmpty()) {
             throw new IllegalArgumentException("결제 내역이 존재 하지 않습니다.");
         }
@@ -612,13 +612,13 @@ public class OrderService {
             // 알림 전송 실패
         }
     }
-    
+
     //통계
-    public List<StatsDto> getStats(Long id,int year, int month) {
+    public List<StatsDto> getStats(Long id, int year, int month) {
         Seller seller = sellerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
 
-        return orderRepository.stats(seller.getId(),year,month);
+        return orderRepository.stats(seller.getId(), year, month);
     }
 
 
