@@ -21,4 +21,5 @@ public class OrderListResponseDto {
     private List<String> orderItems;
     private String photoUrl;
     private Character orderStatus;
+    private boolean isReview;
 }
