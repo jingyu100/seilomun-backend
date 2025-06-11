@@ -327,11 +327,13 @@ public class OrderService {
 
         PointHistory pointHistory = PointHistory.builder().
                 type('A').  // ADD
-                        amount(getPoint).
+                amount(getPoint).
                 order(order).
                 customer(customer).
                 build();
         pointHistoryRepository.save(pointHistory);
+        order.updateOrderStatus('S');
+        orderRepository.save(order);
         return paymentSuccessDto;
     }
 
@@ -398,6 +400,8 @@ public class OrderService {
                     customer(customer).
                     build();
             pointHistoryRepository.save(pointHistory1);
+            order.updateOrderStatus('C');
+            orderRepository.save(order);
             // cancelReason에 테스트로 취소라 넣긴 했는데 나중에 사유 넣을것
             return tossPaymentCancel(payment.getPaymentKey(), "취소");
         }
@@ -445,7 +449,7 @@ public class OrderService {
     @Transactional
     public void acceptanceOrder(Long sellerId, Long orderId) {
         //수락 전 인 것만 찾기
-        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId, 'N');
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId, 'S');
         if (optionalOrder.isEmpty()) {
             throw new IllegalArgumentException("주문이 존재 하지 않습니다.");
         }
@@ -486,7 +490,7 @@ public class OrderService {
     @Transactional
     public void refuseOrder(Long sellerId, Long orderId) {
         //수락 전 인 것만 찾기
-        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId, 'N');
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId, 'S');
         if (optionalOrder.isEmpty()) {
             throw new IllegalArgumentException("주문이 존재 하지 않습니다.");
         }
