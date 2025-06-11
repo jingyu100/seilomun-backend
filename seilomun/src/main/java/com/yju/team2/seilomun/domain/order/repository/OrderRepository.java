@@ -32,8 +32,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "SUM(o.totalAmount)) " +
             "FROM Order o " +
             "JOIN o.orderItems oi " +
-            "WHERE o.orderStatus = 'A' " +
+            "WHERE o.orderStatus = 'A' "+
+            "AND o.seller.id = :id " +
+            "AND YEAR(o.createdAt) = :year " +
+            "AND MONTH(o.createdAt) = :month " +
             "GROUP BY YEAR(o.createdAt), MONTH(o.createdAt)")
-    List<StatsDto> stats();
+    List<StatsDto> stats(@Param("id") Long sellerId,
+                         @Param("year") Integer year,
+                         @Param("month") Integer month);
 
 }

@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class StatsDto {
 
-    private int year;
-    private int month;
+    private Integer year;
+    private Integer month;
     private Long count;
     private Long totalAmount;
 

@@ -571,7 +571,10 @@ public class OrderService {
     }
     
     //통계
-    public List<StatsDto> getStats() {
-        return orderRepository.stats();
+    public List<StatsDto> getStats(Long id,int year, int month) {
+        Seller seller = sellerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
+
+        return orderRepository.stats(seller.getId(),year,month);
     }
 }
