@@ -569,4 +569,9 @@ public class OrderService {
             // 알림 전송 실패
         }
     }
+    
+    //통계
+    public List<StatsDto> getStats() {
+        return orderRepository.stats();
+    }
 }
