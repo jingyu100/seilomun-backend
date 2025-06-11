@@ -76,7 +76,7 @@ jobs:
         cd seilomun
         gradle build -x test
     
-    # Docker 이미지 Build
+    # Docker 이미지 Build (올바른 경로에서)
     - name: docker image build
       run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/seilomun .
     
@@ -102,13 +102,11 @@ jobs:
     
     - name: docker stop container
       run: |
-        if [ $(sudo docker ps -a -q -f name=seilomun) ]; then
-          sudo docker stop seilomun
-          sudo docker rm seilomun
-        fi
+        sudo docker stop seilomun 2>/dev/null || true
+        sudo docker rm seilomun 2>/dev/null || true
     
     - name: docker run new container
-      run: sudo docker run --rm -it -d -p 80:80 --name seilomun ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
+      run: sudo docker run --rm -d -p 80:80 --name seilomun ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
     
     - name: delete old docker image
       run: sudo docker system prune -f
