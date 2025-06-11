@@ -78,7 +78,9 @@ jobs:
     
     # Docker 이미지 Build
     - name: docker image build
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/spring-cicd-test .
+      run: |
+        cd seilomun
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/seilomun .
     
     # DockerHub Login (push 하기 위해)
     - name: docker login
@@ -89,7 +91,7 @@ jobs:
     
     # Docker hub 로 push
     - name: Docker Hub push
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/spring-cicd-test
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
 
   deploy-to-ec2:
     needs: build-docker-image
@@ -98,17 +100,17 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
     - name: docker pull
-      run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/spring-cicd-test
+      run: sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
     
     - name: docker stop container
       run: |
-        if [ $(sudo docker ps -a -q -f name=spring-cicd-test) ]; then
-          sudo docker stop spring-cicd-test
-          sudo docker rm spring-cicd-test
+        if [ $(sudo docker ps -a -q -f name=seilomun) ]; then
+          sudo docker stop seilomun
+          sudo docker rm seilomun
         fi
     
     - name: docker run new container
-      run: sudo docker run --rm -it -d -p 80:8080 --name spring-cicd-test ${{ secrets.DOCKERHUB_USERNAME }}/spring-cicd-test
+      run: sudo docker run --rm -it -d -p 80:8080 --name seilomun ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
     
     - name: delete old docker image
       run: sudo docker system prune -f
