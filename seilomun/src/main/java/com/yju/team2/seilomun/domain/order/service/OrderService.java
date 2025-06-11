@@ -349,6 +349,8 @@ public class OrderService {
         }
         Order order = optionalOrder.get();
         order.updateOrderStatus('F');   // fail의 F
+        restoreStock(order);
+        orderRepository.save(order);
         return PaymentFailDto.builder().
                 errorCode(code).
                 errorMessage(message).
@@ -401,11 +403,46 @@ public class OrderService {
                     build();
             pointHistoryRepository.save(pointHistory1);
             order.updateOrderStatus('C');
+            restoreStock(order);
             orderRepository.save(order);
             // cancelReason에 테스트로 취소라 넣긴 했는데 나중에 사유 넣을것
             return tossPaymentCancel(payment.getPaymentKey(), "취소");
         }
         throw new IllegalArgumentException("결제 취소 실패");
+    }
+
+    // 결체장 닫으면 부를 메서드
+    @Transactional
+    public void closePayment(Long customerId, Long orderId) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("사용자가 존재하지 않습니다.");
+        }
+        Optional<Order> optionalOrder = orderRepository.findByIdAndOrderStatus(orderId, 'N');
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalArgumentException("대기 중인 주문이 존재하지 않습니다.");
+        }
+
+        Order order = optionalOrder.get();
+        if (!order.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("해당 주문에 대한 권한이 없습니다.");
+        }
+        Optional<Payment> optionalPayment = paymentRepository.findByOrder(order);
+        if (optionalPayment.isEmpty()) {
+            log.warn("결제 정보가 없는 주문 삭제: orderId={}", order.getId());
+            orderRepository.delete(order);
+        }
+        Payment payment = optionalPayment.get();
+        if (payment.isPaySuccessYN()) {
+            throw new IllegalArgumentException("이미 결제가 완료된 주문입니다. 환불 신청을 해주세요.");
+        }
+        try {
+            paymentRepository.delete(payment);
+            orderRepository.delete(order);
+
+        } catch (Exception e) {
+            throw new RuntimeException("주문 삭제 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     //환불 신청
@@ -509,6 +546,7 @@ public class OrderService {
         //주문 거절 했으니 결제 취소(환불)
         cancelPayment(order.getCustomer().getId(), order.getId());
         order.updateOrderStatus('R'); //refuse의 r
+        restoreStock(order);
         orderRepository.save(order);
         
         // 알림 전송
@@ -554,6 +592,7 @@ public class OrderService {
         refund.insertProcessedAt(LocalDateTime.now());
         refund.updateStatus('A'); // 수락의 A
         order.updateOrderStatus('B');
+        restoreStock(order);
         refundRepository.save(refund);
         orderRepository.save(order);
 
@@ -580,5 +619,20 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
 
         return orderRepository.stats(seller.getId(),year,month);
+    }
+
+
+    // 재고 복구 로직을 별도 메서드로
+    private void restoreStock(Order order) {
+        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+        for (OrderItem orderItem : orderItems) {
+            Product product = orderItem.getProduct();
+            int newStock = product.getStockQuantity() + orderItem.getQuantity();
+            product.updateStockQuantity(newStock);
+            productRepository.save(product);
+
+            log.info("재고 복구: productId={}, 복구량={}, 새로운재고={}",
+                    product.getId(), orderItem.getQuantity(), newStock);
+        }
     }
 }

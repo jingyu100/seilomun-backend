@@ -10,6 +10,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByTransactionId(String orderId);
 
     Optional<Payment> findByOrderAndPaySuccessYN(Order order, boolean paySuccess);
-
+    Optional<Payment> findByOrder(Order order);
     Optional<Payment> findByIdAndPaySuccessYN(Long id, boolean paySuccess);
 }

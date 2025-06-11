@@ -149,4 +149,23 @@ public class OrderController {
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                 Map.of("통계 조회",orderService.getStats(SellerId,year,month))));
     }
+    
+    // SDK창 닫을때
+    @PostMapping("/close-payment/{orderId}")
+    public ResponseEntity<ApiResponseJson> closePayment(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal JwtUserDetails userDetail) {
+        log.info("결제창 닫기 요청: orderId={}, customerId={}", orderId, userDetail.getId());
+        try {
+            orderService.closePayment(userDetail.getId(), orderId);
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("message", "주문이 성공적으로 취소되었습니다",
+                            "orderId", orderId)));
+        } catch (Exception e) {
+            log.error("결제창 닫기 처리 실패: orderId={}, customerId={}, error={}",
+                    orderId, userDetail.getId(), e.getMessage());
+            return ResponseEntity.badRequest().body(new ApiResponseJson(HttpStatus.BAD_REQUEST,
+                    Map.of("error", e.getMessage())));
+        }
+    }
 }
