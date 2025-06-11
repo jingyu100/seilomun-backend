@@ -57,6 +57,10 @@ public class ReviewService {
         if (!order.getCustomer().getId().equals(customer.getId())) {
             throw new IllegalArgumentException("해당 주문에 접근 권한이 없습니다.");
         }
+        Optional<Review> optionalReview = reviewRepository.findByOrder(order);
+        if (optionalReview.isPresent()) {
+            throw new IllegalArgumentException("주문당 한개의 리뷰만 작성할 수 있습니다.");
+        }
         // 리뷰 생성
         Review review = Review.builder().
                 content(reviewRequestDto.getReviewContent()).

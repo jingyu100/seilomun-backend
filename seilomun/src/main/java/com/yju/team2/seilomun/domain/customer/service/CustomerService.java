@@ -20,6 +20,8 @@ import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
+import com.yju.team2.seilomun.domain.review.entity.Review;
+import com.yju.team2.seilomun.domain.review.repository.ReviewRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.util.JwtUtil;
@@ -64,6 +66,7 @@ public class CustomerService {
     private final SmsUtil smsUtil;
     private final ValidationUtil validationUtil;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ReviewRepository reviewRepository;
 
     private final ProductService productService;
     private final AddressRepository addressRepository;
@@ -320,7 +323,11 @@ public class CustomerService {
             for (OrderItem orderItem : orderItemList) {
                 productNames.add(orderItem.getProduct().getName());
             }
-
+            boolean isReview = false;
+            Optional<Review> optionalReview = reviewRepository.findByOrder(order);
+            if (optionalReview.isPresent()) {
+                isReview = true;
+            }
             OrderListResponseDto orderListResponseDto = OrderListResponseDto.builder()
                     .orderId(order.getId())
                     .sellerName(order.getSeller().getStoreName())
@@ -329,6 +336,7 @@ public class CustomerService {
                     .photoUrl("seller_photo_URL") // photoUrl
                     .orderStatus(order.getOrderStatus())
                     .orderItems(productNames)
+                    .isReview(isReview)
                     .build();
             orderListResponseDtoList.add(orderListResponseDto);
         }
