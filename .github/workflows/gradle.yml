@@ -108,7 +108,7 @@ jobs:
         fi
     
     - name: docker run new container
-      run: sudo docker run --rm -it -d -p 80:8080 --name seilomun ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
+      run: sudo docker run --rm -it -d -p 80:80 --name seilomun ${{ secrets.DOCKERHUB_USERNAME }}/seilomun
     
     - name: delete old docker image
       run: sudo docker system prune -f
