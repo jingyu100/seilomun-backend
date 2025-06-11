@@ -19,6 +19,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -40,13 +41,21 @@ public class OrderController {
                 Map.of("Update", paymentResDto,
                         "Message", "상품이 주문 되었습니다")));
     }
-
+    // 바로 구매하기
     @GetMapping("/buy")
     public ResponseEntity<ApiResponseJson> getBuyProduct(@RequestBody CartItemRequestDto cartItemRequestDto,
                                                          @AuthenticationPrincipal JwtUserDetails userDetail) {
         Long customerId = userDetail.getId();
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                 Map.of("주문페이지로 갑니다", orderService.getBuyProduct(cartItemRequestDto, customerId))));
+    }
+    // 장바구니에서 구매하기
+    @GetMapping("/buy")
+    public ResponseEntity<ApiResponseJson> getBuyProducts(@RequestBody List<CartItemRequestDto> cartItemRequestDto,
+                                                         @AuthenticationPrincipal JwtUserDetails userDetail) {
+        Long customerId = userDetail.getId();
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("주문페이지로 갑니다", orderService.getBuyProducts(cartItemRequestDto, customerId))));
     }
     // 결제 성공시 콜백
     // 여기서 orderId는 결제테이블의 pk가 아닌 결제고유식별자를 의미함

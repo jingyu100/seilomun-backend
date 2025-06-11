@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -18,13 +20,7 @@ public class OrderDto {
     @NotEmpty
     private String deliveryAddress;
     @NotBlank
-    private Long productId;
-    @NotBlank
-    private Integer quantity;
-    @NotBlank
-    private Integer price;
-    @NotBlank
-    private Integer currentDiscountRate;
+    private List<OrderProductDto> orderProducts;
     @NotEmpty
     private String payType; // 결제 타입 - 카드/현금/포인트
     @NotEmpty

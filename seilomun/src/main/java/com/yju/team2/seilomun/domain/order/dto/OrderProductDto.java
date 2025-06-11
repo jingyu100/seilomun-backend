@@ -14,4 +14,5 @@ public class OrderProductDto {
     @NotBlank
     private Integer quantity;
     private Integer price;
+    private Integer currentDiscountRate;
 }

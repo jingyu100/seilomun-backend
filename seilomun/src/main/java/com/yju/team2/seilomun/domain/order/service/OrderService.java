@@ -64,37 +64,60 @@ public class OrderService {
         return stringBuilder.toString();
     }
 
-    // 한가지 상품 바로 구매하기(장바구니에서 x)
+    // 상품  구매하기
     @Transactional
     public PaymentResDto buyProduct(OrderDto orderDto, Long customerId) {
-        Optional<Product> optionalProduct = productRepository.findById(orderDto.getProductId());
-        if (optionalProduct.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 상품입니다.");
-        }
-        Product product = optionalProduct.get();
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
         }
         Customer customer = optionalCustomer.get();
 
-        if (product.getStockQuantity() < orderDto.getQuantity()) {
-            throw new IllegalArgumentException("구매 하려는 상품의 수량이 초과하였습니다.");
+        if (orderDto.getOrderProducts() == null || orderDto.getOrderProducts().isEmpty()) {
+            throw new IllegalArgumentException("주문할 상품 정보가 없습니다.");
+        }
+        List<Product> products = new ArrayList<>();
+        List<OrderItem> orderItems = new ArrayList<>();
+        Integer productTotalAmount = 0;
+        Seller seller = null;
+        for (OrderProductDto productDto : orderDto.getOrderProducts()) {
+            Optional<Product> optionalProduct = productRepository.findById(productDto.getProductId());
+            if (optionalProduct.isEmpty()) {
+                throw new IllegalArgumentException("존재하지 않는 상품입니다: " + productDto.getProductId());
+            }
+            Product product = optionalProduct.get();
+            products.add(product);
+
+            // 모든 상품이 같은 판매자인지 확인
+            if (seller == null) {
+                seller = product.getSeller();
+            } else if (!seller.getId().equals(product.getSeller().getId())) {
+                throw new IllegalArgumentException("다른 판매자의 상품들은 함께 주문할 수 없습니다.");
+            }
+
+            // 재고 확인
+            if (product.getStockQuantity() < productDto.getQuantity()) {
+                throw new IllegalArgumentException("구매 하려는 상품의 수량이 초과하였습니다: " + product.getName());
+            }
+
+            // 총 상품 금액 누적
+            productTotalAmount += productDto.getPrice() * productDto.getQuantity();
+
+            OrderItem orderItem = OrderItem.builder()
+                    .product(product)
+                    .quantity(productDto.getQuantity())
+                    .discountRate(productDto.getCurrentDiscountRate())
+                    .unitPrice(productDto.getPrice())
+                    .build();
+            orderItems.add(orderItem);
         }
         String orderNumber;
         do {
             orderNumber = generateOrderNumber();
         } while (orderRepository.existsByOrderNumber(orderNumber));
 
-        Optional<Seller> optionalSeller = sellerRepository.findById(product.getSeller().getId());
-        if (optionalSeller.isEmpty()) {
-            throw new IllegalArgumentException("존재하지 않는 판매자 입니다.");
-        }
-        Seller seller = optionalSeller.get();
         //배달비 목록
         List<DeliveryFee> deliveryFees = deliveryFeeRepository.findBySeller(seller);
-        // 상품 구매하는 총 가격과 초기화한 배달비 값 생성
-        Integer productTotalAmount = orderDto.getPrice() * orderDto.getQuantity();
         Integer deliveryFee = 0;
         // 배달 선택시 배달비 계산
         if (orderDto.getIsDelivery().equals('Y')) {
@@ -138,7 +161,7 @@ public class OrderService {
 
         Order order = Order.builder().
                 customer(customer).
-                seller(product.getSeller()).
+                seller(seller).
                 orderNumber(orderNumber).
                 memo(orderDto.getMemo()).
                 usedPoints(orderDto.getUsedPoints()).
@@ -150,13 +173,16 @@ public class OrderService {
                 isReivewed('N').
                 orderStatus('N').build();
         orderRepository.save(order);
-        OrderItem orderItem = OrderItem.builder().
-                order(order).
-                product(product).
-                quantity(orderDto.getQuantity()).
-                discountRate(orderDto.getCurrentDiscountRate())
-                .unitPrice(orderDto.getPrice()).build();
-        orderItemRepository.save(orderItem);
+        for (OrderItem orderItem : orderItems) {
+            orderItem = OrderItem.builder()
+                    .order(order)
+                    .product(orderItem.getProduct())
+                    .quantity(orderItem.getQuantity())
+                    .discountRate(orderItem.getDiscountRate())
+                    .unitPrice(orderItem.getUnitPrice())
+                    .build();
+            orderItemRepository.save(orderItem);
+        }
         // 주문 가격이랑 포인트를 합산한채로 결제
         Integer totalAmountMinusPoint = order.getTotalAmount() - order.getUsedPoints();
 
@@ -185,8 +211,42 @@ public class OrderService {
         Product product = optionalProduct.get();
         Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
         Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
-        OrderProductDto orderProductDto = new OrderProductDto(product.getId(), cartItemRequestDto.getQuantity(), discountPrice);
+        OrderProductDto orderProductDto = new OrderProductDto(product.getId(), cartItemRequestDto.getQuantity(), discountPrice,currentDiscountRate);
         return orderProductDto;
+    }
+
+    // 장바구니에서 상품 구매갈 때
+    public List<OrderProductDto> getBuyProducts(List<CartItemRequestDto> cartItems, Long customerId) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 소비자입니다.");
+        }
+
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new IllegalArgumentException("주문할 상품 정보가 없습니다.");
+        }
+
+        List<OrderProductDto> orderProducts = new ArrayList<>();
+
+        for (CartItemRequestDto cartItem : cartItems) {
+            Optional<Product> optionalProduct = productRepository.findById(cartItem.getProductId());
+            if (optionalProduct.isEmpty()) {
+                throw new IllegalArgumentException("존재하지 않는 상품입니다: " + cartItem.getProductId());
+            }
+            Product product = optionalProduct.get();
+            Integer currentDiscountRate = productService.getCurrentDiscountRate(product.getId());
+            Integer discountPrice = product.getOriginalPrice() * (100 - currentDiscountRate) / 100;
+
+            OrderProductDto orderProductDto = new OrderProductDto(
+                    product.getId(),
+                    cartItem.getQuantity(),
+                    discountPrice,
+                    currentDiscountRate
+            );
+            orderProducts.add(orderProductDto);
+        }
+
+        return orderProducts;
     }
 
     // 요청 헤더에 토스에서 제공해준 시크릿 키를 시크릿 키를 Basic Authorization 방식으로 base64를 이용하여 인코딩하여 꼭 보내야함
