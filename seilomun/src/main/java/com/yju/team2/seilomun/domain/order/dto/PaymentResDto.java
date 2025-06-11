@@ -13,7 +13,8 @@ public class PaymentResDto {
     private String payType; // 결제 타입 - 카드/현금/포인트
     private Integer amount; // 가격 정보
     private String orderName; // 주문명
-    private String orderId; // 주문 Id
+    private String transactionId; // 결제 고유 식별자
+    private Long orderId;
     private String customerEmail; // 고객 이메일
     private String customerName; // 고객 이름
     private String successUrl; // 성공 시 리다이렉트 될 URL
