@@ -24,17 +24,19 @@ jobs:
         distribution: 'temurin'
     - name: Create application.properties
       run: |
-        mkdir -p src/main/resources
-        cat << 'EOF' > src/main/resources/application.properties
+        mkdir -p seilomun/src/main/resources
+        cat << 'EOF' > seilomun/src/main/resources/application.properties
         ${{ secrets.APPLICATION_PROPERTIES }}
         EOF
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582
       with:
         gradle-version: '8.9'
-    - name: Build with Gradle Wrapper
-      run: gradle build
-
+    - name: Build with Gradle
+      run: |
+        cd seilomun
+        gradle build
+        
   dependency-submission:
     runs-on: ubuntu-latest
     permissions:
@@ -48,9 +50,11 @@ jobs:
         distribution: 'temurin'
     - name: Create application.properties
       run: |
-        mkdir -p src/main/resources
-        cat << 'EOF' > src/main/resources/application.properties
+        mkdir -p seilomun/src/main/resources
+        cat << 'EOF' > seilomun/src/main/resources/application.properties
         ${{ secrets.APPLICATION_PROPERTIES }}
         EOF
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582
+      with:
+        build-root-directory: seilomun
