@@ -50,7 +50,7 @@ public class OrderController {
                 Map.of("주문페이지로 갑니다", orderService.getBuyProduct(cartItemRequestDto, customerId))));
     }
     // 장바구니에서 구매하기
-    @GetMapping("/buy")
+    @GetMapping("/cart/buy")
     public ResponseEntity<ApiResponseJson> getBuyProducts(@RequestBody List<CartItemRequestDto> cartItemRequestDto,
                                                          @AuthenticationPrincipal JwtUserDetails userDetail) {
         Long customerId = userDetail.getId();
