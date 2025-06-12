@@ -4,10 +4,13 @@ import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.domain.customer.dto.*;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
+import com.yju.team2.seilomun.domain.customer.repository.PointHistoryRepository;
 import com.yju.team2.seilomun.domain.customer.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +27,8 @@ import java.util.Map;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final CustomerRepository customerRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     @PostMapping
     public ApiResponseJson registerNewAccount(@Valid @RequestBody CustomerRegisterDto customerRegisterDto,
@@ -229,5 +235,26 @@ public class CustomerController {
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
             "Message","인증 번호가 발생되었습니다"
         ))));
+    }
+    
+
+
+    // 포인트 내역 조회 (무한스크롤)
+    @GetMapping("/points")
+    public ResponseEntity<ApiResponseJson> getPointHistory(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Long customerId = userDetails.getId();
+        PointHistoryPaginationDto pointHistory = customerService.getPointHistory(customerId, page, size);
+
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "pointHistory", pointHistory.getPointHistories(),
+                "currentPoints", pointHistory.getCurrentPoints(),
+                "hasNext", pointHistory.isHasNext(),
+                "totalElements", pointHistory.getTotalElements(),
+                "message", "포인트 내역이 조회되었습니다."
+        )));
     }
 }
