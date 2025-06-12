@@ -2,14 +2,8 @@ package com.yju.team2.seilomun.domain.customer.service;
 
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.dto.*;
-import com.yju.team2.seilomun.domain.customer.entity.Address;
-import com.yju.team2.seilomun.domain.customer.entity.Customer;
-import com.yju.team2.seilomun.domain.customer.entity.Favorite;
-import com.yju.team2.seilomun.domain.customer.entity.Wish;
-import com.yju.team2.seilomun.domain.customer.repository.AddressRepository;
-import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
-import com.yju.team2.seilomun.domain.customer.repository.FavoriteRepository;
-import com.yju.team2.seilomun.domain.customer.repository.WishRepository;
+import com.yju.team2.seilomun.domain.customer.entity.*;
+import com.yju.team2.seilomun.domain.customer.repository.*;
 import com.yju.team2.seilomun.domain.order.dto.OrderItemDto;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.order.entity.OrderItem;
@@ -42,6 +36,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -67,6 +62,7 @@ public class CustomerService {
     private final ValidationUtil validationUtil;
     private final RedisTemplate<String, String> redisTemplate;
     private final ReviewRepository reviewRepository;
+    private final PointHistoryRepository pointHistoryRepository;
 
     private final ProductService productService;
     private final AddressRepository addressRepository;
@@ -264,6 +260,7 @@ public class CustomerService {
                     .map(ProductPhoto::getPhotoUrl)
                     .orElse(null);
             wishProductDtoList.add(new WishProductDto(
+                    product.getSeller().getId(),
                     product.getId(),
                     wish.getId(),
                     product.getName(),
@@ -531,6 +528,31 @@ public class CustomerService {
         }
 
         addressRepository.deleteById(addressId);
+    }
+
+
+    // 포인트 적립 내역
+    public PointHistoryPaginationDto getPointHistory(Long customerId, int page, int size){
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 소비자입니다.");
+        }
+        Customer customer = optionalCustomer.get();
+
+        // 페이지네이션 설정 (최신순 정렬)
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<PointHistory> pointHistorie =  pointHistoryRepository.findByCustomer(customer, pageable);
+        // DTO 변환
+        List<PointHistoryResDto> pointHistories = pointHistorie.getContent().stream()
+                .map(PointHistoryResDto::fromEntity)
+                .collect(Collectors.toList());
+
+        return PointHistoryPaginationDto.builder()
+                .pointHistories(pointHistories)
+                .currentPoints(customer.getPoints())
+                .hasNext(pointHistorie.hasNext())
+                .totalElements(pointHistorie.getTotalElements())
+                .build();
     }
 }
 

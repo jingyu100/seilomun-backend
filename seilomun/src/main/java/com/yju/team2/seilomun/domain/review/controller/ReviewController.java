@@ -31,7 +31,7 @@ public class ReviewController {
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
                 "리뷰 작성 완료", reviewService.postReview(userDetails.getId(), orderId, reviewRequestDto)
         ))));
-    }    //리뷰 불러오기
+    }  //리뷰 불러오기
     @GetMapping("/{sellerId}")
     public ResponseEntity<ApiResponseJson> getReview(
             @PathVariable Long sellerId,
