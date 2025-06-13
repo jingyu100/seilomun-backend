@@ -13,4 +13,5 @@ public class AddressRequestDto {
     private String addressDetail;
     private Character addressMain;
     private String label;
+
 }

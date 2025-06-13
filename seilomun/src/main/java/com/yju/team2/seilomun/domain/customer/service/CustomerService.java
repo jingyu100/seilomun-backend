@@ -487,6 +487,12 @@ public class CustomerService {
                     addressRepository.save(addr);
                 }
             }
+        }else {
+            boolean noMain = addressRepository.findByCustomerId(customerId).stream()
+                    .noneMatch(addr -> addr.getAddressMain() != null && addr.getAddressMain() == '1');
+            if(noMain) {
+                address.setAddressMain('1');
+            }
         }
 
         Address newAddress = Address.builder()
