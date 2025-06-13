@@ -2,10 +2,8 @@ package com.yju.team2.seilomun.domain.seller.controller;
 
 import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
-import com.yju.team2.seilomun.domain.seller.dto.SellerInformationResponseDto;
-import com.yju.team2.seilomun.domain.seller.dto.SellerRegisterDto;
-import com.yju.team2.seilomun.domain.seller.dto.SellerStatusUpdateDto;
+import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.seller.dto.*;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import jakarta.validation.Valid;
@@ -116,6 +114,15 @@ public class SellerController {
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
                 "storeName",storeName
         )));
+    }
+
+    // 소비자 정보 수정
+    @GetMapping
+    public ResponseEntity<ApiResponseJson> getSellers(@AuthenticationPrincipal JwtUserDetails userDetails) {
+        SellerInforResDto seller = sellerService.getUserDetailsBySellerId(userDetails.getId());
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+                "seller", seller
+        ))));
     }
 
     private String getStatusMessage(Character isOpen) {
