@@ -166,6 +166,18 @@ public class CustomerController {
         ))));
     }
 
+    @PostMapping("/mypage/password")
+    public ResponseEntity<ApiResponseJson> passwordValid(@AuthenticationPrincipal JwtUserDetails userDetails,
+                                                         @RequestBody PasswordValidDto passwordValidDto) {
+        Long id = userDetails.getId();
+
+        customerService.localUserPasswordValid(id, passwordValidDto);
+
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+           "Message","비밀번호가 일치합니다"
+        ))));
+    }
+
     //소비자 정보 수정
     @PutMapping("/mypage/local")
     public ResponseEntity<ApiResponseJson> updateLocalCustomer(@AuthenticationPrincipal JwtUserDetails userDetails,

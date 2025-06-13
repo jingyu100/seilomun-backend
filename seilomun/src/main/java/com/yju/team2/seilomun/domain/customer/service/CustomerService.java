@@ -398,7 +398,17 @@ public class CustomerService {
 
         return LocalUserViewDto.from(customer);
     }
-
+    
+    // 로컬 소비자 비밀번호검증
+    public void localUserPasswordValid(Long customerId, PasswordValidDto passwordValidDto) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+        
+        if(!passwordEncoder.matches(passwordValidDto.getCurrentPassword(), customer.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치 하지 않습니다.");
+        }
+    }
+    
     // 로컬 소비자 정보 수정
     public void localUserUpdateDto(Long customerId, LocalUserUpdateDto updateDto, PasswordChangeDto passwordChangeDto) {
         if(updateDto == null) {
