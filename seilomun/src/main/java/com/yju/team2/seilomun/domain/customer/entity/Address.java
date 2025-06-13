@@ -1,5 +1,7 @@
 package com.yju.team2.seilomun.domain.customer.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +34,7 @@ public class Address {
 
     @ManyToOne
     @JoinColumn(name = "cu_id")
+    @JsonIgnore
     private Customer customer;
 
     public void updateAddress(String postCode, String detail, Character addressMain, String label) {
