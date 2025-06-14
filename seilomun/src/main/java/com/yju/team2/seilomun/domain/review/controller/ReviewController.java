@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -27,11 +29,26 @@ public class ReviewController {
     public ResponseEntity<ApiResponseJson> writeReview(
             @AuthenticationPrincipal JwtUserDetails userDetails,
             @PathVariable Long orderId,
-            @RequestBody @Valid ReviewRequestDto reviewRequestDto) {
-        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
-                "리뷰 작성 완료", reviewService.postReview(userDetails.getId(), orderId, reviewRequestDto)
-        ))));
-    }  //리뷰 불러오기
+            @RequestPart("review") @Valid ReviewRequestDto reviewRequestDto,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
+        try {
+            // 리뷰 작성 및 사진 업로드 처리
+            ReviewRequestDto result = reviewService.postReview(userDetails.getId(), orderId, reviewRequestDto, photos);
+
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "message", "리뷰 작성이 완료되었습니다.",
+                    "review", result
+            )));
+        } catch (Exception e) {
+            log.error("리뷰 작성 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseJson(HttpStatus.INTERNAL_SERVER_ERROR, Map.of(
+                            "error", "리뷰 작성에 실패했습니다: " + e.getMessage()
+                    )));
+        }
+    }
+
+    //리뷰 불러오기
     @GetMapping("/{sellerId}")
     public ResponseEntity<ApiResponseJson> getReview(
             @PathVariable Long sellerId,

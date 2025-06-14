@@ -21,6 +21,7 @@ import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
+import com.yju.team2.seilomun.domain.upload.service.AWSS3UploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.minidev.json.JSONObject;
@@ -30,6 +31,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -55,6 +57,7 @@ public class OrderService {
     private final RefundPhotoRepository refundPhotoRepository;
     private final RefundRepository refundRepository;
     private final NotificationService notificationService;
+    private final AWSS3UploadService awss3UploadService;
 
     private String generateOrderNumber() {
         StringBuilder stringBuilder = new StringBuilder(14);
@@ -447,7 +450,7 @@ public class OrderService {
 
     //환불 신청
     @Transactional
-    public RefundRequestDto refundApplication(Long customerId, Long orderId, RefundRequestDto refundRequestDto) {
+    public RefundRequestDto refundApplication(Long customerId, Long orderId, RefundRequestDto refundRequestDto,List<MultipartFile> photos) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("사용자가 존재 하지 않습니다.");
@@ -462,23 +465,47 @@ public class OrderService {
             throw new IllegalArgumentException("결제가 존재 하지 않습니다.");
         }
         Payment payment = optionalPayment.get();
+        // 사진 업로드 처리
+        List<String> photoUrls = new ArrayList<>();
+        if (photos != null && !photos.isEmpty()) {
+            if (photos.size() > 5) {
+                throw new IllegalArgumentException("사진은 최대 5장까지 업로드할 수 있습니다.");
+            }
+
+            try {
+                photoUrls = awss3UploadService.uploadFiles(photos);
+                log.info("환불 신청 사진 업로드 완료: {} 장", photoUrls.size());
+            } catch (Exception e) {
+                log.error("환불 신청 사진 업로드 실패: {}", e.getMessage());
+                throw new RuntimeException("사진 업로드에 실패했습니다.");
+            }
+        }
+
         Refund refund = Refund.builder().
                 refundType(refundRequestDto.getRefundType()).
                 title(refundRequestDto.getTitle()).
                 content(refundRequestDto.getContent()).
                 status('N'). // 판매자가 아직 환불 수락 전이기 때문에 N
-                        payment(payment).
+                payment(payment).
                 build();
         refundRepository.save(refund);
+
         // 환불 사진 등록
-        if (refundRequestDto.getRefundPhotos() != null && !refundRequestDto.getRefundPhotos().isEmpty()) {
-            refundRequestDto.getRefundPhotos().forEach(url -> {
+        List<String> allPhotoUrls = new ArrayList<>();
+        if (refundRequestDto.getRefundPhotos() != null) {
+            allPhotoUrls.addAll(refundRequestDto.getRefundPhotos());
+        }
+        allPhotoUrls.addAll(photoUrls);
+
+        if (!allPhotoUrls.isEmpty()) {
+            allPhotoUrls.forEach(url -> {
                 refundPhotoRepository.save(RefundPhoto.builder()
                         .refund(refund)
                         .photoUrl(url)
                         .build());
             });
         }
+        refundRequestDto.setRefundPhotos(allPhotoUrls);
         return refundRequestDto;
     }
 

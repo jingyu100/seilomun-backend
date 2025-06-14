@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -120,11 +121,26 @@ public class OrderController {
     public ResponseEntity<ApiResponseJson> refundOrder(
             @AuthenticationPrincipal JwtUserDetails customer,
             @PathVariable Long orderId,
-            @RequestBody @Valid RefundRequestDto refundRequestDto) {
-        RefundRequestDto requestDto = orderService.refundApplication(customer.getId(), orderId, refundRequestDto);
-        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("환불 신청 완료", requestDto.getTitle())
-        ));
+            @RequestPart("refund") @Valid RefundRequestDto refundRequestDto,
+            @RequestPart(value = "photos", required = false) List<MultipartFile> photos) {
+
+        try {
+            RefundRequestDto requestDto = orderService.refundApplication(
+                    customer.getId(), orderId, refundRequestDto, photos);
+
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of(
+                            "message", "환불 신청이 완료되었습니다.",
+                            "refund", requestDto
+                    )
+            ));
+        } catch (Exception e) {
+            log.error("환불 신청 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseJson(HttpStatus.INTERNAL_SERVER_ERROR, Map.of(
+                            "error", "환불 신청에 실패했습니다: " + e.getMessage()
+                    )));
+        }
     }
 
     // 환불 신청 수락
