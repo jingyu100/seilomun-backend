@@ -18,6 +18,7 @@ import com.yju.team2.seilomun.domain.review.entity.Review;
 import com.yju.team2.seilomun.domain.review.repository.ReviewRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
+import com.yju.team2.seilomun.domain.upload.service.AWSS3UploadService;
 import com.yju.team2.seilomun.util.JwtUtil;
 import com.yju.team2.seilomun.util.SmsUtil;
 import com.yju.team2.seilomun.validation.ValidationUtil;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.util.*;
@@ -63,6 +65,7 @@ public class CustomerService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ReviewRepository reviewRepository;
     private final PointHistoryRepository pointHistoryRepository;
+    private final AWSS3UploadService awsS3UploadService;
 
     private final ProductService productService;
     private final AddressRepository addressRepository;
@@ -417,44 +420,67 @@ public class CustomerService {
 
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
-
-        if (!customer.getEmail().equalsIgnoreCase(updateDto.getEmail())) {
+        
+        // 이메일 검증
+        if (updateDto.getEmail() != null && !customer.getEmail().equalsIgnoreCase(updateDto.getEmail())) {
             if (customerRepository.existsByEmail(updateDto.getEmail().toLowerCase())) {
                 throw new IllegalArgumentException("이미 등록된 이메일입니다.");
             }
         }
 
-        if (!customer.getNickname().equalsIgnoreCase(updateDto.getNickname())) {
+        // 닉네임 검증
+        if (updateDto.getNickname() != null && !customer.getNickname().equalsIgnoreCase(updateDto.getNickname())) {
             if (customerRepository.existsByNickname(updateDto.getNickname())) {
-                log.info("이미 존재하는 닉네임입니다.");
                 throw new IllegalArgumentException("이미 등록된 닉네임입니다.");
             }
         }
-        System.out.println("newPassword : " + passwordChangeDto.getNewPassword());
-        System.out.println("confirmPassword : " + passwordChangeDto.getConfirmPassword());
-        // 현재 비밀번호 검증
-        if(!passwordEncoder.matches(passwordChangeDto.getCurrentPassword(), customer.getPassword())) {
-            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
-        }
 
-        // 현재 비밀번호와 새로운 비밀번호 검증
-        if(passwordChangeDto.isValidPassword()) {
-            throw new IllegalArgumentException("현재 비밀번호와 일치하므로 변경 바랍니다.");
-        }
+        // 비밀번호 검증
+        String newPassword = null;
+        if(passwordChangeDto != null && passwordChangeDto.hasPasswordChangeRequest()) {
+            if(!passwordEncoder.matches(passwordChangeDto.getCurrentPassword(), customer.getPassword())) {
+                throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+            }
 
-        // 새로운 비밀번호 검증
-        if(!passwordChangeDto.isNewPasswordValid()) {
-            throw new IllegalArgumentException("새로운 비밀번호와 비밀번호 확인이 일치하지 않습니다");
-        }
+            if(passwordChangeDto.isValidPassword()) {
+                throw new IllegalArgumentException("현재 비밀번호와 일치합니다.");
+            }
 
-        checkPasswordStrength(passwordChangeDto.getNewPassword());
-        String newPassword = passwordEncoder.encode(passwordChangeDto.getNewPassword());
+            if(!passwordChangeDto.isNewPasswordValid()) {
+                throw new IllegalArgumentException("새 비밀번호와 일치하지 않습니다.");
+            }
+
+            checkPasswordStrength(passwordChangeDto.getNewPassword());
+            newPassword = passwordEncoder.encode(passwordChangeDto.getNewPassword());
+        }
 
         customer.UpdateLocalCustomer(updateDto,newPassword);
 
-        customerRepository.save(customer);
     }
     
+    //로컬 회원 프로필변경
+    public String localProfile(Long id, MultipartFile multipartFile) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        if(multipartFile == null || multipartFile.isEmpty()) {
+            throw new IllegalArgumentException("업로드할 프로필 이미지가 없습니다.");
+        }
+
+        if(multipartFile != null && !multipartFile.isEmpty()) {
+            String imageUrl = awsS3UploadService.uploadFile(multipartFile);
+
+            customer.UpdateProfileImageUrl(imageUrl);
+
+            customerRepository.save(customer);
+
+            return imageUrl;
+        } else {
+            throw new IllegalArgumentException("업로드할 프로필 이미지가 없습니다.");
+        }
+
+    }
+
     // 소셜 소비자 정보 수정
     public void socialUserUpdateDto(Long customerId, SocialUserUpdateDto updateDto) {
         if(updateDto == null) {

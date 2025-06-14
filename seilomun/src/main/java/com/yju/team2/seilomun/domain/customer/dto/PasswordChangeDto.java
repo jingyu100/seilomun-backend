@@ -27,4 +27,8 @@ public class PasswordChangeDto {
     public boolean isNewPasswordValid() {
         return (this.newPassword.equals(this.confirmPassword));
     }
+
+    public boolean hasPasswordChangeRequest() {
+        return this.newPassword != null && this.newPassword.isEmpty();
+    }
 }

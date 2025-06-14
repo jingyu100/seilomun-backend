@@ -100,7 +100,6 @@ public class Customer {
         this.nickname = dto.getNickname();
         this.birthDate = dto.getBirthDate();
         this.gender = dto.getGender();
-        this.profileImageUrl = dto.getProfileImageUrl();
         this.password = newPassword;
     }
 
@@ -111,5 +110,9 @@ public class Customer {
         this.birthDate = dto.getBirthDate();
         this.gender = dto.getGender();
         this.profileImageUrl = dto.getProfileImageUrl();
+    }
+
+    public void UpdateProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

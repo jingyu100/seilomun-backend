@@ -11,11 +11,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -178,12 +180,30 @@ public class CustomerController {
         ))));
     }
 
+    @PutMapping("/mypage/local/profile")
+    public ResponseEntity<ApiResponseJson> localProfileUpdate(@AuthenticationPrincipal JwtUserDetails userDetails,
+                                                              @RequestPart("multipartFile") MultipartFile multipartFile) {
+        Long id = userDetails.getId();
+        System.out.println("프로필 이미지 업로드 요청 받음, userId = " + id);
+        System.out.println("파일명: " + multipartFile.getOriginalFilename());
+
+
+        String imageUrl = customerService.localProfile(id,multipartFile);
+        System.out.println("업로드 완료, imageUrl = " + imageUrl);
+
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
+            "Message","프로필 수정이 완료되었습니다.",
+                "profileImageUrl",imageUrl
+        ))));
+
+    }
+
     //소비자 정보 수정
     @PutMapping("/mypage/local")
     public ResponseEntity<ApiResponseJson> updateLocalCustomer(@AuthenticationPrincipal JwtUserDetails userDetails,
-                                                               @RequestBody @Valid LocalUserUpdateRequest request) {
+                                                               @RequestBody LocalUserUpdateRequest request) {
         Long id = userDetails.getId();
-        log.info("사용자의 정보 : {}", request.toString());
+
         customerService.localUserUpdateDto(id, request.getUpdateDto(), request.getPasswordChangeDto());
 
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of(
