@@ -17,6 +17,8 @@ import com.yju.team2.seilomun.domain.order.repository.*;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.repository.ProductRepository;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
+import com.yju.team2.seilomun.domain.review.entity.Review;
+import com.yju.team2.seilomun.domain.review.repository.ReviewRepository;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
@@ -58,6 +60,7 @@ public class OrderService {
     private final RefundRepository refundRepository;
     private final NotificationService notificationService;
     private final AWSS3UploadService awss3UploadService;
+    private final ReviewRepository reviewRepository;
 
     private String generateOrderNumber() {
         StringBuilder stringBuilder = new StringBuilder(14);
@@ -460,6 +463,17 @@ public class OrderService {
             throw new IllegalArgumentException("판매자가 수락한 주문이 아닙니다");
         }
         Order order = optionalOrder.get();
+        // 환불 신청자가 주문자와 동일한지 확인
+        if (!order.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("해당 주문에 대한 권한이 없습니다.");
+        }
+
+        //리뷰가 작성된 경우 환불 신청 불가
+        Optional<Review> optionalReview = reviewRepository.findByOrder(order);
+        if (optionalReview.isPresent()) {
+            throw new IllegalArgumentException("리뷰가 작성된 주문은 환불 신청이 불가능합니다.");
+        }
+
         Optional<Payment> optionalPayment = paymentRepository.findByOrderAndPaySuccessYN(order, true);
         if (optionalPayment.isEmpty()) {
             throw new IllegalArgumentException("결제가 존재 하지 않습니다.");
