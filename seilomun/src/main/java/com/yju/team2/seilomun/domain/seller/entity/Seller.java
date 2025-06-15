@@ -152,6 +152,18 @@ public class Seller {
                 this.notificationPhotos.add(photo);
             }
         }
+
+        this.sellerPhotos.clear();
+
+        if(sellerInformationDto.getSellerPhotoUrls() != null && !sellerInformationDto.getSellerPhotoUrls().isEmpty()) {
+            for(String url : sellerInformationDto.getSellerPhotoUrls()) {
+                SellerPhoto sellerPhoto = SellerPhoto.builder()
+                        .photoUrl(url)
+                        .seller(this)
+                        .build();
+                this.sellerPhotos.add(sellerPhoto);
+            }
+        }
     }
     
     // 별점 업데이트용

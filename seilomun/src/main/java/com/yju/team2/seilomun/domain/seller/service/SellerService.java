@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -127,9 +128,32 @@ public class SellerService {
             }
         }
 
+        // 사진 업로드 처리
+        List<String> photoUrls = new ArrayList<>();
         if(storeImage != null && !storeImage.isEmpty()) {
-            uploadStoreImage(seller, storeImage);
+            if(storeImage.size() > 5) {
+                throw new IllegalArgumentException("가게사진은 최대 5장까지 업로드 할 수 있습니다.");
+            }
+
+            try {
+                photoUrls = awsS3UploadService.uploadFiles(storeImage);
+                log.info("가게 사진 업로드 완료 : {}", photoUrls);
+            }catch (Exception e) {
+                log.info("가게 사진 업로드 실패 : {}", e.getMessage());
+                throw new IllegalArgumentException("사진 업로드에 실패했습니다.");
+            }
         }
+
+        // 가게 사진 등록
+        List<SellerPhoto> allPhotoUrls = new ArrayList<>();
+        for (String url : photoUrls) {
+            SellerPhoto sellerPhoto = SellerPhoto.builder()
+                    .photoUrl(url)
+                    .seller(seller)
+                    .build();
+            allPhotoUrls.add(sellerPhoto);
+        }
+        seller.getSellerPhotos().addAll(allPhotoUrls);
 
 
         Seller updatedSeller = sellerRepository.save(seller);
@@ -140,30 +164,6 @@ public class SellerService {
         return updatedSeller;
     }
 
-    private void uploadStoreImage(Seller seller, List<MultipartFile> storeImage) {
-        long currentImageCount = sellerPhotoRepository.countBySeller(seller);
-
-        if(currentImageCount + storeImage.size() > 5) {
-            throw new IllegalArgumentException("매장 이미지는 최대 5장까지만 등록 가능합니다.");
-        }
-
-        for(MultipartFile multipartFile : storeImage) {
-            if(multipartFile != null && !multipartFile.isEmpty()) {
-                try {
-                    String photoUrl = awsS3UploadService.uploadFile(multipartFile);
-
-                    SellerPhoto sellerPhoto = new SellerPhoto();
-                    sellerPhoto.UpdatePhoto(photoUrl,seller);
-
-                    sellerPhotoRepository.save(sellerPhoto);
-                }catch (Exception e) {
-                    throw new IllegalArgumentException("매장 이미지 업로드 중 오류가 발생했습니다.");
-                }
-            }
-        }
-
-
-    }
 
     public SellerInformationResponseDto getSellerById(Long id) {
         Seller seller = sellerRepository.findById(id)
