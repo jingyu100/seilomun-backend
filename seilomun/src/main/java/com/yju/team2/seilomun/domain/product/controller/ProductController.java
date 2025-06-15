@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -37,9 +38,10 @@ public class ProductController {
 
     // 상품 등록
     @PostMapping
-    public ResponseEntity<ApiResponseJson> createProductDto(@RequestBody ProductDto productDto,
+    public ResponseEntity<ApiResponseJson> createProductDto(@RequestPart ProductDto productDto,
                                                             BindingResult bindingResult,
-                                                            @AuthenticationPrincipal JwtUserDetails userDetail) {
+                                                            @AuthenticationPrincipal JwtUserDetails userDetail,
+                                                            @RequestPart(value = "photoImages",required = false) List<MultipartFile> file) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
@@ -50,7 +52,7 @@ public class ProductController {
 
 
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                    Map.of("Create", productService.createProductDto(productDto, sellerEmail),
+                    Map.of("Create", productService.createProductDto(productDto, sellerEmail,file),
                             "Message", "상품 등록이 되었습니다")));
         } catch (Exception e) {
             log.error("상품등록중 오류 발생: {}", e.getMessage());
@@ -60,7 +62,7 @@ public class ProductController {
 
     //상품 수정
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestBody ProductDto productDto,
+    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestPart ProductDto productDto,
                                                             @AuthenticationPrincipal JwtUserDetails userDetail) {
         String sellerEmail = userDetail.getEmail();
 

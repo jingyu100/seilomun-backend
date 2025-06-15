@@ -13,15 +13,18 @@ import com.yju.team2.seilomun.domain.search.repository.ProductSearchRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.product.dto.ProductDto;
+import com.yju.team2.seilomun.domain.upload.service.AWSS3UploadService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -39,6 +42,7 @@ public class ProductService {
     private final SellerRepository sellerRepository;
     private final ProductIndexService productIndexService;
     private final NotificationService notificationService;
+    private final AWSS3UploadService awsS3UploadService;
 
     private static final String DISCOUNT_RATE_KEY = "Product:currentDiscountRate";
     private static final String DISCOUNT_PRICE_KEY = "Product:discountPrice";
@@ -116,7 +120,7 @@ public class ProductService {
     }
 
     // 상품 등록
-    public ProductDto createProductDto(ProductDto productDto, String sellerEmail) {
+    public ProductDto createProductDto(ProductDto productDto, String sellerEmail, List<MultipartFile> productPhotos) {
 
         Seller seller = sellerRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
@@ -139,6 +143,22 @@ public class ProductService {
         LocalDateTime createdAt = productDto.getCreatedAt() != null ? productDto.getCreatedAt() : LocalDateTime.now();
         LocalDateTime expiryDate = productDto.getExpiryDate() != null ? productDto.getExpiryDate() : LocalDateTime.now().plusDays(7);
 
+        List<String> photos = new ArrayList<>();
+        if(productPhotos != null && !productPhotos.isEmpty()) {
+            if(productPhotos.size() > 5) {
+                throw new IllegalArgumentException("상품 사진은 최대 5장 까지 등록이 가능합니다.");
+            }
+        }
+
+        try {
+            photos = awsS3UploadService.uploadFiles(productPhotos);
+            log.info("상품 사진 업로드 완료 : {}", photos.size());
+        } catch (Exception e) {
+            log.info("상품 사진 업로드 실패 : {}", e.getMessage());
+            throw new RuntimeException("상품 사진 업로드 실패했습니다.");
+        }
+
+
         Product product = Product.builder()
                 .name(productDto.getName())
                 .description(productDto.getDescription())
@@ -157,6 +177,13 @@ public class ProductService {
         log.info("상품 저장 완료: productId={}", savedProduct.getId());
 
         Integer currentDiscountRate = getCurrentDiscountRate(savedProduct.getId());
+
+        for (String url : photos) {
+            productPhotoRepository.save(ProductPhoto.builder()
+                    .product(savedProduct)
+                    .photoUrl(url)
+                    .build());
+        }
 
         // ProductIndexService를 사용하여 Elasticsearch에 인덱싱
         try {
@@ -243,6 +270,8 @@ public class ProductService {
 
         product.updateProudct(productDto,productCategory);
         Product updatedProduct = productRepository.save(product);
+
+
 
         // ProductIndexService를 사용하여 Elasticsearch 문서 업데이트
         productIndexService.indexProduct(updatedProduct);
