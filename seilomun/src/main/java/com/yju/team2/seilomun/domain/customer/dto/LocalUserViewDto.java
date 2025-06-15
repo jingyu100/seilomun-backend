@@ -15,6 +15,7 @@ public class LocalUserViewDto {
     private String name;
     private String email;
     private String nickname;
+    private Integer points;
     private String phone;
     private Character gender;
     private String birthday;
@@ -25,6 +26,7 @@ public class LocalUserViewDto {
                 customer.getName(),
                 customer.getEmail(),
                 customer.getNickname(),
+                customer.getPoints(),
                 customer.getPhone(),
                 customer.getGender(),
                 customer.getBirthDate(),
