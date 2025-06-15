@@ -13,7 +13,9 @@ import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -44,9 +46,10 @@ public class SellerController {
 
     // 매장 정보 수정
     @PutMapping
-    public ApiResponseJson updateSellerInformation(@Valid @RequestBody SellerInformationDto sellerInformationDto,
+    public ApiResponseJson updateSellerInformation(@Valid @RequestPart SellerInformationDto sellerInformationDto,
                                                    BindingResult bindingResult,
-                                                   @AuthenticationPrincipal JwtUserDetails userDetails) {
+                                                   @AuthenticationPrincipal JwtUserDetails userDetails,
+                                                   @RequestPart(value = "storeImage",required = false) List<MultipartFile> storeImage) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
@@ -54,7 +57,7 @@ public class SellerController {
         String email = userDetails.getEmail();
 
         try {
-            Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto);
+            Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto,storeImage);
             log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", email);
 
             return new ApiResponseJson(HttpStatus.OK, Map.of(

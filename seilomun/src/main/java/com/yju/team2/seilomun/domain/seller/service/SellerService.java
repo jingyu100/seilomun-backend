@@ -5,18 +5,22 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.seller.dto.*;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
+import com.yju.team2.seilomun.domain.seller.entity.SellerPhoto;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerCategoryRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.upload.service.AWSS3UploadService;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -35,6 +39,7 @@ public class SellerService {
     private final SellerCategoryRepository sellerCategoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final SellerIndexService sellerIndexService;
+    private final AWSS3UploadService awsS3UploadService;
 
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
@@ -76,7 +81,7 @@ public class SellerService {
     }
 
     // 유저 정보 업데이트 (사진 추가는 아직 x)
-    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
+    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto, List<MultipartFile> storeImage) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
 
@@ -123,6 +128,34 @@ public class SellerService {
             }
         }
 
+        // 사진 업로드 처리
+        List<String> photoUrls = new ArrayList<>();
+        if(storeImage != null && !storeImage.isEmpty()) {
+            if(storeImage.size() > 5) {
+                throw new IllegalArgumentException("가게사진은 최대 5장까지 업로드 할 수 있습니다.");
+            }
+
+            try {
+                photoUrls = awsS3UploadService.uploadFiles(storeImage);
+                log.info("가게 사진 업로드 완료 : {}", photoUrls);
+            }catch (Exception e) {
+                log.info("가게 사진 업로드 실패 : {}", e.getMessage());
+                throw new IllegalArgumentException("사진 업로드에 실패했습니다.");
+            }
+        }
+
+        // 가게 사진 등록
+        List<SellerPhoto> allPhotoUrls = new ArrayList<>();
+        for (String url : photoUrls) {
+            SellerPhoto sellerPhoto = SellerPhoto.builder()
+                    .photoUrl(url)
+                    .seller(seller)
+                    .build();
+            allPhotoUrls.add(sellerPhoto);
+        }
+        seller.getSellerPhotos().addAll(allPhotoUrls);
+
+
         Seller updatedSeller = sellerRepository.save(seller);
 
         // Elasticsearch에 가게 정보 인덱싱 업데이트
@@ -130,6 +163,7 @@ public class SellerService {
 
         return updatedSeller;
     }
+
 
     public SellerInformationResponseDto getSellerById(Long id) {
         Seller seller = sellerRepository.findById(id)
