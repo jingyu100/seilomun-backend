@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.seller.service;
 
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
+import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
 import com.yju.team2.seilomun.domain.seller.dto.*;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
@@ -23,7 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -81,14 +84,14 @@ public class SellerService {
     }
 
     // 유저 정보 업데이트 (사진 추가는 아직 x)
-    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto, List<MultipartFile> storeImage) {
+    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto, List<MultipartFile> storeImage, List<MultipartFile> notificationImage) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
 
         SellerCategoryEntity sellerCategory = sellerCategoryRepository.findById(sellerInformationDto.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
 
-        seller.updateInformation(sellerInformationDto,sellerCategory);
+        seller.updateInformation(sellerInformationDto, sellerCategory);
 
         List<DeliveryFeeDto> deliveryFeeDtos = sellerInformationDto.getDeliveryFeeDtos();
         if (deliveryFeeDtos != null && !deliveryFeeDtos.isEmpty()) {
@@ -128,33 +131,29 @@ public class SellerService {
             }
         }
 
-        // 사진 업로드 처리
-        List<String> photoUrls = new ArrayList<>();
-        if(storeImage != null && !storeImage.isEmpty()) {
-            if(storeImage.size() > 5) {
-                throw new IllegalArgumentException("가게사진은 최대 5장까지 업로드 할 수 있습니다.");
-            }
-
-            try {
-                photoUrls = awsS3UploadService.uploadFiles(storeImage);
-                log.info("가게 사진 업로드 완료 : {}", photoUrls);
-            }catch (Exception e) {
-                log.info("가게 사진 업로드 실패 : {}", e.getMessage());
-                throw new IllegalArgumentException("사진 업로드에 실패했습니다.");
-            }
-        }
-
-        // 가게 사진 등록
-        List<SellerPhoto> allPhotoUrls = new ArrayList<>();
-        for (String url : photoUrls) {
-            SellerPhoto sellerPhoto = SellerPhoto.builder()
+        // 가게 사진 업로드 + 등록
+        List<SellerPhoto> storeAllPhotoUrls = uploadAndCreatePhotos(
+            storeImage,
+            seller,
+            5,
+            url -> SellerPhoto.builder()
                     .photoUrl(url)
                     .seller(seller)
-                    .build();
-            allPhotoUrls.add(sellerPhoto);
-        }
-        seller.getSellerPhotos().addAll(allPhotoUrls);
+                    .build()
+        );
+        seller.getSellerPhotos().addAll(storeAllPhotoUrls);
 
+        // 공지 사진 업로드 + 등록
+        List<NotificationPhoto> notificationAllPhotoUrls = uploadAndCreatePhotos(
+                notificationImage,
+                seller,
+                5,
+                url -> NotificationPhoto.builder()
+                        .photoUrl(url)
+                        .seller(seller)
+                        .build()
+        );
+        seller.getNotificationPhotos().addAll(notificationAllPhotoUrls);
 
         Seller updatedSeller = sellerRepository.save(seller);
 
@@ -162,6 +161,32 @@ public class SellerService {
         sellerIndexService.indexSeller(updatedSeller);
 
         return updatedSeller;
+    }
+
+    private <T> List<T> uploadAndCreatePhotos(
+            List<MultipartFile> files,
+            Seller seller,
+            int maxCount,
+            Function<String, T> entityCreator
+    ) {
+        if(files != null && !files.isEmpty()) {
+            if(files.size() > maxCount) {
+                throw new IllegalArgumentException("사진은 최대 5장 까지 업로드 할 수 있습니다.");
+            }
+        }
+
+        List<String> photoUrls = new ArrayList<>();
+        try {
+            photoUrls = awsS3UploadService.uploadFiles(files);
+            log.info("사진 업로드 완료 : {}", photoUrls);
+        } catch (Exception e) {
+            log.info("사진 업로드 실패 : {}", e.getMessage());
+            throw new RuntimeException("사진 업로드 실패했습니다.");
+        }
+
+        return photoUrls.stream()
+                .map(entityCreator)
+                .collect(Collectors.toList());
     }
 
 
@@ -184,7 +209,7 @@ public class SellerService {
     public SellerInforResDto getUserDetailsBySellerId(Long id) {
         Seller seller = sellerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
-        return new SellerInforResDto(seller.getId(),seller.getStoreName());
+        return new SellerInforResDto(seller.getId(), seller.getStoreName());
     }
 
 

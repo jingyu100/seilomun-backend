@@ -49,7 +49,8 @@ public class SellerController {
     public ApiResponseJson updateSellerInformation(@Valid @RequestPart SellerInformationDto sellerInformationDto,
                                                    BindingResult bindingResult,
                                                    @AuthenticationPrincipal JwtUserDetails userDetails,
-                                                   @RequestPart(value = "storeImage",required = false) List<MultipartFile> storeImage) {
+                                                   @RequestPart(value = "storeImage",required = false) List<MultipartFile> storeImage,
+                                                   @RequestPart(value = "notificationImage",required = false) List<MultipartFile> notificationImage) {
         if (bindingResult.hasErrors()) {
             throw new IllegalArgumentException("잘못된 요청입니다.");
         }
@@ -57,7 +58,7 @@ public class SellerController {
         String email = userDetails.getEmail();
 
         try {
-            Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto,storeImage);
+            Seller seller = sellerService.updateSellerInformation(email, sellerInformationDto,storeImage,notificationImage);
             log.info("판매자 매장 정보가 성공적으로 업데이트되었습니다: {}", email);
 
             return new ApiResponseJson(HttpStatus.OK, Map.of(
