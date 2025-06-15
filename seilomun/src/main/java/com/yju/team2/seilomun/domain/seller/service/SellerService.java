@@ -5,17 +5,20 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.seller.dto.*;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
+import com.yju.team2.seilomun.domain.seller.entity.SellerPhoto;
 import com.yju.team2.seilomun.domain.seller.repository.DeliveryFeeRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerCategoryRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.upload.service.AWSS3UploadService;
 import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +38,7 @@ public class SellerService {
     private final SellerCategoryRepository sellerCategoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final SellerIndexService sellerIndexService;
+    private final AWSS3UploadService awsS3UploadService;
 
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
@@ -76,7 +80,7 @@ public class SellerService {
     }
 
     // 유저 정보 업데이트 (사진 추가는 아직 x)
-    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto) {
+    public Seller updateSellerInformation(String email, SellerInformationDto sellerInformationDto, List<MultipartFile> storeImage) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
 
@@ -123,12 +127,42 @@ public class SellerService {
             }
         }
 
+        if(storeImage != null && !storeImage.isEmpty()) {
+            uploadStoreImage(seller, storeImage);
+        }
+
+
         Seller updatedSeller = sellerRepository.save(seller);
 
         // Elasticsearch에 가게 정보 인덱싱 업데이트
         sellerIndexService.indexSeller(updatedSeller);
 
         return updatedSeller;
+    }
+
+    private void uploadStoreImage(Seller seller, List<MultipartFile> storeImage) {
+        long currentImageCount = sellerPhotoRepository.countBySeller(seller);
+
+        if(currentImageCount + storeImage.size() > 5) {
+            throw new IllegalArgumentException("매장 이미지는 최대 5장까지만 등록 가능합니다.");
+        }
+
+        for(MultipartFile multipartFile : storeImage) {
+            if(multipartFile != null && !multipartFile.isEmpty()) {
+                try {
+                    String photoUrl = awsS3UploadService.uploadFile(multipartFile);
+
+                    SellerPhoto sellerPhoto = new SellerPhoto();
+                    sellerPhoto.UpdatePhoto(photoUrl,seller);
+
+                    sellerPhotoRepository.save(sellerPhoto);
+                }catch (Exception e) {
+                    throw new IllegalArgumentException("매장 이미지 업로드 중 오류가 발생했습니다.");
+                }
+            }
+        }
+
+
     }
 
     public SellerInformationResponseDto getSellerById(Long id) {

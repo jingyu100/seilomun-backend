@@ -24,4 +24,9 @@ public class SellerPhoto {
     @ManyToOne
     @JoinColumn(name="se_id")
     private Seller seller;
+
+    public void UpdatePhoto(String photoUrl, Seller seller) {
+        this.photoUrl = photoUrl;
+        this.seller = seller;
+    }
 }
