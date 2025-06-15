@@ -2,11 +2,13 @@ package com.yju.team2.seilomun.domain.product.dto;
 
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
+import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -46,6 +48,9 @@ public class ProductDto {
                 .createdAt(product.getCreatedAt())
                 .seller(SellerInformationDto.toDto(product.getSeller()))
                 .categoryId(product.getProductCategory().getId())
+                .photoUrl(product.getProductPhotos().stream()
+                        .map(ProductPhoto::getPhotoUrl)
+                        .collect(Collectors.toList()))
                 .build();
     }
 }
