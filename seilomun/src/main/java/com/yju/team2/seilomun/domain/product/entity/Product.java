@@ -94,6 +94,11 @@ public class Product {
             //End의 E
             this.status = 'E';
         }
+
+        // 재고가 다시 생기면 정상 판매 상태로 복구
+        else if (this.stockQuantity > 0 && this.status == 'E') {
+            this.status = '1'; // 정상 판매 상태
+        }
     }
 
     public void updateStatus(Character status) {
