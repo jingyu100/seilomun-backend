@@ -168,13 +168,14 @@ public class OrderController {
     // 통계 조회
     @GetMapping("/stats")
     public ResponseEntity<ApiResponseJson> getStats(@AuthenticationPrincipal JwtUserDetails userDetails,
+                                                    @RequestParam(defaultValue = "monthly") String period,
                                                     @RequestParam(required = false) Integer year,
                                                     @RequestParam(required = false) Integer month) {
 
         Long SellerId = userDetails.getId();
 
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("통계 조회",orderService.getStats(SellerId,year,month))));
+                Map.of("통계 조회",orderService.getStats(SellerId,period,year,month))));
     }
     
     // SDK창 닫을때

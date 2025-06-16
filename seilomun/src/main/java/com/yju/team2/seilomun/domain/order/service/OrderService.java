@@ -32,10 +32,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.net.Inet4Address;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -506,7 +509,7 @@ public class OrderService {
                 title(refundRequestDto.getTitle()).
                 content(refundRequestDto.getContent()).
                 status('N'). // 판매자가 아직 환불 수락 전이기 때문에 N
-                payment(payment).
+                        payment(payment).
                 build();
         refundRepository.save(refund);
 
@@ -714,13 +717,88 @@ public class OrderService {
     }
 
     //통계
-    public List<StatsDto> getStats(Long id, int year, int month) {
-        Seller seller = sellerRepository.findById(id)
+    public List<StatsDto> getStats(Long sellerId, String period, Integer year, Integer month) {
+        Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("판매자를 찾을 수 없습니다."));
 
-        return orderRepository.stats(seller.getId(), year, month);
+        switch (period.toLowerCase()) {
+            case "daily":
+                return orderRepository.getDailyStats(seller.getId(), year, month);
+            case "weekly":
+                return convertWeekStats(orderRepository.getWeeklyStatsRaw(seller.getId(), year));
+            case "monthly":
+                return orderRepository.getMonthStats(seller.getId(), year, month);
+            case "quarterly":
+                return converQuarterStats(orderRepository.getQuarterStats(seller.getId(), year));
+            case "yearly":
+                return orderRepository.getYearStats(seller.getId());
+            default:
+                throw new IllegalArgumentException("해당 타입은 조회를 하지 못했습니다.");
+        }
+
     }
 
+    //분기별 데이터 변환
+    private List<StatsDto> converQuarterStats(List<Object[]> quarterStats) {
+        return quarterStats.stream()
+                .map(row -> {
+                    Integer year = safeToInteger(row[0]);
+                    Integer quarter = safeToInteger(row[1]);
+                    Integer count = safeToInteger(row[2]);
+                    Integer totalAmount = safeToInteger(row[3]);
+
+
+                    StatsDto statsDto = new StatsDto();
+                    statsDto.setYear(year);
+                    statsDto.setQuarter(quarter);
+                    statsDto.setCount(count);
+                    statsDto.setTotalAmount(totalAmount);
+                    return statsDto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 주차별 데이터 변환
+    private List<StatsDto> convertWeekStats(List<Object[]> weeklyStatsRaw) {
+        return weeklyStatsRaw.stream()
+                .map(row -> {
+                    Integer year = safeToInteger(row[0]);
+                    Integer week = safeToInteger(row[1]);
+                    Integer count = safeToInteger(row[2]);
+                    Integer TotalAmount = safeToInteger(row[3]);
+
+                    StatsDto statsDto = new StatsDto();
+                    statsDto.setYear(year);
+                    statsDto.setWeek(week);
+                    statsDto.setCount(count);
+                    statsDto.setTotalAmount(TotalAmount);
+                    return statsDto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private Integer safeToInteger(Object value) {
+        if (value == null) {
+            return 0;
+        }
+
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Long) {
+            return ((Long) value).intValue();
+        } else if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).intValue();
+        } else if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+
+        // String인 경우도 처리
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
 
     // 재고 복구 로직을 별도 메서드로
     private void restoreStock(Order order) {
