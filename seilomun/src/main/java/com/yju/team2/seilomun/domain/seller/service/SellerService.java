@@ -3,6 +3,16 @@ package com.yju.team2.seilomun.domain.seller.service;
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
+import com.yju.team2.seilomun.domain.order.dto.OrderItemDto;
+import com.yju.team2.seilomun.domain.order.entity.Order;
+import com.yju.team2.seilomun.domain.order.entity.OrderItem;
+import com.yju.team2.seilomun.domain.order.entity.Payment;
+import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
+import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
+import com.yju.team2.seilomun.domain.order.repository.PaymentRepository;
+import com.yju.team2.seilomun.domain.product.entity.Product;
+import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
+import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.dto.*;
 import com.yju.team2.seilomun.domain.seller.entity.DeliveryFee;
 import com.yju.team2.seilomun.domain.seller.entity.SellerCategoryEntity;
@@ -17,6 +27,10 @@ import com.yju.team2.seilomun.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,6 +57,10 @@ public class SellerService {
     private final PasswordEncoder passwordEncoder;
     private final SellerIndexService sellerIndexService;
     private final AWSS3UploadService awsS3UploadService;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ProductPhotoRepository productPhotoRepository;
+    private final PaymentRepository paymentRepository;
 
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
@@ -212,7 +230,117 @@ public class SellerService {
         return new SellerInforResDto(seller.getId(), seller.getStoreName());
     }
 
+    // 판매자용 주문 상세 조회
+    public SellerOrderDetailResponseDto getOrderDetail(Long sellerId, Long orderId) {
+        // 판매자 존재 확인
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
 
+        // 주문 존재 확인
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문입니다."));
+
+        // 해당 판매자의 주문인지 확인
+        if (!order.getSeller().getId().equals(sellerId)) {
+            throw new IllegalArgumentException("해당 주문에 접근할 권한이 없습니다.");
+        }
+
+        // 주문 아이템 조회
+        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+
+        // 주문 아이템 DTO 생성
+        List<OrderItemDto> orderItemDtos = new ArrayList<>();
+        for (OrderItem item : orderItems) {
+            Product product = item.getProduct();
+            String photoUrl = null;
+            List<ProductPhoto> photos = productPhotoRepository.findByProduct(product);
+
+            if (!photos.isEmpty()) {
+                photoUrl = photos.get(0).getPhotoUrl();
+            }
+
+            OrderItemDto dto = OrderItemDto.builder()
+                    .productName(product.getName())
+                    .expiryDate(product.getExpiryDate())
+                    .quantity(item.getQuantity())
+                    .unitPrice(item.getUnitPrice())
+                    .discountRate(item.getDiscountRate())
+                    .photoUrl(photoUrl)
+                    .build();
+            orderItemDtos.add(dto);
+        }
+
+        // 결제 정보 조회
+        Optional<Payment> paymentOpt = paymentRepository.findByOrder(order);
+        String paymentStatus = paymentOpt.map(payment ->
+                payment.isPaySuccessYN() ? "결제완료" : "결제실패").orElse("결제정보없음");
+
+        return SellerOrderDetailResponseDto.builder()
+                .orderId(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .customerName(order.getCustomer().getName())
+                .customerPhone(order.getCustomer().getPhone())
+                .orderDate(order.getCreatedAt())
+                .orderItems(orderItemDtos)
+                .totalAmount(order.getTotalAmount())
+                .usedPoints(order.getUsedPoints())
+                .deliveryFee(order.getDeliveryFee())
+                .isDelivery(order.getIsDelivery())
+                .deliveryAddress(order.getDeliveryAddress())
+                .memo(order.getMemo())
+                .orderStatus(order.getOrderStatus())
+                .paymentStatus(paymentStatus)
+                .build();
+    }
+
+    // 판매자용 주문 목록 조회 (페이징)
+    public SellerOrderPaginationDto getOrderList(Long sellerId, int page, int size) {
+        // 판매자 존재 확인
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+
+        // 페이지네이션 설정 (최신순 정렬)
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Order> orderPage = orderRepository.findBySellerIdWithPagination(sellerId, pageable);
+
+        List<SellerOrderListResponseDto> orderListDtos = new ArrayList<>();
+
+        for (Order order : orderPage.getContent()) {
+            // 주문 상품명들 조회
+            List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+            List<String> productNames = orderItems.stream()
+                    .map(item -> item.getProduct().getName())
+                    .collect(Collectors.toList());
+
+            // 대표 상품 사진 URL
+            String photoUrl = null;
+            if (!orderItems.isEmpty()) {
+                Product firstProduct = orderItems.get(0).getProduct();
+                Optional<ProductPhoto> firstPhoto = productPhotoRepository.findTopByProductOrderById(firstProduct);
+                photoUrl = firstPhoto.map(ProductPhoto::getPhotoUrl).orElse(null);
+            }
+
+            SellerOrderListResponseDto dto = SellerOrderListResponseDto.builder()
+                    .orderId(order.getId())
+                    .orderNumber(order.getOrderNumber())
+                    .customerName(order.getCustomer().getName())
+                    .totalAmount(order.getTotalAmount())
+                    .orderDate(order.getCreatedAt())
+                    .orderItems(productNames)
+                    .photoUrl(photoUrl)
+                    .orderStatus(order.getOrderStatus())
+                    .isDelivery(order.getIsDelivery())
+                    .build();
+
+            orderListDtos.add(dto);
+        }
+
+        return SellerOrderPaginationDto.builder()
+                .orders(orderListDtos)
+                .hasNext(orderPage.hasNext())
+                .totalElements(orderPage.getTotalElements())
+                .build();
+    }
     public void updateSellerStatus(String email, Character isOpen) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));

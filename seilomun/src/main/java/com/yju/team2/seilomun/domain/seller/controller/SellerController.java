@@ -129,6 +129,31 @@ public class SellerController {
         ))));
     }
 
+    // 판매자용 주문 상세 페이지 (이거 불러오고 아래에다가 주문 수락 거절 버튼 만드세요.)
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<ApiResponseJson> getOrderDetails(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @PathVariable Long orderId) {
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "orderDetail", sellerService.getOrderDetail(userDetails.getId(), orderId),
+                "message", "주문 상세 조회가 완료되었습니다."
+        )));
+    }
+
+    // 판매자용 주문 목록 조회
+    @GetMapping("/orders")
+    public ResponseEntity<ApiResponseJson> getOrders(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "orders", sellerService.getOrderList(userDetails.getId(), page, size),
+                "message", "주문 목록 조회가 완료되었습니다."
+        )));
+    }
+
+
+
     private String getStatusMessage(Character isOpen) {
         switch (isOpen) {
             case '1': return "영업중";
