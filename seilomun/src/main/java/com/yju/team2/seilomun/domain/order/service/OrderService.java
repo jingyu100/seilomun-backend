@@ -315,7 +315,11 @@ public class OrderService {
         payment.successPayment(paymentKey);
         paymentRepository.save(payment);
         Product product = optionalProduct.get();
-        product.updateStockQuantity(product.getStockQuantity() - orderItem.getQuantity());
+        Character oldStatus = product.getStatus();
+        boolean isStatusChanged = product.updateStockQuantity(product.getStockQuantity() - orderItem.getQuantity());
+        if (isStatusChanged) {
+            sendProductStatusChangeNotifications(product, oldStatus, product.getStatus());
+        }
         productRepository.save(product);
 
         //결제 성공하면 유저 point 1퍼센트 증가
@@ -506,7 +510,7 @@ public class OrderService {
                 title(refundRequestDto.getTitle()).
                 content(refundRequestDto.getContent()).
                 status('N'). // 판매자가 아직 환불 수락 전이기 때문에 N
-                payment(payment).
+                        payment(payment).
                 build();
         refundRepository.save(refund);
 
@@ -728,11 +732,49 @@ public class OrderService {
         for (OrderItem orderItem : orderItems) {
             Product product = orderItem.getProduct();
             int newStock = product.getStockQuantity() + orderItem.getQuantity();
-            product.updateStockQuantity(newStock);
+            Character oldStatus = product.getStatus();
+            boolean isStatusChanged = product.updateStockQuantity(newStock);
+            if (isStatusChanged) {
+                sendProductStatusChangeNotifications(product, oldStatus, product.getStatus());
+            }
             productRepository.save(product);
 
             log.info("재고 복구: productId={}, 복구량={}, 새로운재고={}",
                     product.getId(), orderItem.getQuantity(), newStock);
+        }
+    }
+
+    private void sendProductStatusChangeNotifications(Product product, Character oldStatus, Character newStatus) {
+        try {
+            // 1. 판매자에게 알림
+            ProductStatusChangedEvent sellerEvent = ProductStatusChangedEvent.builder()
+                    .product(product)
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .eventId("PRODUCT_STATUS_" + product.getId())
+                    .build();
+            notificationService.processNotification(sellerEvent);
+
+            // 2. 좋아요한 고객들에게 알림
+            LikeProductStatusChangedEvent likeEvent = LikeProductStatusChangedEvent.builder()
+                    .product(product)
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .eventId("LIKE_PRODUCT_STATUS_" + product.getId())
+                    .build();
+            notificationService.processNotification(likeEvent);
+
+            // 3. 장바구니에 담은 고객들에게 알림
+            CartProductStatusChangedEvent cartEvent = CartProductStatusChangedEvent.builder()
+                    .product(product)
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .eventId("CART_PRODUCT_STATUS_" + product.getId())
+                    .build();
+            notificationService.processNotification(cartEvent);
+
+        } catch (Exception e) {
+            log.error("상품 상태 변경 알림 전송 실패: productId={}", product.getId(), e);
         }
     }
 }

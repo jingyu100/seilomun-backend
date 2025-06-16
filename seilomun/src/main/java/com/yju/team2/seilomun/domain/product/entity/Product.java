@@ -96,17 +96,21 @@ public class Product {
         this.productCategory = productCategory;
     }
 
-    public void updateStockQuantity(Integer stockQuantity) {
+    public boolean updateStockQuantity(Integer stockQuantity) {
+        boolean isStatusChanged = false;
         this.stockQuantity = stockQuantity;
         if (this.stockQuantity == 0) {
             //End의 E
             this.status = 'E';
+            isStatusChanged = true;
         }
 
         // 재고가 다시 생기면 정상 판매 상태로 복구
         else if (this.stockQuantity > 0 && this.status == 'E') {
             this.status = '1'; // 정상 판매 상태
+            isStatusChanged = true;
         }
+        return isStatusChanged;
     }
 
     public void updateStatus(Character status) {
