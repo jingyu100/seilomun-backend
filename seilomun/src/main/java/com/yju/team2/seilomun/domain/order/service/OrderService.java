@@ -669,6 +669,50 @@ public class OrderService {
         }
     }
 
+    //환불 거절
+    @Transactional
+    public void refundDecline(Long sellerId, Long refundId) {
+        Optional<Refund> optionalRefund = refundRepository.findByIdAndStatus(refundId, 'N');
+        if (optionalRefund.isEmpty()) {
+            throw new IllegalArgumentException("환불 신청이 존재 하지 않습니다.");
+        }
+        Refund refund = optionalRefund.get();
+        Optional<Payment> optionalPayment = paymentRepository.findByIdAndPaySuccessYN(refund.getPayment().getId(), true);
+        if (optionalPayment.isEmpty()) {
+            throw new IllegalArgumentException("결제 내역이 존재 하지 않습니다.");
+        }
+        Payment payment = optionalPayment.get();
+        Optional<Order> optionalOrder = orderRepository.findById(payment.getOrder().getId());
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalArgumentException("주문 내역이 존재 하지 않습니다.");
+        }
+        Order order = optionalOrder.get();
+        if (!order.getSeller().getId().equals(sellerId)) {
+            throw new IllegalArgumentException("해당 주문에 대한 권한이 없습니다.");
+        }
+
+        // 환불 거절 처리 (결제 취소하지 않음)
+        refund.insertProcessedAt(LocalDateTime.now());
+        refund.updateStatus('R'); // 거절의 R
+        refundRepository.save(refund);
+
+        // 알림 전송
+        try {
+            if (notificationService != null) {
+                OrderRefundDeclinedEvent orderRefundDeclinedEvent = OrderRefundDeclinedEvent.builder()
+                        .refund(refund)
+                        .eventId("REFUND_DECLINED_" + refund.getId())
+                        .build();
+
+                notificationService.processNotification(orderRefundDeclinedEvent);
+                log.info("환불 거절 알림 전송 완료");
+            }
+        } catch (Exception e) {
+            log.error("환불 거절 알림 전송 실패", e);
+            // 알림 전송 실패해도 환불 거절 처리는 완료
+        }
+    }
+
     //통계
     public List<StatsDto> getStats(Long id, int year, int month) {
         Seller seller = sellerRepository.findById(id)

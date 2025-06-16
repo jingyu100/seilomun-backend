@@ -54,7 +54,7 @@ public class OrderController {
     }
 
     // 장바구니에서 구매하기
-    @GetMapping("/cart/buy")
+    @PostMapping("/cart/buy")
     public ResponseEntity<ApiResponseJson> getBuyProducts(@RequestBody List<CartItemRequestDto> cartItemRequestDto,
                                                           @AuthenticationPrincipal JwtUserDetails userDetail) {
         Long customerId = userDetail.getId();
@@ -151,6 +151,17 @@ public class OrderController {
         orderService.refundAcceptance(seller.getId(), refundId);
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
                 Map.of("message", "환불 신청 수락 완료")
+        ));
+    }
+
+    // 환불 신청 거절
+    @PostMapping("/refund/decline/{refundId}")
+    public ResponseEntity<ApiResponseJson> refundDeclineOrder(
+            @AuthenticationPrincipal JwtUserDetails seller,
+            @PathVariable Long refundId) {
+        orderService.refundDecline(seller.getId(), refundId);
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("message", "환불 신청 거절 완료")
         ));
     }
     
