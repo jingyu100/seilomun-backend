@@ -6,10 +6,7 @@ import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.PointHistory;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.customer.repository.PointHistoryRepository;
-import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
-import com.yju.team2.seilomun.domain.notification.event.OrderAcceptedEvent;
-import com.yju.team2.seilomun.domain.notification.event.OrderDeclinedEvent;
-import com.yju.team2.seilomun.domain.notification.event.OrderRefundAcceptedEvent;
+import com.yju.team2.seilomun.domain.notification.event.*;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.order.dto.*;
 import com.yju.team2.seilomun.domain.order.entity.*;
@@ -340,6 +337,15 @@ public class OrderService {
         pointHistoryRepository.save(pointHistory);
         order.updateOrderStatus('S');
         orderRepository.save(order);
+        try {
+            OrderOfferedEvent orderOfferedEvent = OrderOfferedEvent.builder()
+                    .order(order)
+                    .eventId("ORDER_OFFERED_" + order.getId())
+                    .build();
+            notificationService.processNotification(orderOfferedEvent);
+        } catch (Exception e) {
+            log.error("주문 신청 알림 전송 실패", e);
+        }
         return paymentSuccessDto;
     }
 
@@ -453,7 +459,7 @@ public class OrderService {
 
     //환불 신청
     @Transactional
-    public RefundRequestDto refundApplication(Long customerId, Long orderId, RefundRequestDto refundRequestDto,List<MultipartFile> photos) {
+    public RefundRequestDto refundApplication(Long customerId, Long orderId, RefundRequestDto refundRequestDto, List<MultipartFile> photos) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("사용자가 존재 하지 않습니다.");
@@ -520,6 +526,15 @@ public class OrderService {
             });
         }
         refundRequestDto.setRefundPhotos(allPhotoUrls);
+        try {
+            OrderRefundEvent orderRefundEvent = OrderRefundEvent.builder()
+                    .refund(refund)
+                    .eventId("REFUND_" + refund.getId())
+                    .build();
+            notificationService.processNotification(orderRefundEvent);
+        } catch (Exception e) {
+            log.error("환불 신청 알림 전송 실패", e);
+        }
         return refundRequestDto;
     }
 

@@ -2,6 +2,8 @@ package com.yju.team2.seilomun.domain.review.service;
 
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
+import com.yju.team2.seilomun.domain.notification.event.ReviewWrittenEvent;
+import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.order.entity.Order;
 import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
 import com.yju.team2.seilomun.domain.review.dto.ReviewCommentRequestDto;
@@ -44,6 +46,7 @@ public class ReviewService {
     private final ReviewCommentRepository commentRepository;
     private final ReviewCommentRepository reviewCommentRepository;
     private final AWSS3UploadService awsS3UploadService;
+    private final NotificationService notificationService;
 
     @Transactional
     public ReviewRequestDto postReview(Long customerId,Long orderId ,ReviewRequestDto reviewRequestDto, List<MultipartFile> photos) {
@@ -120,6 +123,17 @@ public class ReviewService {
         }
         seller.updateRating(averageRating);
         reviewRequestDto.setReviewPhotos(allPhotoUrls);
+
+        try {
+            ReviewWrittenEvent reviewWrittenEvent = ReviewWrittenEvent.builder()
+                    .review(review)
+                    .eventId("REVIEW_" + review.getId())
+                    .build();
+            notificationService.processNotification(reviewWrittenEvent);
+        } catch (Exception e) {
+            log.error("리뷰 작성 알림 전송 실패", e);
+        }
+
         return reviewRequestDto;
     }
 
