@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AWSS3UploadService {
 
 
@@ -51,22 +53,38 @@ public class AWSS3UploadService {
 
     // 파일 리스트로 업로드
     public List<String> uploadFiles(List<MultipartFile> files) {
-        List<String> fileNameList = new ArrayList<>();
+        List<String> uploadedFileNames = new ArrayList<>();
 
-        files.forEach(file -> {
-            String fileName = createFileName(file.getOriginalFilename());
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentType(file.getContentType());
-            objectMetadata.setContentLength(file.getSize());
+        try {
+            for (MultipartFile file : files) {
+                String fileName = createFileName(file.getOriginalFilename());
+                ObjectMetadata objectMetadata = new ObjectMetadata();
+                objectMetadata.setContentType(file.getContentType());
+                objectMetadata.setContentLength(file.getSize());
 
-            try (InputStream inputStream = file.getInputStream()) {
-                amazonS3.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata));
-            } catch (IOException e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
+                try (InputStream inputStream = file.getInputStream()) {
+                    amazonS3.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata));
+                    uploadedFileNames.add(fileName);
+                }
             }
-            fileNameList.add(fileName);
+            return uploadedFileNames;
+
+        } catch (Exception e) {
+            // 실패 시 이미 업로드된 파일들 삭제
+            rollbackUploadedFiles(uploadedFileNames);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
+        }
+    }
+
+    private void rollbackUploadedFiles(List<String> uploadedFileNames) {
+        uploadedFileNames.forEach(fileName -> {
+            try {
+                amazonS3.deleteObject(bucket, fileName);
+            } catch (Exception e) {
+                // 삭제 실패 로그 남기기
+                log.error("롤백 중 파일 삭제 실패: {}", fileName, e);
+            }
         });
-        return fileNameList;
     }
 
     // UUID로 파일명 난수 생성
