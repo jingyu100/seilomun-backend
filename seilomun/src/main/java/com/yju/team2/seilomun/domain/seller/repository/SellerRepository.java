@@ -1,5 +1,6 @@
 package com.yju.team2.seilomun.domain.seller.repository;
 
+import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,6 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
     boolean existsByEmail(String email);
 
     Optional<Seller> findByEmail(String email);
+
+    Optional<Seller> findByProducts(Product findedProduct);
 }

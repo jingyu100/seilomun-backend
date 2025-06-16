@@ -49,16 +49,83 @@ public class CartController {
         log.info("장바구니 상품 추가 요청: userId={}, productId={}, quantity={}",
                 user.getId(), request.getProductId(), request.getQuantity());
 
-        int newQuantity = cartService.addToCart(user.getId(), request.getProductId(), request.getQuantity());
+        try {
+            int newQuantity = cartService.addToCart(user.getId(), request.getProductId(), request.getQuantity());
 
-        return ResponseEntity.ok(new ApiResponseJson(
-                HttpStatus.OK,
-                Map.of(
-                        "message", "상품이 장바구니에 추가되었습니다",
-                        "productId", request.getProductId(),
-                        "newQuantity", newQuantity
-                )
-        ));
+            return ResponseEntity.ok(new ApiResponseJson(
+                    HttpStatus.OK,
+                    Map.of(
+                            "message", "상품이 장바구니에 추가되었습니다",
+                            "productId", request.getProductId(),
+                            "newQuantity", newQuantity
+                    )
+            ));
+        } catch (IllegalArgumentException e) {
+            // 비즈니스 규칙 위반 (다른 판매자 상품 등)
+            log.warn("장바구니 추가 실패 - 비즈니스 규칙 위반: userId={}, productId={}, reason={}",
+                    user.getId(), request.getProductId(), e.getMessage());
+
+            return ResponseEntity.badRequest().body(new ApiResponseJson(
+                    HttpStatus.BAD_REQUEST,
+                    Map.of(
+                            "error", "BUSINESS_RULE_VIOLATION",
+                            "message", e.getMessage(),
+                            "productId", request.getProductId()
+                    )
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("존재하지 않는 상품")) {
+                // 상품 없음
+                log.warn("장바구니 추가 실패 - 상품 없음: userId={}, productId={}",
+                        user.getId(), request.getProductId());
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponseJson(
+                        HttpStatus.NOT_FOUND,
+                        Map.of(
+                                "error", "PRODUCT_NOT_FOUND",
+                                "message", e.getMessage(),
+                                "productId", request.getProductId()
+                        )
+                ));
+            } else if (e.getMessage().contains("재고 부족")) {
+                // 재고 부족
+                log.warn("장바구니 추가 실패 - 재고 부족: userId={}, productId={}",
+                        user.getId(), request.getProductId());
+
+                return ResponseEntity.badRequest().body(new ApiResponseJson(
+                        HttpStatus.BAD_REQUEST,
+                        Map.of(
+                                "error", "INSUFFICIENT_STOCK",
+                                "message", e.getMessage(),
+                                "productId", request.getProductId()
+                        )
+                ));
+            } else {
+                // 기타 시스템 오류
+                log.error("장바구니 추가 중 시스템 오류: userId={}, productId={}",
+                        user.getId(), request.getProductId(), e);
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponseJson(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        Map.of(
+                                "error", "INTERNAL_SERVER_ERROR",
+                                "message", "장바구니에 상품을 추가하는 중 오류가 발생했습니다"
+                        )
+                ));
+            }
+        } catch (Exception e) {
+            // 예상치 못한 오류
+            log.error("장바구니 추가 중 예상치 못한 오류: userId={}, productId={}",
+                    user.getId(), request.getProductId(), e);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponseJson(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    Map.of(
+                            "error", "UNEXPECTED_ERROR",
+                            "message", "예상치 못한 오류가 발생했습니다"
+                    )
+            ));
+        }
     }
 
     // 장바구니 상품 수량 업데이트

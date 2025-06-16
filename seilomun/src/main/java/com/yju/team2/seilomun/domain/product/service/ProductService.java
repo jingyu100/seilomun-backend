@@ -29,6 +29,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -147,8 +148,8 @@ public class ProductService {
         LocalDateTime expiryDate = productDto.getExpiryDate() != null ? productDto.getExpiryDate() : LocalDateTime.now().plusDays(7);
 
         List<String> photos = new ArrayList<>();
-        if(productPhotos != null && !productPhotos.isEmpty()) {
-            if(productPhotos.size() > 5) {
+        if (productPhotos != null && !productPhotos.isEmpty()) {
+            if (productPhotos.size() > 5) {
                 throw new IllegalArgumentException("상품 사진은 최대 5장 까지 등록이 가능합니다.");
             }
         }
@@ -269,7 +270,7 @@ public class ProductService {
         }
 
         ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
-                        .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
 
         Character oldStatus = product.getStatus();
         product.updateProudct(productDto, productCategory);
@@ -304,7 +305,7 @@ public class ProductService {
         if (!expiredProducts.isEmpty()) {
             for (Product product : expiredProducts) {
                 // 유통기한 다되면 상태를 변화 지금은 임시로 0 차후에 뭘로 할지 상의
-                product.updateProudct(productDto,productCategory);
+                product.updateProudct(productDto, productCategory);
                 productRepository.save(product);
 
                 String currentDiscountRateKey = DISCOUNT_RATE_KEY + product.getId();
@@ -371,5 +372,17 @@ public class ProductService {
         } catch (Exception e) {
             log.error("상품 상태 변경 알림 전송 실패: productId={}", product.getId(), e);
         }
+    }
+
+    public Long getSellerIdByProductId(Long productId) {
+        System.out.println(productId);
+        Product findedProduct = productRepository.findById(productId).orElse(null);
+        Seller byId = sellerRepository.findByProducts(findedProduct).orElse(null);
+        return byId.getId();
+    }
+
+    public String getSellerNameById(Long existingSellerId) {
+        Seller byId = sellerRepository.findById(existingSellerId).orElse(null);
+        return byId.getStoreName();
     }
 }

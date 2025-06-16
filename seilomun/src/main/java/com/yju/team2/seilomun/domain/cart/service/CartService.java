@@ -33,6 +33,31 @@ public class CartService {
         String cartKey = getCartKey(userId);
 
         try {
+            // 추가하려는 상품의 판매자 정보 조회
+            Long newProductSellerId = productService.getSellerIdByProductId(productId);
+
+            // 현재 장바구니에 있는 상품들 확인
+            Map<Object, Object> cartItems = redisTemplate.opsForHash().entries(cartKey);
+
+            // 장바구니에 상품이 있는 경우 판매자 확인
+            if (!cartItems.isEmpty()) {
+                // 기존 상품 중 하나의 판매자 ID 확인
+                String existingProductId = cartItems.keySet().iterator().next().toString();
+                Long existingSellerId = productService.getSellerIdByProductId(Long.valueOf(existingProductId));
+
+                // 다른 판매자의 상품인 경우
+                if (!existingSellerId.equals(newProductSellerId)) {
+                    String existingSellerName = productService.getSellerNameById(existingSellerId);
+                    String newSellerName = productService.getSellerNameById(newProductSellerId);
+
+                    throw new IllegalArgumentException(
+                            String.format("장바구니에는 '%s' 매장의 상품이 담겨있습니다. " +
+                                            "'%s' 매장의 상품을 추가하려면 기존 장바구니를 비워주세요.",
+                                    existingSellerName, newSellerName)
+                    );
+                }
+            }
+
             // 현재 장바구니에 있는 상품 수량 확인
             Integer currentQuantity = 0;
             Object currentValue = redisTemplate.opsForHash().get(cartKey, productId.toString());
@@ -56,6 +81,8 @@ public class CartService {
                     userId, productId, quantity, newQuantity);
 
             return newQuantity;
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("장바구니에 상품 추가 중 오류 발생: userId={}, productId={}, quantity={}",
                     userId, productId, quantity, e);
