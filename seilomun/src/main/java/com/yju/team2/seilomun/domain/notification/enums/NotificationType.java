@@ -16,7 +16,7 @@ public enum NotificationType {
     ORDER_REFUND("환불 신청"),
     PRODUCT_STATUS_CHANGED("등록된 상품 상태가 변경"),
     REVIEW_WRITTEN("리뷰 작성"),
-    PAYMENT_COMPLETED("결제 완료");
+    PAYMENT_COMPLETED("결제 완료"); // 제거 예정
 
     private final String description;
 

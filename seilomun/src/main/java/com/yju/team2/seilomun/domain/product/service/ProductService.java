@@ -1,6 +1,9 @@
 package com.yju.team2.seilomun.domain.product.service;
 
+import com.yju.team2.seilomun.domain.notification.event.CartProductStatusChangedEvent;
+import com.yju.team2.seilomun.domain.notification.event.LikeProductStatusChangedEvent;
 import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
+import com.yju.team2.seilomun.domain.notification.event.ProductStatusChangedEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
@@ -268,10 +271,14 @@ public class ProductService {
         ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
                         .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
 
-        product.updateProudct(productDto,productCategory);
+        Character oldStatus = product.getStatus();
+        product.updateProudct(productDto, productCategory);
         Product updatedProduct = productRepository.save(product);
 
-
+        // 상태가 변경되었다면 알림 발생
+        if (!oldStatus.equals(updatedProduct.getStatus())) {
+            sendProductStatusChangeNotifications(updatedProduct, oldStatus, updatedProduct.getStatus());
+        }
 
         // ProductIndexService를 사용하여 Elasticsearch 문서 업데이트
         productIndexService.indexProduct(updatedProduct);
@@ -329,5 +336,40 @@ public class ProductService {
                     return ProductDto.fromEntity(product, currentDiscountRate);
                 })
                 .collect(Collectors.toList());
+    }
+
+    // 상태 변경 알림 메서드
+    private void sendProductStatusChangeNotifications(Product product, Character oldStatus, Character newStatus) {
+        try {
+            // 1. 판매자에게 알림
+            ProductStatusChangedEvent sellerEvent = ProductStatusChangedEvent.builder()
+                    .product(product)
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .eventId("PRODUCT_STATUS_" + product.getId())
+                    .build();
+            notificationService.processNotification(sellerEvent);
+
+            // 2. 좋아요한 고객들에게 알림
+            LikeProductStatusChangedEvent likeEvent = LikeProductStatusChangedEvent.builder()
+                    .product(product)
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .eventId("LIKE_PRODUCT_STATUS_" + product.getId())
+                    .build();
+            notificationService.processNotification(likeEvent);
+
+            // 3. 장바구니에 담은 고객들에게 알림
+            CartProductStatusChangedEvent cartEvent = CartProductStatusChangedEvent.builder()
+                    .product(product)
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .eventId("CART_PRODUCT_STATUS_" + product.getId())
+                    .build();
+            notificationService.processNotification(cartEvent);
+
+        } catch (Exception e) {
+            log.error("상품 상태 변경 알림 전송 실패: productId={}", product.getId(), e);
+        }
     }
 }

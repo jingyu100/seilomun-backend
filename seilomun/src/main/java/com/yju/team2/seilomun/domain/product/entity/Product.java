@@ -21,6 +21,7 @@ import java.util.List;
 @Slf4j
 @Table(name = "products")
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "pr_id")
@@ -41,6 +42,13 @@ public class Product {
     @Column(name = "expiry_date", nullable = false)
     private LocalDateTime expiryDate;
 
+    /**
+     *  판매중 : '1'
+     *  판매중단 : '0'
+     *  품절 : 'E'
+     *  임박특가 'T'
+     *  유통기한만료 : 'X'
+     * */
     @Column(name = "status", length = 1)
     private Character status;
 
