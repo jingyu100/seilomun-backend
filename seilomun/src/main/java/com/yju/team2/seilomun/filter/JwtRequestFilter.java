@@ -14,6 +14,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -72,59 +74,153 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
 
     // 만료된 토큰 처리 로직
     // 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급
+//    private void handleExpiredToken(HttpServletRequest request,
+//                                    HttpServletResponse response,
+//                                    FilterChain filterChain) throws IOException, ServletException {
+//
+//        // 1. 리프레시 토큰 추출
+//        String refreshToken = extractTokenFromCookie(request, "refresh_token");
+//
+//        if (refreshToken != null && jwtUtil.validateRefreshToken(refreshToken)) {
+//            try {
+//                // 2. 리프레시 토큰에서 사용자 정보 추출
+//                String username = jwtUtil.extractUsername(refreshToken);
+//                String userType = jwtUtil.extractUserType(refreshToken);
+//
+//                // Redis에 저장된 토큰과 비교
+//                String storedToken = refreshTokenService.getRefreshToken(username, userType);
+//                if (storedToken == null || !storedToken.equals(refreshToken)) {
+//                    log.error("Redis에 저장된 토큰과 일치하지 않음");
+//                    filterChain.doFilter(request, response);
+//                    return;
+//                }
+//
+//                // 온라인 상태 업데이트
+//                userStatusService.updateOnlineStatus(username, userType);
+//
+//                // 3. 새 토큰 생성
+//                String newAccessToken = jwtUtil.generateAccessToken(username, userType);
+//                String newRefreshToken = jwtUtil.generateRefreshToken(username, userType);
+//
+//                // 4. RefreshToken 교체
+//                refreshTokenService.rotateRefreshToken(username, userType, newRefreshToken);
+//
+//                // 5. 쿠키 업데이트
+//                ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(newAccessToken);
+//                ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(newRefreshToken);
+//
+//                response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+//                response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+//
+//                // 6. SecurityContext 설정
+//                UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(username, userType);
+//                UsernamePasswordAuthenticationToken authentication =
+//                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+//                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                SecurityContextHolder.getContext().setAuthentication(authentication);
+//
+//            } catch (Exception e) {
+//                log.info("토큰 자동 갱신 실패: ", e);
+//                // 갱신 실패 시 인증 없이 계속 진행
+//            }
+//        }
+//
+//        // 리프레시 토큰이 없거나 유효하지 않은 경우
+//        filterChain.doFilter(request, response);
+//    }
+
+    // 만료된 토큰 처리 로직
+    // 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급
     private void handleExpiredToken(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws IOException, ServletException {
 
-        // 1. 리프레시 토큰 추출
         String refreshToken = extractTokenFromCookie(request, "refresh_token");
 
-        if (refreshToken != null && jwtUtil.validateRefreshToken(refreshToken)) {
-            try {
-                // 2. 리프레시 토큰에서 사용자 정보 추출
-                String username = jwtUtil.extractUsername(refreshToken);
-                String userType = jwtUtil.extractUserType(refreshToken);
-
-                // Redis에 저장된 토큰과 비교
-                String storedToken = refreshTokenService.getRefreshToken(username, userType);
-                if (storedToken == null || !storedToken.equals(refreshToken)) {
-                    log.error("Redis에 저장된 토큰과 일치하지 않음");
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                // 온라인 상태 업데이트
-                userStatusService.updateOnlineStatus(username, userType);
-
-                // 3. 새 토큰 생성
-                String newAccessToken = jwtUtil.generateAccessToken(username, userType);
-                String newRefreshToken = jwtUtil.generateRefreshToken(username, userType);
-
-                // 4. RefreshToken 교체
-                refreshTokenService.rotateRefreshToken(username, userType, newRefreshToken);
-
-                // 5. 쿠키 업데이트
-                ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(newAccessToken);
-                ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(newRefreshToken);
-
-                response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
-                response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-
-                // 6. SecurityContext 설정
-                UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(username, userType);
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            } catch (Exception e) {
-                log.info("토큰 자동 갱신 실패: ", e);
-                // 갱신 실패 시 인증 없이 계속 진행
-            }
+        // refresh token이 없는 경우 - 인증 실패 처리
+        if (refreshToken == null) {
+            log.debug("리프레시 토큰이 없음");
+            handleAuthenticationFailure(response);
+            return;
         }
 
-        // 리프레시 토큰이 없거나 유효하지 않은 경우
+        // refresh token이 유효하지 않은 경우 - 인증 실패 처리
+        if (!jwtUtil.validateRefreshToken(refreshToken)) {
+            log.debug("리프레시 토큰이 유효하지 않음");
+            handleAuthenticationFailure(response);
+            return;
+        }
+
+        try {
+            String username = jwtUtil.extractUsername(refreshToken);
+            String userType = jwtUtil.extractUserType(refreshToken);
+
+            // Redis 토큰 검증
+            String storedToken = refreshTokenService.getRefreshToken(username, userType);
+            if (storedToken == null || !storedToken.equals(refreshToken)) {
+                log.warn("Redis에 저장된 토큰과 일치하지 않음 - 사용자: {}", username);
+                handleAuthenticationFailure(response);
+                return;
+            }
+
+            // 토큰 갱신 성공 - 정상 진행
+            renewTokensAndProceed(request, response, filterChain, username, userType);
+
+        } catch (Exception e) {
+            log.warn("토큰 갱신 중 오류 발생: ", e);
+            handleAuthenticationFailure(response);
+        }
+    }
+
+    // 토큰 갱신
+    private void renewTokensAndProceed(HttpServletRequest request,
+                                       HttpServletResponse response,
+                                       FilterChain filterChain,
+                                       String username,
+                                       String userType) throws IOException, ServletException {
+
+        // 온라인 상태 업데이트
+        userStatusService.updateOnlineStatus(username, userType);
+
+        // 새 토큰 생성
+        String newAccessToken = jwtUtil.generateAccessToken(username, userType);
+        String newRefreshToken = jwtUtil.generateRefreshToken(username, userType);
+
+        // RefreshToken 교체
+        refreshTokenService.rotateRefreshToken(username, userType, newRefreshToken);
+
+        // 쿠키 업데이트
+        ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(newAccessToken);
+        ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(newRefreshToken);
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+
+        // SecurityContext 설정
+        UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(username, userType);
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // 정상적으로 다음 필터로 진행
         filterChain.doFilter(request, response);
+    }
+
+    // 인증 실패 응답
+    private void handleAuthenticationFailure(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+
+        String jsonResponse = """
+                {
+                    "error": "AUTHENTICATION_FAILED",
+                    "message": "인증에 실패했습니다. 다시 로그인해주세요."
+                }
+                """;
+
+        response.getWriter().write(jsonResponse);
     }
 
     // 유효한 토큰 처리 로직
