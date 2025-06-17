@@ -74,63 +74,6 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
 
     // 만료된 토큰 처리 로직
     // 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급
-//    private void handleExpiredToken(HttpServletRequest request,
-//                                    HttpServletResponse response,
-//                                    FilterChain filterChain) throws IOException, ServletException {
-//
-//        // 1. 리프레시 토큰 추출
-//        String refreshToken = extractTokenFromCookie(request, "refresh_token");
-//
-//        if (refreshToken != null && jwtUtil.validateRefreshToken(refreshToken)) {
-//            try {
-//                // 2. 리프레시 토큰에서 사용자 정보 추출
-//                String username = jwtUtil.extractUsername(refreshToken);
-//                String userType = jwtUtil.extractUserType(refreshToken);
-//
-//                // Redis에 저장된 토큰과 비교
-//                String storedToken = refreshTokenService.getRefreshToken(username, userType);
-//                if (storedToken == null || !storedToken.equals(refreshToken)) {
-//                    log.error("Redis에 저장된 토큰과 일치하지 않음");
-//                    filterChain.doFilter(request, response);
-//                    return;
-//                }
-//
-//                // 온라인 상태 업데이트
-//                userStatusService.updateOnlineStatus(username, userType);
-//
-//                // 3. 새 토큰 생성
-//                String newAccessToken = jwtUtil.generateAccessToken(username, userType);
-//                String newRefreshToken = jwtUtil.generateRefreshToken(username, userType);
-//
-//                // 4. RefreshToken 교체
-//                refreshTokenService.rotateRefreshToken(username, userType, newRefreshToken);
-//
-//                // 5. 쿠키 업데이트
-//                ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(newAccessToken);
-//                ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(newRefreshToken);
-//
-//                response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
-//                response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-//
-//                // 6. SecurityContext 설정
-//                UserDetails userDetails = userDetailsService.loadUserByUsernameAndType(username, userType);
-//                UsernamePasswordAuthenticationToken authentication =
-//                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-//                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//                SecurityContextHolder.getContext().setAuthentication(authentication);
-//
-//            } catch (Exception e) {
-//                log.info("토큰 자동 갱신 실패: ", e);
-//                // 갱신 실패 시 인증 없이 계속 진행
-//            }
-//        }
-//
-//        // 리프레시 토큰이 없거나 유효하지 않은 경우
-//        filterChain.doFilter(request, response);
-//    }
-
-    // 만료된 토큰 처리 로직
-    // 리프레시 토큰을 사용하여 새로운 액세스 토큰과 리프레시 토큰을 발급
     private void handleExpiredToken(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws IOException, ServletException {
@@ -140,14 +83,14 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
         // refresh token이 없는 경우 - 인증 실패 처리
         if (refreshToken == null) {
             log.debug("리프레시 토큰이 없음");
-            handleAuthenticationFailure(response);
+            clearCookiesAndHandleAuthFailure(response);
             return;
         }
 
         // refresh token이 유효하지 않은 경우 - 인증 실패 처리
         if (!jwtUtil.validateRefreshToken(refreshToken)) {
             log.debug("리프레시 토큰이 유효하지 않음");
-            handleAuthenticationFailure(response);
+            clearCookiesAndHandleAuthFailure(response);
             return;
         }
 
@@ -159,7 +102,7 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
             String storedToken = refreshTokenService.getRefreshToken(username, userType);
             if (storedToken == null || !storedToken.equals(refreshToken)) {
                 log.warn("Redis에 저장된 토큰과 일치하지 않음 - 사용자: {}", username);
-                handleAuthenticationFailure(response);
+                clearCookiesAndHandleAuthFailure(response);
                 return;
             }
 
@@ -169,17 +112,21 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
         } catch (Exception e) {
             log.warn("토큰 갱신 중 오류 발생: ", e);
             // redis에 존재하지 않는 리프레쉬 토큰 발견시 브라우저 쿠키 초기화
-            clearCookiesAndRespond(response);
-            handleAuthenticationFailure(response);
+            clearCookiesAndHandleAuthFailure(response);
         }
     }
 
-    private void clearCookiesAndRespond(HttpServletResponse response) throws IOException {
+    // 쿠키 초기화 및 인증 실패 처리를 하나의 메서드로 통합
+    private void clearCookiesAndHandleAuthFailure(HttpServletResponse response) throws IOException {
+        // 먼저 쿠키를 초기화
         ResponseCookie expiredAccessToken = CookieUtil.createExpiredAccessTokenCookie();
         ResponseCookie expiredRefreshToken = CookieUtil.createExpiredRefreshTokenCookie();
 
         response.addHeader(HttpHeaders.SET_COOKIE, expiredAccessToken.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, expiredRefreshToken.toString());
+
+        // 그 다음 인증 실패 응답
+        handleAuthenticationFailure(response);
     }
 
     // 토큰 갱신
