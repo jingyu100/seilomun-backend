@@ -173,14 +173,18 @@ public class CustomerController {
     public ResponseEntity<ApiResponseJson> getOrders(
             @AuthenticationPrincipal JwtUserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        OrderPaginationDto orders = customerService.getOrderList(userDetails.getId(), page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String storeName) {
+
+        OrderPaginationDto orders = customerService.getOrderList(
+                userDetails.getId(), page, size, storeName);
 
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
                 "orders", orders.getOrders(),
                 "hasNext", orders.isHasNext(),
                 "totalElements", orders.getTotalElements(),
-                "message", "주문 목록이 조회되었습니다."
+                "message", storeName != null ?
+                        "'" + storeName + "' 검색 결과입니다." : "주문 목록이 조회되었습니다."
         )));
     }
 

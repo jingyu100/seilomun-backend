@@ -23,6 +23,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.customer.id = :customerId ORDER BY o.createdAt DESC")
     Page<Order> findByCustomerIdWithPagination(@Param("customerId") Long customerId, Pageable pageable);
 
+    // 가게명으로 검색
+    @Query("SELECT o FROM Order o " +
+            "WHERE o.customer.id = :customerId " +
+            "AND o.seller.storeName LIKE %:storeName% " +
+            "ORDER BY o.createdAt DESC")
+    Page<Order> findByCustomerIdAndStoreNameWithPagination(@Param("customerId") Long customerId,
+                                                           @Param("storeName") String storeName,
+                                                            Pageable pageable);
+
     @Query("SELECT o FROM Order o WHERE o.seller.id = :sellerId ORDER BY o.createdAt DESC")
     Page<Order> findBySellerIdWithPagination(@Param("sellerId") Long sellerId, Pageable pageable);
 

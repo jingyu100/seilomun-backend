@@ -304,15 +304,24 @@ public class CustomerService {
     }
 
     // 주문 목록 보기
-    public OrderPaginationDto getOrderList(Long customerId, int page, int size) {
+    public OrderPaginationDto getOrderList(Long customerId, int page, int size, String storeName) {
         Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
         if (optionalCustomer.isEmpty()) {
             throw new IllegalArgumentException("존재하지 않는 소비자 입니다.");
         }
         Customer customer = optionalCustomer.get();
+
         // 페이지네이션을 위한 Pageable 객체 생성 (최신순 정렬)
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Order> orderPage = orderRepository.findByCustomerIdWithPagination(customerId, pageable);
+
+        // 가게명 검색 여부에 따라 다른 메서드 호출
+        Page<Order> orderPage;
+        if (storeName != null && !storeName.trim().isEmpty()) {
+            orderPage = orderRepository.findByCustomerIdAndStoreNameWithPagination(
+                    customerId, storeName.trim(), pageable);
+        } else {
+            orderPage = orderRepository.findByCustomerIdWithPagination(customerId, pageable);
+        }
 
         List<OrderListResponseDto> orderListResponseDtoList = new ArrayList<>();
 
@@ -323,17 +332,26 @@ public class CustomerService {
             for (OrderItem orderItem : orderItemList) {
                 productNames.add(orderItem.getProduct().getName());
             }
+
             boolean isReview = false;
             Optional<Review> optionalReview = reviewRepository.findByOrder(order);
             if (optionalReview.isPresent()) {
                 isReview = true;
             }
+
+            // 판매자의 첫 번째 사진 가져오기
+            String sellerPhotoUrl = null;
+            Seller seller = order.getSeller();
+            if (seller != null && !seller.getSellerPhotos().isEmpty()) {
+                sellerPhotoUrl = seller.getSellerPhotos().get(0).getPhotoUrl();
+            }
+
             OrderListResponseDto orderListResponseDto = OrderListResponseDto.builder()
                     .orderId(order.getId())
                     .sellerName(order.getSeller().getStoreName())
                     .totalAmount(order.getTotalAmount())
                     .orderDate(order.getCreatedAt())
-                    .photoUrl("seller_photo_URL") // photoUrl
+                    .photoUrl(sellerPhotoUrl) // photoUrl
                     .orderStatus(order.getOrderStatus())
                     .orderItems(productNames)
                     .isReview(isReview)
@@ -347,6 +365,7 @@ public class CustomerService {
                 .totalElements(orderPage.getTotalElements())
                 .build();
     }
+
 
     // 상세 주문 보기
     public OrderDetailResponseDto getOrderDetail(Long customerId, Long orderId) {
