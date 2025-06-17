@@ -115,8 +115,10 @@ public class SellerController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponseJson> getMySellers(@AuthenticationPrincipal JwtUserDetails userDetails) {
         String storeName = userDetails.getUsername();
+        SellerInformationResponseDto sellerInformationDto = sellerService.getSellerById(userDetails.getId());
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
-                "storeName",storeName
+                "storeName",storeName,
+                "sellerInformationDto", sellerInformationDto
         )));
     }
 
