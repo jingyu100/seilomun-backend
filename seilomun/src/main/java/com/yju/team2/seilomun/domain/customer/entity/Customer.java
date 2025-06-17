@@ -93,13 +93,16 @@ public class Customer {
     public void minusPoint(Integer point) {
         this.points -= point;
     }
-    public void UpdateLocalCustomer(LocalUserUpdateDto dto,String newPassword) {
+    public void UpdateLocalCustomer(LocalUserUpdateDto dto) {
         this.email = dto.getEmail();
         this.name = dto.getName();
         this.phone = dto.getPhone();
         this.nickname = dto.getNickname();
         this.birthDate = dto.getBirthDate();
         this.gender = dto.getGender();
+    }
+
+    public void UpdateLocalPassword(String newPassword) {
         this.password = newPassword;
     }
 
