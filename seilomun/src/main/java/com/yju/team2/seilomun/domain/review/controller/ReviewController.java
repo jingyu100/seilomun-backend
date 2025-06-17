@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.review.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
+import com.yju.team2.seilomun.domain.review.dto.MyReviewPaginationDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewCommentRequestDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewPaginationDto;
 import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
@@ -80,6 +81,26 @@ public class ReviewController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponseJson(HttpStatus.INTERNAL_SERVER_ERROR, Map.of(
                             "error", "리뷰 삭제에 실패했습니다: " + e.getMessage()
+                    )));
+        }
+    }
+
+
+    @GetMapping("/myReviews")
+    public ResponseEntity<ApiResponseJson> getMyReviews(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            MyReviewPaginationDto myReviews = reviewService.getMyReviews(userDetails.getId(), page, size);
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "내가 쓴 리뷰", myReviews
+            )));
+        } catch (Exception e) {
+            log.error("내 리뷰 조회 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseJson(HttpStatus.INTERNAL_SERVER_ERROR, Map.of(
+                            "error", "리뷰 조회에 실패했습니다: " + e.getMessage()
                     )));
         }
     }

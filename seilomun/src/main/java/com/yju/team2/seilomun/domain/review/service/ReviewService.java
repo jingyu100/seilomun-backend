@@ -275,6 +275,100 @@ public class ReviewService {
         return reviewCommentRequestDto;
     }
 
+    @Transactional
+    public MyReviewPaginationDto getMyReviews(Long customerId, int page, int size) {
+        Optional<Customer> optionalCustomer = customerRepository.findById(customerId);
+        if (optionalCustomer.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 고객입니다.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Review> reviewPage = reviewRepository.findAllByCustomerIdWithPagination(customerId, pageable);
+
+        List<Review> reviews = reviewPage.getContent();
+        if (reviews.isEmpty()) {
+            return MyReviewPaginationDto.builder()
+                    .myReviews(new ArrayList<>())
+                    .hasNext(false)
+                    .totalElements(0L)
+                    .build();
+        }
+
+        // 리뷰 ID 목록 추출
+        List<Long> reviewIds = reviews.stream()
+                .map(Review::getId)
+                .toList();
+
+        // 별도 쿼리로 리뷰 사진들과 주문 상품들 조회
+        Map<Long, List<ReviewPhoto>> photoMap = reviewRepository.findReviewsWithPhotos(reviewIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Review::getId,
+                        Review::getReviewPhotos,
+                        (existing, replacement) -> existing
+                ));
+
+        Map<Long, List<OrderItem>> orderItemMap = reviewRepository.findReviewsWithOrderItems(reviewIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Review::getId,
+                        review -> review.getOrder().getOrderItems(),
+                        (existing, replacement) -> existing
+                ));
+
+        List<MyReviewResponseDto> myReviewResponseDtos = new ArrayList<>();
+        for (Review review : reviews) {
+            MyReviewResponseDto reviewDto = createMyReviewResponseDto(review, photoMap, orderItemMap);
+
+            // 리뷰 댓글 조회
+            Optional<ReviewComment> optionalComment = reviewCommentRepository.findByReviewId(review.getId());
+            if (optionalComment.isPresent()) {
+                ReviewCommentResponseDto commentDto = ReviewCommentResponseDto.fromEntity(optionalComment.get());
+                reviewDto.setComment(commentDto);
+            }
+
+            myReviewResponseDtos.add(reviewDto);
+        }
+
+        return MyReviewPaginationDto.builder()
+                .myReviews(myReviewResponseDtos)
+                .hasNext(reviewPage.hasNext())
+                .totalElements(reviewPage.getTotalElements())
+                .build();
+    }
+
+
+    private MyReviewResponseDto createMyReviewResponseDto(Review review,
+                                                          Map<Long, List<ReviewPhoto>> photoMap,
+                                                          Map<Long, List<OrderItem>> orderItemMap) {
+        // 주문한 상품 이름 목록
+        List<String> itemNames = new ArrayList<>();
+        List<OrderItem> orderItems = orderItemMap.get(review.getId());
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                itemNames.add(item.getProduct().getName());
+            }
+        }
+
+        // 리뷰 사진 URL 목록
+        List<String> photoUrls = new ArrayList<>();
+        List<ReviewPhoto> photos = photoMap.getOrDefault(review.getId(), new ArrayList<>());
+        for (ReviewPhoto photo : photos) {
+            photoUrls.add(photo.getPhoto_url());
+        }
+
+        return MyReviewResponseDto.builder()
+                .reviewId(review.getId())
+                .reviewContent(review.getContent())
+                .storeName(review.getOrder().getSeller().getStoreName())
+                .orderItems(itemNames)
+                .reviewPhotoUrls(photoUrls)
+                .rating(review.getRating())
+                .createdAt(review.getCreatedAt())
+                .orderId(review.getOrder().getId())
+                .build();
+    }
+
     private ReviewResponseDto createReviewResponseDto(Review review,
                                                       Map<Long, List<ReviewPhoto>> photoMap,
                                                       Map<Long, List<OrderItem>> orderItemMap) {

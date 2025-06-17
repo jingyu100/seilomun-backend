@@ -36,4 +36,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "LEFT JOIN FETCH oi.product " +
             "WHERE r.id IN :reviewIds")
     List<Review> findReviewsWithOrderItems(@Param("reviewIds") List<Long> reviewIds);
+
+    @Query("SELECT r FROM Review r " +
+            "LEFT JOIN FETCH r.order o " +
+            "LEFT JOIN FETCH o.customer " +
+            "LEFT JOIN FETCH o.seller " +
+            "WHERE o.customer.id = :customerId " +
+            "ORDER BY r.createdAt DESC")
+    Page<Review> findAllByCustomerIdWithPagination(@Param("customerId") Long customerId, Pageable pageable);
 }
