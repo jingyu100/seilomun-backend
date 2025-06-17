@@ -31,45 +31,12 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필터 클래스
+public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final JwtUserDetailsService userDetailsService;
     private final RefreshTokenService refreshTokenService;
     private final UserStatusService userStatusService;
-
-    // 토큰 검증이 필요없는 경로들 
-    private static final List<String> EXCLUDED_PATHS = Arrays.asList(
-            "/api/auth/businessVerification",
-            "/api/auth/login",
-            "/api/sellers/",
-            "/api/customers/",
-            "/api/auth/logout",
-            "/api/address/",
-            "/h2-console",
-            "/error",
-            "/favicon.ico",
-            "/swagger-ui",
-            "/v3/api-docs",
-            "/api/products/",
-            "/ws",
-            "/login",
-            "/oauth2/authorization",
-            "/login/oauth2/code",
-            "/api/auth/email",
-            "/api/auth/verifyEmail",
-            "/api/orders/buy",
-            "/api/orders/test/buy",
-            "/api/orders/toss/success",
-            "/api/orders/toss/fail",
-            "/api/chat/",
-            "/api/users/",
-            "/api/search/autocomplete",
-            "/api/search/fuzzy",
-            "/api/search/popular",
-            "/api/products/search",
-            "/api/sellers/search"
-    );
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -78,13 +45,6 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
 
         String requestPath = request.getRequestURI();
         log.debug("요청 경로: {}", requestPath);
-
-        // 토큰 검증이 필요없는 경로는 바로 통과
-        if (shouldSkipTokenValidation(requestPath)) {
-            log.debug("토큰 검증 제외 경로: {}", requestPath);
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         String accessToken = extractTokenFromCookie(request, "access_token");
         String refreshToken = extractTokenFromCookie(request, "refresh_token");
@@ -119,12 +79,7 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
         }
     }
 
-    /**
-     * 토큰 검증을 건너뛸 경로인지 확인
-     */
-    private boolean shouldSkipTokenValidation(String requestPath) {
-        return EXCLUDED_PATHS.stream().anyMatch(requestPath::startsWith);
-    }
+
 
     /**
      * 토큰 유효성 검사
