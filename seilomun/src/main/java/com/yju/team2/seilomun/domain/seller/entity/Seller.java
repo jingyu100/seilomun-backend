@@ -113,8 +113,9 @@ public class Seller {
     private List<ChatRoom> chatRooms = new ArrayList<>();
 
 
-    @OneToOne(mappedBy = "seller", cascade = CascadeType.ALL /*fetch = FetchType.LAZY*/)
-    private ReviewComment reviewComment;
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<ReviewComment> reviewComments = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sc_id")
