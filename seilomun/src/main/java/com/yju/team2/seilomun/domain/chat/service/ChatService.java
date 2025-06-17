@@ -271,4 +271,16 @@ public class ChatService {
         String key = "chat_active:" + chatRoomId + ":" + userId + ":" + userType;
         redisTemplate.opsForValue().set(key, "active", EXPIRE_TIME, TimeUnit.SECONDS);
     }
+
+
+    // 사용자 채팅방 나가기 처리
+    @Transactional
+    public void userLeaveRoom(Long chatRoomId, Long userId, Character userType) {
+        // Redis에서 사용자 활성 상태 삭제
+        String key = "chat_active:" + chatRoomId + ":" + userId + ":" + userType;
+        Boolean deleted = redisTemplate.delete(key);
+
+        log.info("사용자 {}(타입:{}) 채팅방 {} 나가기 처리 완료 (삭제됨: {})",
+                userId, userType, chatRoomId, deleted);
+    }
 }

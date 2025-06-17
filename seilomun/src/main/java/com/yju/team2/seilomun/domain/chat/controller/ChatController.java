@@ -52,6 +52,17 @@ public class ChatController {
         );
     }
 
+    @MessageMapping("/chat.leaveRoom")
+    public void leaveChatRoom(@Payload ChatMessageDto chatMessage) {
+        log.debug("채팅방 나가기: {}", chatMessage);
+        chatService.userLeaveRoom(
+                chatMessage.getChatRoomId(),
+                chatMessage.getSenderId(),
+                chatMessage.getSenderType()
+        );
+    }
+
+
     // 채팅방 생성 또는 조회
     @PostMapping("/chat/rooms")
     public ApiResponseJson createOrGetChatRoom(@RequestBody ChatRoomDto chatRoomDto,
