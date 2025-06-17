@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.search.service;
 
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
+import com.yju.team2.seilomun.domain.product.service.ProductDiscountService;
 import com.yju.team2.seilomun.domain.search.enums.ProductFilterType;
 import com.yju.team2.seilomun.domain.search.enums.ProductSortType;
 import com.yju.team2.seilomun.domain.search.repository.ProductSearchRepository;
@@ -21,6 +22,7 @@ public class ProductSearchService {
 
     private final ProductSearchRepository productSearchRepository;
     private final ElasticsearchOperations elasticsearchOperations;
+    private final ProductDiscountService productDiscountService;
 
     // 키워드 + 필터링 + 정렬 + 페이징
     public Page<ProductDocument> searchProducts(String keyword, ProductFilterType filterType,
