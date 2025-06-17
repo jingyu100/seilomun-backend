@@ -38,20 +38,37 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
     private final RefreshTokenService refreshTokenService;
     private final UserStatusService userStatusService;
 
-    // 토큰 검증이 필요없는 경로들
+    // 토큰 검증이 필요없는 경로들 
     private static final List<String> EXCLUDED_PATHS = Arrays.asList(
+            "/api/auth/businessVerification",
             "/api/auth/login",
-            "/api/customers/signup",
-            "/api/sellers/signup",
+            "/api/sellers/",
+            "/api/customers/",
             "/api/auth/logout",
+            "/api/address/",
             "/h2-console",
+            "/error",
+            "/favicon.ico",
             "/swagger-ui",
             "/v3/api-docs",
+            "/api/products/",
             "/ws",
             "/login",
-            "/oauth2",
+            "/oauth2/authorization",
+            "/login/oauth2/code",
             "/api/auth/email",
-            "/api/auth/verifyEmail"
+            "/api/auth/verifyEmail",
+            "/api/orders/buy",
+            "/api/orders/test/buy",
+            "/api/orders/toss/success",
+            "/api/orders/toss/fail",
+            "/api/chat/",
+            "/api/users/",
+            "/api/search/autocomplete",
+            "/api/search/fuzzy",
+            "/api/search/popular",
+            "/api/products/search",
+            "/api/sellers/search"
     );
 
     @Override
