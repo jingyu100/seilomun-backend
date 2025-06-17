@@ -168,8 +168,18 @@ public class JwtRequestFilter extends OncePerRequestFilter { // Jwt 요청 필�
 
         } catch (Exception e) {
             log.warn("토큰 갱신 중 오류 발생: ", e);
+            // redis에 존재하지 않는 리프레쉬 토큰 발견시 브라우저 쿠키 초기화
+            clearCookiesAndRespond(response);
             handleAuthenticationFailure(response);
         }
+    }
+
+    private void clearCookiesAndRespond(HttpServletResponse response) throws IOException {
+        ResponseCookie expiredAccessToken = CookieUtil.createExpiredAccessTokenCookie();
+        ResponseCookie expiredRefreshToken = CookieUtil.createExpiredRefreshTokenCookie();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, expiredAccessToken.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, expiredRefreshToken.toString());
     }
 
     // 토큰 갱신
