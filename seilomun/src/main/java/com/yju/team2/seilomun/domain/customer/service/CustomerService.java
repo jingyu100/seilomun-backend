@@ -433,10 +433,6 @@ public class CustomerService {
     
     // 로컬 소비자 정보 수정
     public void localUserUpdateDto(Long customerId, LocalUserUpdateDto updateDto, PasswordChangeDto passwordChangeDto) {
-        if(updateDto == null) {
-            throw new IllegalArgumentException("사용자 정보가 제공되지 않았습니다");
-        }
-
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다"));
         
@@ -454,29 +450,32 @@ public class CustomerService {
             }
         }
 
-        // 비밀번호 검증
-        String newPassword = null;
-        if(passwordChangeDto != null && passwordChangeDto.hasPasswordChangeRequest()) {
-            if(!passwordEncoder.matches(passwordChangeDto.getCurrentPassword(), customer.getPassword())) {
-                throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
-            }
-
-            if(passwordChangeDto.isValidPassword()) {
-                throw new IllegalArgumentException("현재 비밀번호와 일치합니다.");
-            }
-
-            if(!passwordChangeDto.isNewPasswordValid()) {
-                throw new IllegalArgumentException("새 비밀번호와 일치하지 않습니다.");
-            }
-
-            checkPasswordStrength(passwordChangeDto.getNewPassword());
-            newPassword = passwordEncoder.encode(passwordChangeDto.getNewPassword());
+        if(passwordChangeDto != null && passwordChangeDto.hasPasswordChangeRequest()){
+            validateUpdatePasswordChange(customer, passwordChangeDto);
+            String encodedPassword = passwordEncoder.encode(passwordChangeDto.getNewPassword());
+            customer.UpdateLocalPassword(encodedPassword);
         }
 
-        customer.UpdateLocalCustomer(updateDto,newPassword);
-
     }
-    
+
+    // 회원정보 비밀번호 변경
+    private void validateUpdatePasswordChange(Customer customer, PasswordChangeDto passwordChangeDto) {
+        if(!passwordEncoder.matches(passwordChangeDto.getCurrentPassword(), customer.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        if(passwordChangeDto.getNewPassword().equals(passwordChangeDto.getCurrentPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호와 새 비밀번호가 동일합니다");
+        }
+
+        if(passwordChangeDto.isValidPassword()){
+            throw new IllegalArgumentException("새 비밀번호 확인이 일치하지 않습니다.");
+        }
+
+        checkPasswordStrength(passwordChangeDto.getNewPassword());
+    }
+
+
     //로컬 회원 프로필변경
     public String localProfile(Long id, MultipartFile multipartFile) {
         Customer customer = customerRepository.findById(id)
