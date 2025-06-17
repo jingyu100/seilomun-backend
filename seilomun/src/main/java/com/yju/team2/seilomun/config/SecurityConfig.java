@@ -64,7 +64,12 @@ public class SecurityConfig {
                                 "/api/orders/toss/success",  // Toss 결제 성공 콜백
                                 "/api/orders/toss/fail",  // 정적 리소스로 사용할 경우
                                 "/api/chat/**",
-                                "/api/users/**"
+                                "/api/users/**",
+                                "/api/search/autocomplete",
+                                "/api/search/fuzzy",
+                                "/api/search/popular",
+                                "/api/products/search",
+                                "/api/sellers/search"
                         ).permitAll()
                         // 알림 관련 엔드포인트 - 인증된 사용자만 접근 허용
                         .requestMatchers("/api/notifications/**").authenticated()

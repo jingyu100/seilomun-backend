@@ -27,7 +27,7 @@ public class DiscountCacheScheduler {
     public void refreshExpiringProductsCache() {
         log.info("만료 임박 상품 할인 캐시 갱신 시작");
 
-        LocalDateTime tomorrow = LocalDateTime.now().plusDays(1);
+        LocalDateTime tomorrow = LocalDateTime.now().plusDays(3);
         // 내일까지 만료되는 상품들 조회
         List<Product> expiringProducts = productRepository
                 .findByExpiryDateBeforeAndStatusNot(tomorrow, '0');
