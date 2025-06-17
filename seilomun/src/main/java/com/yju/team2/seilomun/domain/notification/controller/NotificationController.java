@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -98,4 +99,50 @@ public class NotificationController {
                     Map.of("error", e.getMessage())));
         }
     }
+
+    @PostMapping("/test/seller")
+    public ResponseEntity<ApiResponseJson> sendTestNotificationToSeller(
+            @RequestParam(required = false) Long sellerId,
+            @RequestParam(defaultValue = "테스트 알림입니다.") String message,
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
+        try {
+            // sellerId가 없으면 현재 사용자에게 전송
+            Long targetSellerId = sellerId != null ? sellerId : userDetails.getId();
+
+            notificationService.sendTestNotificationToSeller(targetSellerId, message);
+
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("message", "테스트 알림이 전송되었습니다.",
+                            "sellerId", targetSellerId,
+                            "content", message)));
+        } catch (Exception e) {
+            log.error("테스트 알림 전송 실패: sellerId={}", sellerId, e);
+            return ResponseEntity.badRequest().body(new ApiResponseJson(HttpStatus.BAD_REQUEST,
+                    Map.of("error", e.getMessage())));
+        }
+    }
+
+    // 테스트용 알림 전송 - 고객
+    @PostMapping("/test/customer")
+    public ResponseEntity<ApiResponseJson> sendTestNotificationToCustomer(
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(defaultValue = "테스트 알림입니다.") String message,
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
+        try {
+            // customerId가 없으면 현재 사용자에게 전송
+            Long targetCustomerId = customerId != null ? customerId : userDetails.getId();
+
+            notificationService.sendTestNotificationToCustomer(targetCustomerId, message);
+
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("message", "테스트 알림이 전송되었습니다.",
+                            "customerId", targetCustomerId,
+                            "content", message)));
+        } catch (Exception e) {
+            log.error("테스트 알림 전송 실패: customerId={}", customerId, e);
+            return ResponseEntity.badRequest().body(new ApiResponseJson(HttpStatus.BAD_REQUEST,
+                    Map.of("error", e.getMessage())));
+        }
+    }
+
 }

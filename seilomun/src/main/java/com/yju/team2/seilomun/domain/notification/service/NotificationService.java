@@ -37,6 +37,74 @@ public class NotificationService {
     private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60; // 60분
     private static final String NOTIFICATION_CHANNEL = "notification:channel";
 
+    // 테스트용 알림 전송 - 고객
+    @Transactional
+    public void sendTestNotificationToCustomer(Long customerId, String message) {
+        try {
+            // 테스트 알림 생성
+            Notification notification = Notification.builder()
+                    .content(message)
+                    .isVisible('Y')
+                    .recipientType('C') // Customer
+                    .recipientId(customerId)
+                    .senderType('S') // System
+                    .senderId(0L) // 시스템 발송
+                    .isRead('N')
+                    .build();
+
+            // DB에 저장
+            notificationRepository.save(notification);
+
+            // Redis Pub/Sub으로 알림 메시지 발행
+            NotificationMessage notificationMessage = NotificationMessage.builder()
+                    .customerId(customerId)
+                    .notification(NotificationDto.fromEntity(notification))
+                    .build();
+
+            publishNotification(notificationMessage);
+
+            log.info("테스트 알림 전송 완료: customerId={}, message={}", customerId, message);
+
+        } catch (Exception e) {
+            log.error("테스트 알림 전송 실패: customerId={}", customerId, e);
+            throw new RuntimeException("테스트 알림 전송에 실패했습니다.", e);
+        }
+    }
+
+    // 테스트용 알림 전송 - 판매자
+    @Transactional
+    public void sendTestNotificationToSeller(Long sellerId, String message) {
+        try {
+            // 테스트 알림 생성
+            Notification notification = Notification.builder()
+                    .content(message)
+                    .isVisible('Y')
+                    .recipientType('S') // Seller
+                    .recipientId(sellerId)
+                    .senderType('S') // System/Seller
+                    .senderId(0L) // 시스템 발송
+                    .isRead('N')
+                    .build();
+
+            // DB에 저장
+            notificationRepository.save(notification);
+
+            // Redis Pub/Sub으로 알림 메시지 발행
+            NotificationMessage notificationMessage = NotificationMessage.builder()
+                    .customerId(sellerId) // 실제로는 sellerId지만 기존 구조 유지
+                    .notification(NotificationDto.fromEntity(notification))
+                    .build();
+
+            publishNotification(notificationMessage);
+
+            log.info("테스트 알림 전송 완료: sellerId={}, message={}", sellerId, message);
+
+        } catch (Exception e) {
+            log.error("테스트 알림 전송 실패: sellerId={}", sellerId, e);
+            throw new RuntimeException("테스트 알림 전송에 실패했습니다.", e);
+        }
+    }
+
     // 고객용 SSE 연결
     public SseEmitter connect(Long customerId) {
         return createSseConnection(customerId, "CUSTOMER");
