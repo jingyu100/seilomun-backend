@@ -5,6 +5,7 @@ import com.yju.team2.seilomun.domain.notification.event.LikeProductStatusChanged
 import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
 import com.yju.team2.seilomun.domain.notification.event.ProductStatusChangedEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
+import com.yju.team2.seilomun.domain.product.dto.DiscountInfo;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
@@ -47,6 +48,7 @@ public class ProductService {
     private final ProductIndexService productIndexService;
     private final NotificationService notificationService;
     private final AWSS3UploadService awsS3UploadService;
+    private final ProductDiscountService productDiscountService;
 
     private static final String DISCOUNT_RATE_KEY = "Product:currentDiscountRate";
     private static final String DISCOUNT_PRICE_KEY = "Product:discountPrice";
@@ -118,9 +120,14 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다"));
 
-        Integer discountRate = calculateDiscountRate(id);
+        // 원래 코드
+//        Integer discountRate = calculateDiscountRate(id);
+//
+//        return ProductDto.fromEntity(product, discountRate);
 
-        return ProductDto.fromEntity(product, discountRate);
+        DiscountInfo discountInfo = productDiscountService.getDiscountInfo(id);
+
+        return ProductDto.fromEntity(product, discountInfo.getDiscountRate(), discountInfo.getDiscountedPrice());
     }
 
     // 상품 등록
