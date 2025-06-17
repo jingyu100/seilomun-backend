@@ -154,7 +154,16 @@ public class SellerController {
         )));
     }
 
-
+    // 판매자용 환불 상세 페이지
+    @GetMapping("/refunds/{refundId}")
+    public ResponseEntity<ApiResponseJson> getRefundDetails(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @PathVariable Long refundId) {
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "refundDetail", sellerService.getRefundDetail(userDetails.getId(), refundId),
+                "message", "환불 상세 조회가 완료되었습니다."
+        )));
+    }
 
     private String getStatusMessage(Character isOpen) {
         switch (isOpen) {

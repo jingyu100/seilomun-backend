@@ -4,12 +4,11 @@ import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
 import com.yju.team2.seilomun.domain.order.dto.OrderItemDto;
-import com.yju.team2.seilomun.domain.order.entity.Order;
-import com.yju.team2.seilomun.domain.order.entity.OrderItem;
-import com.yju.team2.seilomun.domain.order.entity.Payment;
+import com.yju.team2.seilomun.domain.order.entity.*;
 import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
 import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
 import com.yju.team2.seilomun.domain.order.repository.PaymentRepository;
+import com.yju.team2.seilomun.domain.order.repository.RefundRepository;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.product.repository.ProductPhotoRepository;
@@ -61,7 +60,7 @@ public class SellerService {
     private final OrderItemRepository orderItemRepository;
     private final ProductPhotoRepository productPhotoRepository;
     private final PaymentRepository paymentRepository;
-
+    private final RefundRepository refundRepository;
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
         checkPasswordStrength(sellerRegisterDto.getPassword());
@@ -341,6 +340,93 @@ public class SellerService {
                 .totalElements(orderPage.getTotalElements())
                 .build();
     }
+
+    // 판매자용 환불 상세 조회
+    public SellerRefundDetailResponseDto getRefundDetail(Long sellerId, Long refundId) {
+        // 판매자 존재 확인
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+
+        // 환불 신청 존재 확인
+        Refund refund = refundRepository.findById(refundId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 환불 신청입니다."));
+
+        // 결제 정보 조회
+        Payment payment = refund.getPayment();
+        if (payment == null) {
+            throw new IllegalArgumentException("환불 신청에 대한 결제 정보가 없습니다.");
+        }
+
+        // 주문 정보 조회
+        Order order = payment.getOrder();
+        if (order == null) {
+            throw new IllegalArgumentException("환불 신청에 대한 주문 정보가 없습니다.");
+        }
+
+        // 해당 판매자의 주문인지 확인
+        if (!order.getSeller().getId().equals(sellerId)) {
+            throw new IllegalArgumentException("해당 환불 신청에 접근할 권한이 없습니다.");
+        }
+
+        // 주문 아이템 조회
+        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+
+        // 주문 아이템 DTO 생성
+        List<OrderItemDto> orderItemDtos = new ArrayList<>();
+        for (OrderItem item : orderItems) {
+            Product product = item.getProduct();
+            String photoUrl = null;
+            List<ProductPhoto> photos = productPhotoRepository.findByProduct(product);
+
+            if (!photos.isEmpty()) {
+                photoUrl = photos.get(0).getPhotoUrl();
+            }
+
+            OrderItemDto dto = OrderItemDto.builder()
+                    .productName(product.getName())
+                    .expiryDate(product.getExpiryDate())
+                    .quantity(item.getQuantity())
+                    .unitPrice(item.getUnitPrice())
+                    .discountRate(item.getDiscountRate())
+                    .photoUrl(photoUrl)
+                    .build();
+            orderItemDtos.add(dto);
+        }
+
+        // 환불 사진 URL 목록 조회
+        List<String> refundPhotoUrls = refund.getRefundPhoto().stream()
+                .map(RefundPhoto::getPhotoUrl)
+                .collect(Collectors.toList());
+
+        // 결제 상태 확인
+        String paymentStatus = payment.isPaySuccessYN() ? "결제완료" : "결제실패";
+
+        return SellerRefundDetailResponseDto.builder()
+                .refundId(refund.getId())
+                .orderId(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .customerName(order.getCustomer().getName())
+                .customerPhone(order.getCustomer().getPhone())
+                .orderDate(order.getCreatedAt())
+                .refundRequestDate(refund.getRequestedAt())
+                .refundProcessedDate(refund.getProcessedAt())
+                .orderItems(orderItemDtos)
+                .totalAmount(order.getTotalAmount())
+                .usedPoints(order.getUsedPoints())
+                .deliveryFee(order.getDeliveryFee())
+                .isDelivery(order.getIsDelivery())
+                .deliveryAddress(order.getDeliveryAddress())
+                .orderMemo(order.getMemo())
+                .orderStatus(order.getOrderStatus())
+                .paymentStatus(paymentStatus)
+                .refundType(refund.getRefundType())
+                .refundTitle(refund.getTitle())
+                .refundContent(refund.getContent())
+                .refundStatus(refund.getStatus())
+                .refundPhotos(refundPhotoUrls)
+                .build();
+    }
+
     public void updateSellerStatus(String email, Character isOpen) {
         Seller seller = sellerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
