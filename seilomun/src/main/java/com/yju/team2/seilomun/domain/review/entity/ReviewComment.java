@@ -31,7 +31,7 @@ public class ReviewComment {
     @JoinColumn(name = "re_id")
     private Review review;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "se_id")
     private Seller seller;
 }
