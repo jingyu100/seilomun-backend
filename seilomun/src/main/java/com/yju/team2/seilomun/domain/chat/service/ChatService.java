@@ -270,6 +270,8 @@ public class ChatService {
         // redis에 사용자 활성 상태 저장
         String key = "chat_active:" + chatRoomId + ":" + userId + ":" + userType;
         redisTemplate.opsForValue().set(key, "active", EXPIRE_TIME, TimeUnit.SECONDS);
+        // 입장 알림
+        sendUserEnterNotification(chatRoomId, userId, userType);
     }
 
 
@@ -282,5 +284,28 @@ public class ChatService {
 
         log.info("사용자 {}(타입:{}) 채팅방 {} 나가기 처리 완료 (삭제됨: {})",
                 userId, userType, chatRoomId, deleted);
+    }
+    //입장 알림 메서드
+    private void sendUserEnterNotification(Long chatRoomId, Long userId, Character userType) {
+        try {
+            // 입장 알림 메시지 생성
+            ChatMessageDto enterNotification = ChatMessageDto.builder()
+                    .type(ChatMessageDto.MessageType.JOIN)
+                    .chatRoomId(chatRoomId)
+                    .senderId(userId)
+                    .senderType(userType)
+                    .content("USER_ENTER")
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            // JSON으로 변환 후 Redis에 발행
+            String jsonMessage = objectMapper.writeValueAsString(enterNotification);
+            redisTemplate.convertAndSend(channelTopic.getTopic(), jsonMessage);
+
+            log.debug("사용자 입장 알림 전송 완료: chatRoomId={}, userId={}", chatRoomId, userId);
+
+        } catch (JsonProcessingException e) {
+            log.error("입장 알림 전송 중 에러 발생: {}", e.getMessage(), e);
+        }
     }
 }
