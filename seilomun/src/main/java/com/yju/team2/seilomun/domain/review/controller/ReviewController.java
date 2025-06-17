@@ -59,7 +59,30 @@ public class ReviewController {
                 "리뷰 조회" , reviews
         ))));
     }
-    
+
+
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<ApiResponseJson> deleteReview(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @PathVariable Long reviewId) {
+        try {
+            reviewService.deleteReview(userDetails.getId(), reviewId);
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "message", "리뷰가 성공적으로 삭제되었습니다."
+            )));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponseJson(HttpStatus.BAD_REQUEST, Map.of(
+                            "error", e.getMessage()
+                    )));
+        } catch (Exception e) {
+            log.error("리뷰 삭제 중 오류 발생: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponseJson(HttpStatus.INTERNAL_SERVER_ERROR, Map.of(
+                            "error", "리뷰 삭제에 실패했습니다: " + e.getMessage()
+                    )));
+        }
+    }
 
 
     //사장님 리뷰 답글

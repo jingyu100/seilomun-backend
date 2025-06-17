@@ -17,6 +17,23 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findAllByOrder_SellerId(Long sellerId);
     Optional<Review> findByOrder(Order order);
 
-    @Query("SELECT r FROM Review r JOIN r.order o WHERE o.seller.id = :sellerId ORDER BY r.createdAt DESC")
+    @Query("SELECT r FROM Review r " +
+            "LEFT JOIN FETCH r.order o " +
+            "LEFT JOIN FETCH o.customer " +
+            "LEFT JOIN FETCH o.seller " +
+            "WHERE o.seller.id = :sellerId " +
+            "ORDER BY r.createdAt DESC")
     Page<Review> findAllBySellerIdWithPagination(@Param("sellerId") Long sellerId, Pageable pageable);
+
+    @Query("SELECT DISTINCT r FROM Review r " +
+            "LEFT JOIN FETCH r.reviewPhotos " +
+            "WHERE r.id IN :reviewIds")
+    List<Review> findReviewsWithPhotos(@Param("reviewIds") List<Long> reviewIds);
+
+    @Query("SELECT DISTINCT r FROM Review r " +
+            "LEFT JOIN FETCH r.order o " +
+            "LEFT JOIN FETCH o.orderItems oi " +
+            "LEFT JOIN FETCH oi.product " +
+            "WHERE r.id IN :reviewIds")
+    List<Review> findReviewsWithOrderItems(@Param("reviewIds") List<Long> reviewIds);
 }

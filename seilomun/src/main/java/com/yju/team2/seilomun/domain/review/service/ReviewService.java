@@ -5,11 +5,9 @@ import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
 import com.yju.team2.seilomun.domain.notification.event.ReviewWrittenEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.order.entity.Order;
+import com.yju.team2.seilomun.domain.order.entity.OrderItem;
 import com.yju.team2.seilomun.domain.order.repository.OrderRepository;
-import com.yju.team2.seilomun.domain.review.dto.ReviewCommentRequestDto;
-import com.yju.team2.seilomun.domain.review.dto.ReviewPaginationDto;
-import com.yju.team2.seilomun.domain.review.dto.ReviewRequestDto;
-import com.yju.team2.seilomun.domain.review.dto.ReviewResponseDto;
+import com.yju.team2.seilomun.domain.review.dto.*;
 import com.yju.team2.seilomun.domain.review.entity.Review;
 import com.yju.team2.seilomun.domain.review.entity.ReviewComment;
 import com.yju.team2.seilomun.domain.review.entity.ReviewPhoto;
@@ -31,7 +29,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -148,9 +148,49 @@ public class ReviewService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Review> reviewPage = reviewRepository.findAllBySellerIdWithPagination(sellerId, pageable);
 
+        List<Review> reviews = reviewPage.getContent();
+        if (reviews.isEmpty()) {
+            return ReviewPaginationDto.builder()
+                    .reviews(new ArrayList<>())
+                    .hasNext(false)
+                    .totalElements(0L)
+                    .build();
+        }
+
+        // 리뷰 ID 목록 추출
+        List<Long> reviewIds = reviews.stream()
+                .map(Review::getId)
+                .toList();
+
+        // 별도 쿼리로 리뷰 사진들과 주문 상품들 조회
+        Map<Long, List<ReviewPhoto>> photoMap = reviewRepository.findReviewsWithPhotos(reviewIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Review::getId,
+                        Review::getReviewPhotos,
+                        (existing, replacement) -> existing
+                ));
+
+        Map<Long, List<OrderItem>> orderItemMap = reviewRepository.findReviewsWithOrderItems(reviewIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        Review::getId,
+                        review -> review.getOrder().getOrderItems(),
+                        (existing, replacement) -> existing
+                ));
+
         List<ReviewResponseDto> reviewResponseDtos = new ArrayList<>();
-        for (Review review : reviewPage.getContent()) {
-            reviewResponseDtos.add(ReviewResponseDto.fromEntity(review));
+        for (Review review : reviews) {
+            ReviewResponseDto reviewDto = createReviewResponseDto(review, photoMap, orderItemMap);
+
+            // 리뷰 댓글 조회
+            Optional<ReviewComment> optionalComment = reviewCommentRepository.findByReviewId(review.getId());
+            if (optionalComment.isPresent()) {
+                ReviewCommentResponseDto commentDto = ReviewCommentResponseDto.fromEntity(optionalComment.get());
+                reviewDto.setComment(commentDto);
+            }
+
+            reviewResponseDtos.add(reviewDto);
         }
 
         return ReviewPaginationDto.builder()
@@ -158,6 +198,57 @@ public class ReviewService {
                 .hasNext(reviewPage.hasNext())
                 .totalElements(reviewPage.getTotalElements())
                 .build();
+    }
+
+    // 리뷰 삭제
+    @Transactional
+    public void deleteReview(Long userId, Long reviewId) {
+        Optional<Review> optionalReview = reviewRepository.findById(reviewId);
+        if (optionalReview.isEmpty()) {
+            throw new IllegalArgumentException("존재하지 않는 리뷰입니다.");
+        }
+
+        Review review = optionalReview.get();
+
+        // 리뷰 작성자 확인
+        if (!review.getOrder().getCustomer().getId().equals(userId)) {
+            throw new IllegalArgumentException("해당 리뷰를 삭제할 권한이 없습니다.");
+        }
+
+        // S3에서 리뷰 사진들 삭제
+        List<ReviewPhoto> reviewPhotos = review.getReviewPhotos();
+        for (ReviewPhoto photo : reviewPhotos) {
+            try {
+                // S3에서 파일명만 추출해서 삭제
+                String fileName = photo.getPhoto_url();
+                awsS3UploadService.deleteFile(fileName);
+            } catch (Exception e) {
+                log.error("S3 파일 삭제 실패: {}", photo.getPhoto_url(), e);
+            }
+        }
+
+        // 리뷰 삭제
+        reviewRepository.delete(review);
+
+        // 판매자 평점 재계산
+        Seller seller = review.getOrder().getSeller();
+        List<Review> remainingReviews = reviewRepository.findAllByOrder_SellerId(seller.getId());
+
+        float totalRating = 0f;
+        for (Review remainingReview : remainingReviews) {
+            totalRating += remainingReview.getRating();
+        }
+
+        float averageRating;
+        if (remainingReviews.isEmpty()) {
+            averageRating = 0f;
+        } else {
+            averageRating = totalRating / remainingReviews.size();
+            averageRating = Math.round(averageRating * 10) / 10.0f;
+        }
+        seller.updateRating(averageRating);
+
+        log.info("리뷰 삭제 완료 - 리뷰 ID: {}, 사용자 ID: {}", reviewId, userId);
     }
 
     @Transactional
@@ -182,5 +273,41 @@ public class ReviewService {
                 build();
         reviewCommentRepository.save(reviewComment);
         return reviewCommentRequestDto;
+    }
+
+    private ReviewResponseDto createReviewResponseDto(Review review,
+                                                      Map<Long, List<ReviewPhoto>> photoMap,
+                                                      Map<Long, List<OrderItem>> orderItemMap) {
+        // 주문한 상품 이름 목록
+        List<String> itemNames = new ArrayList<>();
+        List<OrderItem> orderItems = orderItemMap.get(review.getId());
+        if (orderItems != null) {
+            for (OrderItem item : orderItems) {
+                itemNames.add(item.getProduct().getName());
+            }
+        }
+
+        // 리뷰 사진 URL 목록
+        List<String> photoUrls = new ArrayList<>();
+        List<ReviewPhoto> photos = photoMap.getOrDefault(review.getId(), new ArrayList<>());
+        for (ReviewPhoto photo : photos) {
+            photoUrls.add(photo.getPhoto_url());
+        }
+
+        // 리뷰 사진 URL을 쉼표로 구분된 문자열로 변환 
+        String customerPhotos = String.join(",", photoUrls);
+
+        return ReviewResponseDto.builder()
+                .reviewId(review.getId())
+                .reviewContent(review.getContent())
+                .customerPhoto(review.getOrder().getCustomer().getProfileImageUrl())
+                .customerName(review.getOrder().getCustomer().getName())
+                .orderItems(itemNames)
+                .reviewPhotoUrls(photoUrls)
+                .customerPhotos(customerPhotos)
+                .sellerName(review.getOrder().getSeller().getStoreName())
+                .rating(review.getRating())
+                .createdAt(review.getCreatedAt())
+                .build();
     }
 }

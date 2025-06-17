@@ -17,15 +17,18 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ReviewResponseDto {
-    String reviewContent;
-    String customerPhoto;
-    String customerName;
-    List<String> orderItems;
-    List<String> reviewPhotoUrls;
-    String customerPhotos;
-    String sellerName;
-    Integer rating;
-    LocalDateTime createdAt;
+    private Long reviewId;
+    private String reviewContent;
+    private String customerPhoto;
+    private String customerName;
+    private List<String> orderItems;
+    private List<String> reviewPhotoUrls;
+    private String customerPhotos;
+    private String sellerName;
+    private Integer rating;
+    private LocalDateTime createdAt;
+    private ReviewCommentResponseDto comment;
+
 
     public static ReviewResponseDto fromEntity(Review review) {
         // 주문한 상품 이름 목록
@@ -53,6 +56,7 @@ public class ReviewResponseDto {
         }
 
         return ReviewResponseDto.builder()
+                .reviewId(review.getId())
                 .reviewContent(review.getContent())
                 .customerPhoto(review.getOrder().getCustomer().getProfileImageUrl())
                 .customerName(review.getOrder().getCustomer().getName())
