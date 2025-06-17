@@ -208,7 +208,7 @@ public class SellerService {
     }
 
 
-    public SellerInformationResponseDto getSellerById(Long id) {
+    public SellerInformationResponseDto  getSellerById(Long id) {
         Seller seller = sellerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("가게 정보를 찾지 못했습니다."));
 

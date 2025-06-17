@@ -74,9 +74,9 @@ public class CustomerService {
         String key = customerRegisterDto.getPhone();
         String storedCode = redisTemplate.opsForValue().get(key);
 
-        if(storedCode == null || !storedCode.equals(customerRegisterDto.getVerificationCode())) {
-            log.info("인증번호가 일치하지 않습니다.");
-            throw new IllegalArgumentException("인증번호가 일치하지 않습니다");
+        if (!Objects.equals(storedCode, customerRegisterDto.getVerificationCode())) {
+            log.info("인증번호 불일치. 입력값: {}, 저장값: {}", customerRegisterDto.getVerificationCode(), storedCode);
+            throw new IllegalArgumentException("인증번호가 일치하지 않습니다.");
         }
 
         redisTemplate.delete(key);

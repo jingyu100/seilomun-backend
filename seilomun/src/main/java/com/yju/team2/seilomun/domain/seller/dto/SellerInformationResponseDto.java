@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.seller.dto;
 
 import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
+import com.yju.team2.seilomun.domain.seller.entity.SellerPhoto;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Data
@@ -55,10 +57,11 @@ public class SellerInformationResponseDto {
     @NotEmpty
     private Character isOpen;
 
+    //가게사진 추가
+    private List<String> sellerPhotos;
+
     // 공지사진 추가
     private List<String> notificationPhotos;
-    // 공지사진 삭제
-    private List<Long> notificationPhotoIds;
     
     // 상세페이지에서 가게정보를 넘기기 위한 메서드
     public static SellerInformationResponseDto toDto(Seller seller) {
@@ -75,6 +78,9 @@ public class SellerInformationResponseDto {
                     .collect(Collectors.toList());
         }
 
+        List<String> sellerPhotos = seller.getSellerPhotos().stream()
+                .map(SellerPhoto::getPhotoUrl)
+                .toList();
 
         List<String> notificationPhotos = seller.getNotificationPhotos().stream()
                 .map(NotificationPhoto::getPhotoUrl)
@@ -95,6 +101,8 @@ public class SellerInformationResponseDto {
                 .postCode(seller.getPostCode())
                 .address(seller.getAddressDetail())
                 .isOpen(seller.getIsOpen())
+                .notificationPhotos(notificationPhotos)
+                .sellerPhotos(sellerPhotos)
                 .build();
     }
 }
