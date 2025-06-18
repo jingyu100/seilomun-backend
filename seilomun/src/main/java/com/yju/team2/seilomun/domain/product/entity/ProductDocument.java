@@ -41,6 +41,9 @@ public class ProductDocument {
     @Field(type = FieldType.Long)
     private Long sellerId;
 
+    @Field(type = FieldType.Long)
+    private Long categoryId;
+
     // 추가 필드
     @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_millis)
     private LocalDateTime createdAt;
@@ -60,6 +63,7 @@ public class ProductDocument {
                 .stockQuantity(product.getStockQuantity())
                 .status(product.getStatus())
                 .sellerId(product.getSeller().getId())
+                .categoryId(product.getProductCategory().getId())
                 .createdAt(product.getCreatedAt())
                 .expiryDate(product.getExpiryDate())
                 // averageRating은 별도로 계산 필요
