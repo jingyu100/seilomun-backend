@@ -38,6 +38,17 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // 소비자만 접근 가능
+                        .requestMatchers(new AntPathRequestMatcher("/api/customers/orders/**")).hasRole("CUSTOMER")
+                        .requestMatchers(new AntPathRequestMatcher("/customer/**")).hasRole("CUSTOMER")
+                        .requestMatchers(new AntPathRequestMatcher("/api/customers/wishes/**")).hasRole("CUSTOMER")
+                        .requestMatchers(new AntPathRequestMatcher("/api/customers/favorites/**")).hasRole("CUSTOMER")
+                        // 알림 관련 엔드포인트 - 인증된 사용자만 접근 허용
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        // 판매자만 접근 가능
+                        .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
+                        // 공통 API (둘 다 접근 가능)
+                        .requestMatchers(new AntPathRequestMatcher("/api/common/**")).hasAnyRole("SELLER", "CUSTOMER")
                         .requestMatchers(
                                 "/api/auth/businessVerification",
                                 "/api/auth/login",
@@ -71,14 +82,6 @@ public class SecurityConfig {
                                 "/api/products/search",
                                 "/api/sellers/search"
                         ).permitAll()
-                        // 알림 관련 엔드포인트 - 인증된 사용자만 접근 허용
-                        .requestMatchers("/api/notifications/**").authenticated()
-                        // 판매자만 접근 가능
-                        .requestMatchers(new AntPathRequestMatcher("/seller/**")).hasRole("SELLER")
-                        // 소비자만 접근 가능
-                        .requestMatchers(new AntPathRequestMatcher("/customer/**")).hasRole("CUSTOMER")
-                        // 공통 API (둘 다 접근 가능)
-                        .requestMatchers(new AntPathRequestMatcher("/api/common/**")).hasAnyRole("SELLER", "CUSTOMER")
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
