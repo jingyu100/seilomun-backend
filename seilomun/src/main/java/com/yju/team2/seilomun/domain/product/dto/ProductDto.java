@@ -31,12 +31,17 @@ public class ProductDto {
     private LocalDateTime createdAt;
     private SellerInformationDto seller;
     private Long categoryId;
-    private List<ProductPhotoDto> productPhotos;
+    private List<String> productPhotoUrl;
+    private List<Long> productPhotoIds;
 
     // 할인 정보를 포함한 팩토리 메서드
     public static ProductDto fromEntity(Product product, Integer currentDiscountRate, Integer discountPrice) {
-        List<ProductPhotoDto> productPhotos = product.getProductPhotos().stream()
-                .map(photo -> new ProductPhotoDto(photo.getId(), photo.getPhotoUrl()))
+        List<String> productPhotos = product.getProductPhotos().stream()
+                .map(ProductPhoto::getPhotoUrl)
+                .collect(Collectors.toList());
+
+        List<Long> productPhotoIds = product.getProductPhotos().stream()
+                .map(ProductPhoto::getId)
                 .collect(Collectors.toList());
 
         return ProductDto.builder()
@@ -54,7 +59,8 @@ public class ProductDto {
                 .createdAt(product.getCreatedAt())
                 .seller(SellerInformationDto.toDto(product.getSeller()))
                 .categoryId(product.getProductCategory().getId())
-                .productPhotos(productPhotos)
+                .productPhotoUrl(productPhotos)
+                .productPhotoIds(productPhotoIds)
                 .build();
     }
 

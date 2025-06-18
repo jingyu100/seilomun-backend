@@ -6,7 +6,6 @@ import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
 import com.yju.team2.seilomun.domain.notification.event.ProductStatusChangedEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.product.dto.DiscountInfo;
-import com.yju.team2.seilomun.domain.product.dto.ProductPhotoDto;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
@@ -267,18 +266,18 @@ public class ProductService {
         ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
 
-        if(productDto.getProductPhotos() != null && !productDto.getProductPhotos().isEmpty()) {
-            for(ProductPhotoDto photoDto : productDto.getProductPhotos()) {
-                ProductPhoto productDelete = productPhotoRepository.findById(photoDto.getId())
+        if(productDto.getProductPhotoIds() != null && !productDto.getProductPhotoIds().isEmpty()) {
+            for(Long PhotoId : productDto.getProductPhotoIds()) {
+                ProductPhoto productDelete = productPhotoRepository.findById(PhotoId)
                         .orElseThrow(() -> new IllegalArgumentException("존재하지 않은 상품입니다."));
 
-                if(!productDelete.getProduct().getId().equals(product.getId())) {
+                if(!productDelete.getProduct().getId().equals(PhotoId)) {
                     throw new IllegalArgumentException("상품 사진에 대한 권한이 없습니다.");
                 }
 
                 productPhotoRepository.delete(productDelete);
                 product.getProductPhotos().remove(productDelete);
-                log.info("상품 사진이 삭제되었습니다 : {}",photoDto.getId());
+                log.info("상품 사진이 삭제되었습니다 : {}",PhotoId);
             }
         }
 
