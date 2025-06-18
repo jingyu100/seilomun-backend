@@ -229,7 +229,26 @@ public class SellerService {
         return new SellerInforResDto(seller.getId(), seller.getStoreName());
     }
 
-    // 판매자용 주문 상세 조회
+    // 주문번호 기반 주문 상세 조회 
+    public SellerOrderDetailResponseDto getOrderDetailByOrderNumber(Long sellerId, String orderNumber) {
+        // 판매자 존재 확인
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 판매자입니다."));
+
+        // 주문번호로 주문 조회
+        Order order = orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문번호입니다."));
+
+        // 해당 판매자의 주문인지 확인
+        if (!order.getSeller().getId().equals(sellerId)) {
+            throw new IllegalArgumentException("해당 주문에 접근할 권한이 없습니다.");
+        }
+
+        // 기존 getOrderDetail 로직 재사용
+        return buildOrderDetailResponse(order);
+    }
+
+    // 판매자용 주문 상세 조회 id 기반
     public SellerOrderDetailResponseDto getOrderDetail(Long sellerId, Long orderId) {
         // 판매자 존재 확인
         Seller seller = sellerRepository.findById(sellerId)
@@ -244,6 +263,11 @@ public class SellerService {
             throw new IllegalArgumentException("해당 주문에 접근할 권한이 없습니다.");
         }
 
+        return buildOrderDetailResponse(order);
+    }
+
+    // 공통 응답 생성 로직 (기존 getOrderDetail 메서드에서 분리)
+    private SellerOrderDetailResponseDto buildOrderDetailResponse(Order order) {
         // 주문 아이템 조회
         List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
 
@@ -291,7 +315,6 @@ public class SellerService {
                 .paymentStatus(paymentStatus)
                 .build();
     }
-
     // 판매자용 주문 목록 조회 (페이징)
     public SellerOrderPaginationDto getOrderList(Long sellerId, int page, int size) {
         // 판매자 존재 확인

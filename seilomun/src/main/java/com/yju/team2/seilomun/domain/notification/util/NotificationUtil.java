@@ -39,22 +39,26 @@ public class NotificationUtil {
             case ORDER_ACCEPTED:
                 Order acceptedOrder = (Order) eventData;
                 return String.format("%s 매장에서 주문을 수락했습니다. (주문번호: %s)",
-                        acceptedOrder.getSeller().getStoreName(), acceptedOrder.getOrderNumber());
+                        acceptedOrder.getSeller().getStoreName(),
+                        acceptedOrder.getOrderNumber());
 
             case ORDER_DECLINED:
                 Order declinedOrder = (Order) eventData;
                 return String.format("%s 매장에서 주문을 거절했습니다. (주문번호: %s)",
-                        declinedOrder.getSeller().getStoreName(), declinedOrder.getOrderNumber());
+                        declinedOrder.getSeller().getStoreName(),
+                        declinedOrder.getOrderNumber());
 
             case ORDER_REFUND_ACCEPTED:
                 Refund acceptedRefund = (Refund) eventData;
-                return String.format("환불 신청이 승인되었습니다. (주문번호: %s)",
-                        acceptedRefund.getPayment().getOrder().getOrderNumber());
+                return String.format("환불 신청이 승인되었습니다. (주문번호: %s, 환불번호: %d)",
+                        acceptedRefund.getPayment().getOrder().getOrderNumber(),
+                        acceptedRefund.getId()); // 환불 ID는 유지 (환불 상세 조회용)
 
             case ORDER_REFUND_DECLINED:
                 Refund declinedRefund = (Refund) eventData;
-                return String.format("환불 신청이 거절되었습니다. (주문번호: %s, 사유: %s)",
+                return String.format("환불 신청이 거절되었습니다. (주문번호: %s, 환불번호: %d, 사유: %s)",
                         declinedRefund.getPayment().getOrder().getOrderNumber(),
+                        declinedRefund.getId(),
                         getRefundDeclineReason(declinedRefund));
 
             case LIKE_PRODUCT_STATUS_CHANGED:
@@ -79,8 +83,9 @@ public class NotificationUtil {
 
             case ORDER_REFUND:
                 Refund refundRequest = (Refund) eventData;
-                return String.format("환불 신청이 들어왔습니다. (주문번호: %s, 사유: %s)",
+                return String.format("환불 신청이 들어왔습니다. (주문번호: %s, 환불번호: %d, 사유: %s)",
                         refundRequest.getPayment().getOrder().getOrderNumber(),
+                        refundRequest.getId(),
                         refundRequest.getTitle());
 
             case PRODUCT_STATUS_CHANGED:
@@ -91,13 +96,16 @@ public class NotificationUtil {
 
             case REVIEW_WRITTEN:
                 Review review = (Review) eventData;
-                return String.format("새로운 리뷰가 작성되었습니다. (%d점, 고객: %s)",
-                        review.getRating(), review.getOrder().getCustomer().getName());
+                return String.format("새로운 리뷰가 작성되었습니다. (%d점, 고객: %s, 주문번호: %s)",
+                        review.getRating(),
+                        review.getOrder().getCustomer().getName(),
+                        review.getOrder().getOrderNumber());
 
             case PAYMENT_COMPLETED:
                 Payment payment = (Payment) eventData;
                 return String.format("결제가 완료되었습니다. (주문번호: %s, 금액: %,d원)",
-                        payment.getOrder().getOrderNumber(), payment.getTotalAmount());
+                        payment.getOrder().getOrderNumber(),
+                        payment.getTotalAmount());
 
             default:
                 return "새로운 알림이 있습니다.";

@@ -165,6 +165,18 @@ public class SellerController {
         )));
     }
 
+    // 주문번호 기반 주문 상세 조회
+    @GetMapping("/orders/number/{orderNumber}")
+    public ResponseEntity<ApiResponseJson> getOrderDetailsByOrderNumber(
+            @AuthenticationPrincipal JwtUserDetails userDetails,
+            @PathVariable String orderNumber) {
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                "orderDetail", sellerService.getOrderDetailByOrderNumber(userDetails.getId(), orderNumber),
+                "message", "주문 상세 조회가 완료되었습니다."
+        )));
+    }
+
+
     private String getStatusMessage(Character isOpen) {
         switch (isOpen) {
             case '1': return "영업중";
