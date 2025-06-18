@@ -5,6 +5,7 @@ import com.yju.team2.seilomun.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,7 +30,7 @@ public class LocalUserUpdateDto {
     @NotBlank
     private String phone;
 
-    @NotBlank
+    @NotNull
     private Character gender;
 
     @NotBlank
