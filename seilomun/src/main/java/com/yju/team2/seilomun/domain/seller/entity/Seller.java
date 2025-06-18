@@ -138,33 +138,33 @@ public class Seller {
         this.pickupTime = sellerInformationDto.getPickupTime();
         this.sellerCategory = sellerCategory;
 
-        if(sellerInformationDto.getNotificationPhotoIds() != null && !sellerInformationDto.getNotificationPhotoIds().isEmpty()) {
-            this.notificationPhotos.removeIf(photo ->
-                    sellerInformationDto.getNotificationPhotoIds().contains(photo.getId()));
-
-        }
-
-        if(sellerInformationDto.getNotificationPhotos() != null && !sellerInformationDto.getNotificationPhotos().isEmpty()) {
-            for(String url : sellerInformationDto.getNotificationPhotos()) {
-                NotificationPhoto photo = NotificationPhoto.builder()
-                        .photoUrl(url)
-                        .seller(this)
-                        .build();
-                this.notificationPhotos.add(photo);
-            }
-        }
-
-        this.sellerPhotos.clear();
-
-        if(sellerInformationDto.getSellerPhotoUrls() != null && !sellerInformationDto.getSellerPhotoUrls().isEmpty()) {
-            for(String url : sellerInformationDto.getSellerPhotoUrls()) {
-                SellerPhoto sellerPhoto = SellerPhoto.builder()
-                        .photoUrl(url)
-                        .seller(this)
-                        .build();
-                this.sellerPhotos.add(sellerPhoto);
-            }
-        }
+//        if(sellerInformationDto.getNotificationPhotoIds() != null && !sellerInformationDto.getNotificationPhotoIds().isEmpty()) {
+//            this.notificationPhotos.removeIf(photo ->
+//                    sellerInformationDto.getNotificationPhotoIds().contains(photo.getId()));
+//
+//        }
+//
+//        if(sellerInformationDto.getNotificationPhotos() != null && !sellerInformationDto.getNotificationPhotos().isEmpty()) {
+//            for(String url : sellerInformationDto.getNotificationPhotos()) {
+//                NotificationPhoto photo = NotificationPhoto.builder()
+//                        .photoUrl(url)
+//                        .seller(this)
+//                        .build();
+//                this.notificationPhotos.add(photo);
+//            }
+//        }
+//
+//        this.sellerPhotos.clear();
+//
+//        if(sellerInformationDto.getSellerPhotoUrls() != null && !sellerInformationDto.getSellerPhotoUrls().isEmpty()) {
+//            for(String url : sellerInformationDto.getSellerPhotoUrls()) {
+//                SellerPhoto sellerPhoto = SellerPhoto.builder()
+//                        .photoUrl(url)
+//                        .seller(this)
+//                        .build();
+//                this.sellerPhotos.add(sellerPhoto);
+//            }
+//        }
     }
     
     // 별점 업데이트용
