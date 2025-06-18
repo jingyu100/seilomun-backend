@@ -104,6 +104,10 @@ public class OrderService {
                 throw new IllegalArgumentException("다른 판매자의 상품들은 함께 주문할 수 없습니다.");
             }
 
+            if(product.getStatus().equals('X')){
+                throw new IllegalArgumentException("유통 기한 지난 상품은 주문할 수 없습니다.");
+            }
+
             // 재고 확인
             if (product.getStockQuantity() < productDto.getQuantity()) {
                 throw new IllegalArgumentException("구매 하려는 상품의 수량이 초과하였습니다: " + product.getName());
@@ -307,26 +311,43 @@ public class OrderService {
             throw new IllegalArgumentException("주문 테이블이 존재 하지 않습니다");
         }
         Order order = orederOptional.get();
-        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(order.getId());
-        if (orderItemOptional.isEmpty()) {
-            throw new IllegalArgumentException("주문 아이템이 존재 하지 않습니다");
+        // ✅ 수정: 올바른 OrderItem 조회 방법
+        List<OrderItem> orderItems = orderItemRepository.findByOrder(order);
+        if (orderItems.isEmpty()) {
+            throw new IllegalArgumentException("주문 아이템이 존재하지 않습니다");
         }
-        OrderItem orderItem = orderItemOptional.get();
-        Optional<Product> optionalProduct = productRepository.findById(orderItem.getProduct().getId());
-        if (optionalProduct.isEmpty()) {
-            throw new IllegalArgumentException("상품이 존재 하지 않습니다");
-        }
+
         PaymentSuccessDto paymentSuccessDto = requestPaymentAccept(paymentKey, orderId, amount);
         // 결제 성공하면 payment에 키넣고 성공으로 변환
         payment.successPayment(paymentKey);
         paymentRepository.save(payment);
-        Product product = optionalProduct.get();
-        Character oldStatus = product.getStatus();
-        boolean isStatusChanged = product.updateStockQuantity(product.getStockQuantity() - orderItem.getQuantity());
-        if (isStatusChanged) {
-            sendProductStatusChangeNotifications(product, oldStatus, product.getStatus());
+        // ✅ 개선: 모든 주문 아이템에 대해 재고 감소 처리
+        for (OrderItem orderItem : orderItems) {
+            Product product = orderItem.getProduct();
+
+            // 재고 부족 체크 (이중 체크)
+            if (product.getStockQuantity() < orderItem.getQuantity()) {
+                // 결제는 성공했지만 재고가 부족한 경우 - 환불 처리 필요
+                log.error("결제 성공 후 재고 부족 발견: productId={}, 현재재고={}, 주문수량={}",
+                        product.getId(), product.getStockQuantity(), orderItem.getQuantity());
+                throw new IllegalStateException("재고가 부족합니다. 환불이 필요합니다.");
+            }
+
+            // 재고 감소 및 상태 변경 처리
+            Character oldStatus = product.getStatus();
+            int newStock = product.getStockQuantity() - orderItem.getQuantity();
+            boolean isStatusChanged = product.updateStockQuantity(newStock);
+
+            productRepository.save(product);
+
+            // 상태 변경시 알림 발송
+            if (isStatusChanged) {
+                sendProductStatusChangeNotifications(product, oldStatus, product.getStatus());
+            }
+
+            log.info("재고 감소 완료: productId={}, 주문수량={}, 남은재고={}",
+                    product.getId(), orderItem.getQuantity(), newStock);
         }
-        productRepository.save(product);
 
         //결제 성공하면 유저 point 1퍼센트 증가
         Optional<Customer> optionalCustomer = customerRepository.findById(order.getCustomer().getId());

@@ -1,7 +1,6 @@
 package com.yju.team2.seilomun.domain.product.controller;
 
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.service.ProductService;
 import com.yju.team2.seilomun.domain.seller.service.SellerService;
 import com.yju.team2.seilomun.common.ApiResponseJson;
@@ -61,14 +60,21 @@ public class ProductController {
     }
 
     //상품 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long id, @RequestPart ProductDto productDto,
-                                                            @AuthenticationPrincipal JwtUserDetails userDetail) {
+    @PutMapping("/{productId}")
+    public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long productId, @RequestPart("productDto") ProductDto productDto,
+                                                            @AuthenticationPrincipal JwtUserDetails userDetail,
+                                                            @RequestPart(value= "productPhotos",required = false) List<MultipartFile> prodcutPhotos) {
         String sellerEmail = userDetail.getEmail();
 
-        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("Update", productService.updateProductDto(id, productDto, sellerEmail),
-                        "Message", "상품이 수정 되었습니다")));
+        try {
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                    Map.of("Update", productService.updateProductDto(productId, productDto, sellerEmail,prodcutPhotos),
+                            "Message", "상품이 수정 되었습니다")));
+        } catch (Exception e) {
+            log.error("상품 정보 업데이트 중 오류 발생 : {}",e.getMessage());
+            throw new RuntimeException("상품 정보 업데이트 중 오류가 발생했습니다."+ e.getMessage());
+        }
+
     }
 
     // 상품 삭제

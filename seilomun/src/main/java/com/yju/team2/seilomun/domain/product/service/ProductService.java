@@ -6,6 +6,7 @@ import com.yju.team2.seilomun.domain.notification.event.NewProductEvent;
 import com.yju.team2.seilomun.domain.notification.event.ProductStatusChangedEvent;
 import com.yju.team2.seilomun.domain.notification.service.NotificationService;
 import com.yju.team2.seilomun.domain.product.dto.DiscountInfo;
+import com.yju.team2.seilomun.domain.product.dto.ProductPhotoDto;
 import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductDocument;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -154,22 +156,6 @@ public class ProductService {
         LocalDateTime createdAt = productDto.getCreatedAt() != null ? productDto.getCreatedAt() : LocalDateTime.now();
         LocalDateTime expiryDate = productDto.getExpiryDate() != null ? productDto.getExpiryDate() : LocalDateTime.now().plusDays(7);
 
-        List<String> photos = new ArrayList<>();
-        if (productPhotos != null && !productPhotos.isEmpty()) {
-            if (productPhotos.size() > 5) {
-                throw new IllegalArgumentException("상품 사진은 최대 5장 까지 등록이 가능합니다.");
-            }
-        }
-
-        try {
-            photos = awsS3UploadService.uploadFiles(productPhotos);
-            log.info("상품 사진 업로드 완료 : {}", photos.size());
-        } catch (Exception e) {
-            log.info("상품 사진 업로드 실패 : {}", e.getMessage());
-            throw new RuntimeException("상품 사진 업로드 실패했습니다.");
-        }
-
-
         Product product = Product.builder()
                 .name(productDto.getName())
                 .description(productDto.getDescription())
@@ -189,12 +175,6 @@ public class ProductService {
 
         Integer currentDiscountRate = getCurrentDiscountRate(savedProduct.getId());
 
-        for (String url : photos) {
-            productPhotoRepository.save(ProductPhoto.builder()
-                    .product(savedProduct)
-                    .photoUrl(url)
-                    .build());
-        }
 
         // ProductIndexService를 사용하여 Elasticsearch에 인덱싱
         try {
@@ -223,14 +203,22 @@ public class ProductService {
             // 알림 전송 실패해도 상품 등록은 계속 진행
         }
 
-        // 상품 사진 저장
-        if (productDto.getPhotoUrl() != null && !productDto.getPhotoUrl().isEmpty()) {
-            productDto.getPhotoUrl().forEach(url -> {
-                productPhotoRepository.save(ProductPhoto.builder()
-                        .product(savedProduct)
-                        .photoUrl(url)
-                        .build());
-            });
+        if(productPhotos != null && !productPhotos.isEmpty()) {
+            int currentProductPhotoCount = product.getProductPhotos().size();
+            if(currentProductPhotoCount + productPhotos.size() > 5) {
+                throw new IllegalArgumentException("상품 사진은 최대 5장 까지 등록할 수 있습니다");
+            }
+
+            List<ProductPhoto> productPhotoList = uploadAndCreatePhotos(
+                    productPhotos,
+                    product,
+                    5,
+                    url -> ProductPhoto.builder()
+                            .photoUrl(url)
+                            .product(product)
+                            .build()
+            );
+            product.getProductPhotos().addAll(productPhotoList);
         }
 
         return ProductDto.fromEntity(savedProduct, currentDiscountRate);
@@ -264,12 +252,12 @@ public class ProductService {
     }
 
     // 상품 수정
-    public ProductDto updateProductDto(Long id, ProductDto productDto, String sellerEmail) {
+    public ProductDto updateProductDto(Long productId, ProductDto productDto, String sellerEmail,List<MultipartFile> productImages) {
 
         Seller seller = sellerRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new EntityNotFoundException("판매자를 찾을 수 없습니다"));
 
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
 
         if (!product.getSeller().getId().equals(seller.getId())) {
@@ -278,6 +266,39 @@ public class ProductService {
 
         ProductCategory productCategory = productCategoryRepository.findById(productDto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("카테고리를 찾을 수 없습니다."));
+
+        if(productDto.getProductPhotos() != null && !productDto.getProductPhotos().isEmpty()) {
+            for(ProductPhotoDto photoDto : productDto.getProductPhotos()) {
+                ProductPhoto productDelete = productPhotoRepository.findById(photoDto.getId())
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않은 상품입니다."));
+
+                if(!productDelete.getProduct().getId().equals(product.getId())) {
+                    throw new IllegalArgumentException("상품 사진에 대한 권한이 없습니다.");
+                }
+
+                productPhotoRepository.delete(productDelete);
+                product.getProductPhotos().remove(productDelete);
+                log.info("상품 사진이 삭제되었습니다 : {}",photoDto.getId());
+            }
+        }
+
+        if(productImages != null && !productImages.isEmpty()) {
+            int currentProductPhotoCount = product.getProductPhotos().size();
+            if(currentProductPhotoCount + productImages.size() > 5) {
+                throw new IllegalArgumentException("상품 사진은 최대 5장 까지 등록할 수 있습니다");
+            }
+
+            List<ProductPhoto> productPhotoList = uploadAndCreatePhotos(
+                    productImages,
+                    product,
+                    5,
+                    url -> ProductPhoto.builder()
+                            .photoUrl(url)
+                            .product(product)
+                            .build()
+            );
+            product.getProductPhotos().addAll(productPhotoList);
+        }
 
         Character oldStatus = product.getStatus();
         product.updateProudct(productDto, productCategory);
@@ -292,14 +313,40 @@ public class ProductService {
         productIndexService.indexProduct(updatedProduct);
 
         // 캐시 삭제
-        String currentDiscountRateKey = DISCOUNT_RATE_KEY + id;
-        String discountPriceKey = DISCOUNT_PRICE_KEY + id;
+        String currentDiscountRateKey = DISCOUNT_RATE_KEY + productId;
+        String discountPriceKey = DISCOUNT_PRICE_KEY + productId;
         redisTemplate.delete(currentDiscountRateKey);
         redisTemplate.delete(discountPriceKey);
 
-        Integer currentDiscountRate = getCurrentDiscountRate(id);
+        Integer currentDiscountRate = getCurrentDiscountRate(productId);
 
         return ProductDto.fromEntity(updatedProduct, currentDiscountRate);
+    }
+
+    private <T> List<T> uploadAndCreatePhotos(
+            List<MultipartFile> files,
+            Product product,
+            int maxCount,
+            Function<String, T> entityCreator
+    ) {
+        if(files != null && !files.isEmpty()) {
+            if(files.size() > maxCount) {
+                throw new IllegalArgumentException("사진은 최대 5장 까지 업로드 할 수 있습니다.");
+            }
+        }
+
+        List<String> photoUrls = new ArrayList<>();
+        try {
+            photoUrls = awsS3UploadService.uploadFiles(files);
+            log.info("사진 업로드 완료 : {}", photoUrls);
+        } catch (Exception e) {
+            log.info("사진 업로드 실패 : {}", e.getMessage());
+            throw new RuntimeException("사진 업로드 실패했습니다.");
+        }
+
+        return photoUrls.stream()
+                .map(entityCreator)
+                .collect(Collectors.toList());
     }
 
     // 유통기한이 현재시간이 되면 상태변화 메서드

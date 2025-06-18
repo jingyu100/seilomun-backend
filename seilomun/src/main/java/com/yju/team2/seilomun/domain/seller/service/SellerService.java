@@ -179,10 +179,10 @@ public class SellerService {
 
                 notificationPhotoRepositry.delete(photoDelete);
                 seller.getNotificationPhotos().remove(photoDelete);
-                log.info("가게 사진이 삭제되었습니다 :{}",photoId);
+                log.info("공지 사진이 삭제되었습니다 :{}",photoId);
             }
         }
-        
+
         //가게 사진 업로드 + 등록
         if(storeImage != null && !storeImage.isEmpty()) {
             int currentStorePhotoCount = seller.getSellerPhotos().size();
