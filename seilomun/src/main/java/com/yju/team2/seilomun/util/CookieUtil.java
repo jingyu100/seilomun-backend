@@ -13,7 +13,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
-                .maxAge(Duration.ofMinutes(30))  // 30분
+                .maxAge(Duration.ofHours(2))  // 2시간
                 .path("/")
                 .build();
     }
