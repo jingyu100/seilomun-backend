@@ -36,7 +36,7 @@ public class ProductDocument {
     private Integer stockQuantity;
 
     @Field(type = FieldType.Keyword)
-    private Character status;
+    private String status;
 
     @Field(type = FieldType.Long)
     private Long sellerId;
@@ -61,7 +61,7 @@ public class ProductDocument {
                 .description(product.getDescription())
                 .originalPrice(product.getOriginalPrice())
                 .stockQuantity(product.getStockQuantity())
-                .status(product.getStatus())
+                .status(String.valueOf(product.getStatus()))
                 .sellerId(product.getSeller().getId())
                 .categoryId(product.getProductCategory().getId())
                 .createdAt(product.getCreatedAt())

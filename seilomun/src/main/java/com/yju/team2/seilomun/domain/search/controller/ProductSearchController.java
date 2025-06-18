@@ -43,7 +43,7 @@ public class ProductSearchController {
         // ProductDocument를 ProductSearchDto로 변환하면서 status 필터링
         List<ProductSearchDto> dtoList = results.getContent().stream()
                 .filter(productDocument -> {
-                    Character status = productDocument.getStatus();
+                    Character status = productDocument.getStatus().charAt(0);
                     return '1' == status || 'T' == status;
                 })
                 .map(productDocument -> {

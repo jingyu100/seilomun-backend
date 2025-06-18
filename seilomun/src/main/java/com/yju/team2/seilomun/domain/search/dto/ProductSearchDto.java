@@ -40,7 +40,7 @@ public class ProductSearchDto {
         this.discountedPrice = discountedPrice;
         this.thumbnailUrl = document.getThumbnailUrl();
         this.stockQuantity = document.getStockQuantity();
-        this.status = document.getStatus();
+        this.status = document.getStatus().charAt(0);
         this.sellerId = document.getSellerId();
         this.createdAt = document.getCreatedAt();
         this.expiryDate = document.getExpiryDate();

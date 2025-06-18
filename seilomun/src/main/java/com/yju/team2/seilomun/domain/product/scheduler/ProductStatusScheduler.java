@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -27,6 +28,50 @@ public class ProductStatusScheduler {
     private final NotificationService notificationService;
     private final ProductIndexService productIndexService;
     private final ProductSearchRepository productSearchRepository;
+
+    // 매분마다 ES와 DB의 product data 동기화
+    @Scheduled(cron = "0 * * * * ?")
+    @Transactional(readOnly = true)
+    public void syncProductDataWithElasticsearch() {
+        try {
+            List<Product> allProducts = productRepository.findAll();
+            int syncCount = 0;
+            int errorCount = 0;
+
+            for (Product product : allProducts) {
+                try {
+                    // DB의 최신 상품 정보로 ES 인덱스 업데이트
+                    ProductDocument productDocument = ProductDocument.from(product);
+
+                    // ES에서 기존 문서 조회
+                    Optional<ProductDocument> existingDoc = productSearchRepository.findById(String.valueOf(product.getId()));
+
+                    // ES에 문서가 없거나 내용이 다른 경우에만 업데이트
+                    boolean needsUpdate = true;
+                    if (existingDoc.isPresent()) {
+                        needsUpdate = !isProductDocumentEqual(existingDoc.get(), productDocument);
+                    }
+
+                    if (needsUpdate) {
+                        productSearchRepository.save(productDocument);
+                        syncCount++;
+                        log.debug("ES 동기화 완료: productId={}", product.getId());
+                    }
+
+                } catch (Exception e) {
+                    errorCount++;
+                    log.error("ES 동기화 실패: productId={}", product.getId(), e);
+                }
+            }
+
+            if (syncCount > 0 || errorCount > 0) {
+                log.info("ES-DB 동기화 완료: 성공={}, 실패={}, 전체={}", syncCount, errorCount, allProducts.size());
+            }
+
+        } catch (Exception e) {
+            log.error("ES-DB 전체 동기화 작업 실패", e);
+        }
+    }
 
     // 매일 새벽 1시에 유통기한 확인 및 Elasticsearch 동기화
     @Scheduled(cron = "0 * * * * ?")
@@ -178,6 +223,25 @@ public class ProductStatusScheduler {
         if (updatedCount > 0) {
             log.info("재입고 상품 {} 개의 상태를 복구하고 Elasticsearch 인덱스를 동기화했습니다.", updatedCount);
         }
+    }
+
+    // ProductDocument 동등성 비교 메서드
+    private boolean isProductDocumentEqual(ProductDocument existing, ProductDocument current) {
+        if (existing == null || current == null) {
+            return false;
+        }
+
+        return existing.getId().equals(current.getId()) &&
+                existing.getName().equals(current.getName()) &&
+                existing.getStatus().equals(current.getStatus()) &&
+                existing.getOriginalPrice().equals(current.getOriginalPrice()) &&
+                existing.getStockQuantity().equals(current.getStockQuantity()) &&
+                existing.getExpiryDate().equals(current.getExpiryDate()) &&
+                existing.getCategoryId().equals(current.getCategoryId()) &&
+                existing.getDescription().equals(current.getDescription()) &&
+                existing.getSellerId().equals(current.getSellerId()) &&
+                existing.getCreatedAt().equals(current.getCreatedAt()) &&
+                existing.getExpiryDate().equals(current.getExpiryDate());
     }
 
     // 상태 변경 알림 메서드
