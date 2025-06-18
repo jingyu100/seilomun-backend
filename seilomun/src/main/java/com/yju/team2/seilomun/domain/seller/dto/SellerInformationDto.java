@@ -50,8 +50,14 @@ public class SellerInformationDto {
     
     // 공지사진 추가
     private List<String> notificationPhotos;
+    
+    //가게사진 삭제
+    private List<Long> sellerPhotoIds;
+
     // 공지사진 삭제
     private List<Long> notificationPhotoIds;
+
+
     
     // 상세페이지에서 가게정보를 넘기기 위한 메서드
     public static SellerInformationDto toDto(Seller seller) {
@@ -91,6 +97,7 @@ public class SellerInformationDto {
                 seller.getPickupTime(),
                 sellerPhotoUrls,
                 notificationPhotos,
+                null,
                 null
         );
     }

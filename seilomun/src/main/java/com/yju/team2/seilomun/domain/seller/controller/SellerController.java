@@ -46,7 +46,7 @@ public class SellerController {
 
     // 매장 정보 수정
     @PutMapping
-    public ApiResponseJson updateSellerInformation(@Valid @RequestPart SellerInformationDto sellerInformationDto,
+    public ApiResponseJson updateSellerInformation(@Valid @RequestPart("sellerInformationDto") SellerInformationDto sellerInformationDto,
                                                    BindingResult bindingResult,
                                                    @AuthenticationPrincipal JwtUserDetails userDetails,
                                                    @RequestPart(value = "storeImage",required = false) List<MultipartFile> storeImage,

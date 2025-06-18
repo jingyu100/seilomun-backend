@@ -3,6 +3,7 @@ package com.yju.team2.seilomun.domain.seller.service;
 import com.yju.team2.seilomun.domain.auth.service.RefreshTokenService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.notification.entity.NotificationPhoto;
+import com.yju.team2.seilomun.domain.notification.repository.NotificationPhotoRepositry;
 import com.yju.team2.seilomun.domain.order.dto.OrderItemDto;
 import com.yju.team2.seilomun.domain.order.entity.*;
 import com.yju.team2.seilomun.domain.order.repository.OrderItemRepository;
@@ -61,6 +62,8 @@ public class SellerService {
     private final ProductPhotoRepository productPhotoRepository;
     private final PaymentRepository paymentRepository;
     private final RefundRepository refundRepository;
+    private final NotificationPhotoRepositry notificationPhotoRepositry;
+
     // 판매자 가입
     public Seller sellerRegister(SellerRegisterDto sellerRegisterDto) {
         checkPasswordStrength(sellerRegisterDto.getPassword());
@@ -147,30 +150,76 @@ public class SellerService {
                 }
             }
         }
+        
+        //가게 사진 삭제
+        if(sellerInformationDto.getSellerPhotoIds() != null && !sellerInformationDto.getSellerPhotoIds().isEmpty()) {
+            for(Long photoId : sellerInformationDto.getSellerPhotoIds()) {
+                SellerPhoto photoDelete = sellerPhotoRepository.findById(photoId)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않은 가게 사진입니다."));
 
-        // 가게 사진 업로드 + 등록
-        List<SellerPhoto> storeAllPhotoUrls = uploadAndCreatePhotos(
-            storeImage,
-            seller,
-            5,
-            url -> SellerPhoto.builder()
-                    .photoUrl(url)
-                    .seller(seller)
-                    .build()
-        );
-        seller.getSellerPhotos().addAll(storeAllPhotoUrls);
+                if(!photoDelete.getSeller().getId().equals(seller.getId())) {
+                    throw new IllegalArgumentException("가게 사진에 대한 권한이 없습니다.");
+                }
 
-        // 공지 사진 업로드 + 등록
-        List<NotificationPhoto> notificationAllPhotoUrls = uploadAndCreatePhotos(
-                notificationImage,
+                sellerPhotoRepository.delete(photoDelete);
+                seller.getSellerPhotos().remove(photoDelete);
+                log.info("가게 사진이 삭제되었습니다 :{}",photoId);
+            }
+        }
+        
+        //공지 사진 삭제
+        if(sellerInformationDto.getNotificationPhotoIds() != null && !sellerInformationDto.getNotificationPhotoIds().isEmpty()) {
+            for(Long photoId : sellerInformationDto.getNotificationPhotoIds()) {
+                NotificationPhoto photoDelete = notificationPhotoRepositry.findById(photoId)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않은 공지 사진입니다."));
+
+                if(!photoDelete.getSeller().getId().equals(seller.getId())) {
+                    throw new IllegalArgumentException("공지 사진에 대한 권한이 없습니다.");
+                }
+
+                notificationPhotoRepositry.delete(photoDelete);
+                seller.getNotificationPhotos().remove(photoDelete);
+                log.info("가게 사진이 삭제되었습니다 :{}",photoId);
+            }
+        }
+        
+        //가게 사진 업로드 + 등록
+        if(storeImage != null && !storeImage.isEmpty()) {
+            int currentStorePhotoCount = seller.getSellerPhotos().size();
+            if(currentStorePhotoCount + storeImage.size() > 5) {
+                throw new IllegalArgumentException("가게 사진은 최대 5장 까지 등록할 수 있습니다.");
+            }
+
+            List<SellerPhoto> storeAllPhotoUrls = uploadAndCreatePhotos(
+                storeImage,
                 seller,
                 5,
-                url -> NotificationPhoto.builder()
+                url -> SellerPhoto.builder()
                         .photoUrl(url)
                         .seller(seller)
                         .build()
-        );
-        seller.getNotificationPhotos().addAll(notificationAllPhotoUrls);
+            );
+            seller.getSellerPhotos().addAll(storeAllPhotoUrls);
+        }
+
+        //공지 사진 업로드
+        if(notificationImage != null && !notificationImage.isEmpty()) {
+            int currentNotificationPhotoCount = seller.getNotificationPhotos().size();
+            if(currentNotificationPhotoCount + notificationImage.size() > 5) {
+                throw new IllegalArgumentException("공지 사진은 최대 5장 까지 등록할 수 있습니다.");
+            }
+
+            List<NotificationPhoto> notificationAllPhotoUrls = uploadAndCreatePhotos(
+                    notificationImage,
+                    seller,
+                    5,
+                    url -> NotificationPhoto.builder()
+                            .photoUrl(url)
+                            .seller(seller)
+                            .build()
+            );
+            seller.getNotificationPhotos().addAll(notificationAllPhotoUrls);
+        }
 
         Seller updatedSeller = sellerRepository.save(seller);
 
