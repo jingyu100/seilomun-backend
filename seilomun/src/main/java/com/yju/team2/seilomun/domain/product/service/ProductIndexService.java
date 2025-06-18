@@ -67,9 +67,7 @@ public class ProductIndexService {
             for (Product product : allProducts) {
                 // 정상 상품 및 유통기한이 지나지 않은 상품만 인덱싱
                 LocalDateTime now = LocalDateTime.now();
-                if (product.getStatus() == '1' &&
-                        (product.getExpiryDate() == null || product.getExpiryDate().isAfter(now))) {
-
+                if (product.getStatus() == '1' || product.getStatus() == 'T') {
                     ProductDocument productDocument = ProductDocument.from(product);
 
                     // 썸네일 URL 설정
@@ -89,32 +87,19 @@ public class ProductIndexService {
         }
     }
 
-    // 유통기한이 지난 상품 상태 변경 및 인덱스 업데이트
-    @Scheduled(cron = "0 0 1 * * ?")
-    @Transactional
-    public void updateExpiredProductsIndex() {
-        log.info("유통기한 지난 상품 인덱스 업데이트 작업 시작");
-        LocalDateTime now = LocalDateTime.now();
-
+    // 개별 상품 상태 변경 시 호출되는 메서드 (ProductService에서 사용)
+    public void updateProductIndex(Product product) {
         try {
-            List<Product> expiredProducts = productRepository.findByExpiryDateBeforeAndStatusNot(now, '0');
-            int count = 0;
-
-            for (Product product : expiredProducts) {
-                // 유통기한 지난 상품은 상태 변경 후 인덱스 업데이트
-                product.updateStatus('0');  // 상태 코드 '0'으로 변경
-                productRepository.save(product);
-
-                // Elasticsearch 문서 업데이트
-                ProductDocument productDocument = ProductDocument.from(product);
-                productSearchRepository.save(productDocument);
-
-                count++;
+            if (product.getStatus() == '1' || product.getStatus() == 'T') {
+                // 정상 상품이거나 임박특가 상품이면 인덱스 업데이트
+                indexProduct(product);
+            } else {
+                // 그 외 상태(판매중단, 유통기한만료 등)면 인덱스에서 제거
+                deleteProduct(product.getId());
             }
-
-            log.info("유통기한 지난 상품 인덱스 업데이트 완료: 총 {}개 처리됨", count);
         } catch (Exception e) {
-            log.error("유통기한 지난 상품 인덱스 업데이트 중 오류 발생: {}", e.getMessage(), e);
+            log.error("상품 인덱스 업데이트 중 오류 발생: productId={}", product.getId(), e);
         }
     }
+
 }
