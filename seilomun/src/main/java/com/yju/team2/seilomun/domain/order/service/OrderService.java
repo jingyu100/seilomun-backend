@@ -2,6 +2,7 @@ package com.yju.team2.seilomun.domain.order.service;
 
 import com.yju.team2.seilomun.config.TossPaymentConfig;
 import com.yju.team2.seilomun.domain.auth.dto.CartItemRequestDto;
+import com.yju.team2.seilomun.domain.cart.service.CartService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.entity.PointHistory;
 import com.yju.team2.seilomun.domain.customer.repository.CustomerRepository;
@@ -61,6 +62,8 @@ public class OrderService {
     private final NotificationService notificationService;
     private final AWSS3UploadService awss3UploadService;
     private final ReviewRepository reviewRepository;
+    private final CartService cartService;
+
 
     private String generateOrderNumber() {
         StringBuilder stringBuilder = new StringBuilder(14);
@@ -344,6 +347,15 @@ public class OrderService {
         pointHistoryRepository.save(pointHistory);
         order.updateOrderStatus('S');
         orderRepository.save(order);
+
+        try {
+            cartService.clearCart(order.getCustomer().getId());
+            log.info("결제 성공 후 장바구니 비우기 완료: customerId={}", order.getCustomer().getId());
+        } catch (Exception e) {
+            log.error("결제 성공 후 장바구니 비우기 실패: customerId={}", order.getCustomer().getId(), e);
+            // 장바구니 비우기 실패해도 결제는 성공으로 처리
+        }
+
         try {
             OrderOfferedEvent orderOfferedEvent = OrderOfferedEvent.builder()
                     .order(order)
