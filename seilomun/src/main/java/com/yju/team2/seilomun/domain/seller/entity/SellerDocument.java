@@ -27,6 +27,9 @@ public class SellerDocument {
     private String storeDescription;
 
     @Field(type = FieldType.Text)
+    private String address;
+
+    @Field(type = FieldType.Text)
     private String addressDetail;
 
     @Field(type = FieldType.Keyword)
@@ -59,6 +62,7 @@ public class SellerDocument {
                 .id(seller.getId().toString())
                 .storeName(seller.getStoreName())
                 .storeDescription(seller.getStoreDescription())
+                .address(seller.getAddress())
                 .addressDetail(seller.getAddressDetail())
                 .phone(seller.getPhone())
                 .operatingHours(seller.getOperatingHours())

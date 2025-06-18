@@ -87,7 +87,7 @@ public class SellerService {
                 .sellerCategory(category)
                 .storeDescription("가게 설명")
                 .status('1')
-                .postCode("11111")
+                .address(sellerRegisterDto.getAddress())
                 .operatingHours("12")
                 .deliveryAvailable('0')
                 .rating(0F)

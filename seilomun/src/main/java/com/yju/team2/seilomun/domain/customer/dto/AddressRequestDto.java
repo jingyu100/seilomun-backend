@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AddressRequestDto {
 
-    private String postCode;
+    private String address;
     private String addressDetail;
     private Character addressMain;
     private String label;

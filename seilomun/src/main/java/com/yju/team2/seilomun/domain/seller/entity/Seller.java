@@ -51,8 +51,8 @@ public class Seller {
     @Column(name = "phone", nullable = false, length = 11)
     private String phone;
 
-    @Column(name = "post_code", nullable = false, length = 5)
-    private String postCode;
+    @Column(name = "address", nullable = false, length = 200)
+    private String address;
 
     @Column(name = "address_detail", length = 20)
     private String addressDetail;

@@ -98,7 +98,7 @@ public class SellerInformationResponseDto {
                 .categoryId(seller.getSellerCategory().getId())
                 .phone(seller.getPhone())
                 .pickupTime(seller.getPickupTime())
-                .postCode(seller.getPostCode())
+                .postCode(seller.getAddress())
                 .address(seller.getAddressDetail())
                 .isOpen(seller.getIsOpen())
                 .notificationPhotos(notificationPhotos)

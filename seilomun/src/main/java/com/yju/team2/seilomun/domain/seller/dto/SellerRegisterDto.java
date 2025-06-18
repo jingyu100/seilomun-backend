@@ -33,6 +33,7 @@ public class SellerRegisterDto {
     @NotEmpty
     private String phone;
 
+    private String address;
     @NotEmpty
     private String addressDetail;
 

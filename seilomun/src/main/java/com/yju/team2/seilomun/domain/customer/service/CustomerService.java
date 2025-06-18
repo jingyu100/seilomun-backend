@@ -541,7 +541,7 @@ public class CustomerService {
         }
 
         Address newAddress = Address.builder()
-                .postCode(address.getPostCode())
+                .address(address.getAddress())
                 .addressDetail(address.getAddressDetail())
                 .addressMain(address.getAddressMain())
                 .label(address.getLabel())
@@ -567,7 +567,7 @@ public class CustomerService {
         }
 
         address.updateAddress(
-                addressRequestDto.getPostCode(),
+                addressRequestDto.getAddress(),
                 addressRequestDto.getAddressDetail(),
                 addressRequestDto.getAddressMain(),
                 addressRequestDto.getLabel()

@@ -20,8 +20,8 @@ public class Address {
     @Column(name = "ad_id")
     private Long id;
 
-    @Column(name = "post_code", length = 5, nullable = false)
-    private String postCode;
+    @Column(name = "address", length = 200, nullable = false)
+    private String address;
 
     @Column(name = "address_detail", length = 20)
     private String addressDetail;
@@ -37,8 +37,8 @@ public class Address {
     @JsonIgnore
     private Customer customer;
 
-    public void updateAddress(String postCode, String detail, Character addressMain, String label) {
-        this.postCode = postCode;
+    public void updateAddress(String address, String detail, Character addressMain, String label) {
+        this.address = address;
         this.addressDetail = detail;
         this.addressMain = addressMain;
         this.label = label;
