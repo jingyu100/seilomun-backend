@@ -104,6 +104,10 @@ public class OrderService {
                 throw new IllegalArgumentException("다른 판매자의 상품들은 함께 주문할 수 없습니다.");
             }
 
+            if(product.getStatus().equals('X')){
+                throw new IllegalArgumentException("유통 기한 지난 상품은 주문할 수 없습니다.");
+            }
+
             // 재고 확인
             if (product.getStockQuantity() < productDto.getQuantity()) {
                 throw new IllegalArgumentException("구매 하려는 상품의 수량이 초과하였습니다: " + product.getName());
