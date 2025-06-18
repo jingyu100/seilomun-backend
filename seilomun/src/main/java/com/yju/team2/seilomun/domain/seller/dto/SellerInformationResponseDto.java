@@ -58,10 +58,10 @@ public class SellerInformationResponseDto {
     private Character isOpen;
 
     //가게사진 추가
-    private List<String> sellerPhotos;
+    private List<SellerPhotoDto> sellerPhotos;
 
     // 공지사진 추가
-    private List<String> notificationPhotos;
+    private List<SellerPhotoDto> notificationPhotos;
     
     // 상세페이지에서 가게정보를 넘기기 위한 메서드
     public static SellerInformationResponseDto toDto(Seller seller) {
@@ -78,12 +78,12 @@ public class SellerInformationResponseDto {
                     .collect(Collectors.toList());
         }
 
-        List<String> sellerPhotos = seller.getSellerPhotos().stream()
-                .map(SellerPhoto::getPhotoUrl)
-                .toList();
+        List<SellerPhotoDto> notificationPhotos = seller.getNotificationPhotos().stream()
+                .map(photo -> new SellerPhotoDto(photo.getId(), photo.getPhotoUrl()))
+                .collect(Collectors.toList());
 
-        List<String> notificationPhotos = seller.getNotificationPhotos().stream()
-                .map(NotificationPhoto::getPhotoUrl)
+        List<SellerPhotoDto> sellerPhotos = seller.getSellerPhotos().stream()
+                .map(photo -> new SellerPhotoDto(photo.getId(), photo.getPhotoUrl()))
                 .collect(Collectors.toList());
 
         return SellerInformationResponseDto.builder()

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SellerPhotoDto {
 
-    @NotEmpty
+    private Long id;
     private String photoUrl;
 }
