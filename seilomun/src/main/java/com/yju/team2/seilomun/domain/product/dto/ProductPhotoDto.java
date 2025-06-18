@@ -1,6 +1,5 @@
-package com.yju.team2.seilomun.domain.seller.dto;
+package com.yju.team2.seilomun.domain.product.dto;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SellerPhotoDto {
+public class ProductPhotoDto {
 
     private Long id;
     private String photoUrl;

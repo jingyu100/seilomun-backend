@@ -46,10 +46,10 @@ public class SellerInformationDto {
     private String pickupTime;
 
     //가게사진 추가
-    private List<String> sellerPhotoUrls;
+    private List<SellerPhotoDto> sellerPhotoUrls;
     
     // 공지사진 추가
-    private List<String> notificationPhotos;
+    private List<SellerPhotoDto> notificationPhotos;
     
     //가게사진 삭제
     private List<Long> sellerPhotoIds;
@@ -75,12 +75,12 @@ public class SellerInformationDto {
         }
 
 
-        List<String> notificationPhotos = seller.getNotificationPhotos().stream()
-                .map(NotificationPhoto::getPhotoUrl)
+        List<SellerPhotoDto> notificationPhotos = seller.getNotificationPhotos().stream()
+                .map(photo -> new SellerPhotoDto(photo.getId(), photo.getPhotoUrl()))
                 .collect(Collectors.toList());
 
-        List<String> sellerPhotoUrls = seller.getSellerPhotos().stream()
-                .map(SellerPhoto::getPhotoUrl)
+        List<SellerPhotoDto> sellerPhotos = seller.getSellerPhotos().stream()
+                .map(photo -> new SellerPhotoDto(photo.getId(), photo.getPhotoUrl()))
                 .collect(Collectors.toList());
 
         return new SellerInformationDto(
@@ -95,10 +95,10 @@ public class SellerInformationDto {
                 seller.getSellerCategory().getId(),
                 seller.getPhone(),
                 seller.getPickupTime(),
-                sellerPhotoUrls,
+                sellerPhotos,
                 notificationPhotos,
-                null,
-                null
+                new ArrayList<>(),
+                new ArrayList<>()
         );
     }
 }

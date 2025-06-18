@@ -4,6 +4,7 @@ import com.yju.team2.seilomun.domain.product.entity.Product;
 import com.yju.team2.seilomun.domain.product.entity.ProductCategory;
 import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.seller.dto.SellerInformationDto;
+import com.yju.team2.seilomun.domain.seller.dto.SellerPhotoDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -28,12 +29,16 @@ public class ProductDto {
     private Integer maxDiscountRate;
     private Integer currentDiscountRate;
     private LocalDateTime createdAt;
-    private List<String> photoUrl;
     private SellerInformationDto seller;
     private Long categoryId;
+    private List<ProductPhotoDto> productPhotos;
 
     // 할인 정보를 포함한 팩토리 메서드
     public static ProductDto fromEntity(Product product, Integer currentDiscountRate, Integer discountPrice) {
+        List<ProductPhotoDto> productPhotos = product.getProductPhotos().stream()
+                .map(photo -> new ProductPhotoDto(photo.getId(), photo.getPhotoUrl()))
+                .collect(Collectors.toList());
+
         return ProductDto.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -49,9 +54,7 @@ public class ProductDto {
                 .createdAt(product.getCreatedAt())
                 .seller(SellerInformationDto.toDto(product.getSeller()))
                 .categoryId(product.getProductCategory().getId())
-                .photoUrl(product.getProductPhotos().stream()
-                        .map(ProductPhoto::getPhotoUrl)
-                        .collect(Collectors.toList()))
+                .productPhotos(productPhotos)
                 .build();
     }
 
