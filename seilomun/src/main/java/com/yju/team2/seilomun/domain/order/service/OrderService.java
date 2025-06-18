@@ -855,4 +855,11 @@ public class OrderService {
             log.error("상품 상태 변경 알림 전송 실패: productId={}", product.getId(), e);
         }
     }
+    public Long getSellerIdFromProduct(Long productId) {
+        Optional<Product> optionalProduct = productRepository.findById(productId);
+        if (optionalProduct.isPresent()) {
+            return optionalProduct.get().getSeller().getId();
+        }
+        throw new IllegalArgumentException("존재하지 않는 상품입니다: " + productId);
+    }
 }

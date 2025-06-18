@@ -4,10 +4,7 @@ import com.yju.team2.seilomun.common.ApiResponseJson;
 import com.yju.team2.seilomun.config.TossPaymentConfig;
 import com.yju.team2.seilomun.domain.auth.dto.CartItemRequestDto;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
-import com.yju.team2.seilomun.domain.order.dto.OrderDto;
-import com.yju.team2.seilomun.domain.order.dto.PaymentResDto;
-import com.yju.team2.seilomun.domain.order.dto.PaymentSuccessDto;
-import com.yju.team2.seilomun.domain.order.dto.RefundRequestDto;
+import com.yju.team2.seilomun.domain.order.dto.*;
 import com.yju.team2.seilomun.domain.order.service.OrderService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -53,13 +50,24 @@ public class OrderController {
                 Map.of("주문페이지로 갑니다", orderService.getBuyProduct(cartItemRequestDto, customerId))));
     }
 
-    // 장바구니에서 구매하기
     @PostMapping("/cart/buy")
     public ResponseEntity<ApiResponseJson> getBuyProducts(@RequestBody List<CartItemRequestDto> cartItemRequestDto,
                                                           @AuthenticationPrincipal JwtUserDetails userDetail) {
         Long customerId = userDetail.getId();
+        List<OrderProductDto> orderProducts = orderService.getBuyProducts(cartItemRequestDto, customerId);
+
+        // 판매자 ID도 함께 반환
+        Long sellerId = null;
+        if (!orderProducts.isEmpty()) {
+            sellerId = orderService.getSellerIdFromProduct(orderProducts.get(0).getProductId());
+        }
+
         return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                Map.of("주문페이지로 갑니다", orderService.getBuyProducts(cartItemRequestDto, customerId))));
+                Map.of(
+                        "orderProducts", orderProducts,
+                        "sellerId", sellerId,
+                        "message", "주문페이지로 갑니다"
+                )));
     }
 
     // 결제 성공시 콜백
