@@ -456,6 +456,7 @@ public class CustomerService {
             customer.UpdateLocalPassword(encodedPassword);
         }
 
+        customer.UpdateLocalCustomer(updateDto);
     }
 
     // 회원정보 비밀번호 변경
@@ -468,7 +469,7 @@ public class CustomerService {
             throw new IllegalArgumentException("현재 비밀번호와 새 비밀번호가 동일합니다");
         }
 
-        if(passwordChangeDto.isValidPassword()){
+        if(!passwordChangeDto.isValidPassword()) {
             throw new IllegalArgumentException("새 비밀번호 확인이 일치하지 않습니다.");
         }
 

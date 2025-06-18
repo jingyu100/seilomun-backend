@@ -21,7 +21,9 @@ public class PasswordChangeDto {
     private String confirmPassword;
     
     //현재 비밀번호와 새로운 비밀번호 확인
-    public boolean isValidPassword() {return this.currentPassword.equals(this.newPassword);}
+    public boolean isValidPassword() {
+        return this.newPassword != null && this.newPassword.equals(this.confirmPassword);
+    }
 
     //새로운 비밀번호랑 비밀번호 확인
     public boolean isNewPasswordValid() {
@@ -29,6 +31,6 @@ public class PasswordChangeDto {
     }
 
     public boolean hasPasswordChangeRequest() {
-        return this.newPassword != null && this.newPassword.isEmpty();
+        return this.newPassword != null && !this.newPassword.isEmpty();
     }
 }
