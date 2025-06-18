@@ -62,11 +62,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 String newAccessToken = tryRefreshTokens(request, response, refreshToken);
                 if (newAccessToken != null) {
                     log.debug("토큰 갱신 성공, 새 Access Token으로 인증 처리");
-                    // 새로 생성된 Access Token으로 인증 처리
                     authenticateWithToken(newAccessToken, request);
                     filterChain.doFilter(request, response);
                     return;
                 }
+                // 갱신 실패했지만 여기서 쿠키를 삭제하지 않음
+                log.debug("토큰 갱신 실패 - 인증되지 않은 상태로 진행");
             }
 
             // 3. 토큰이 없거나 모두 유효하지 않은 경우
@@ -88,18 +89,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return !jwtUtil.isTokenExpired(token);
         } catch (Exception e) {
             log.debug("Access Token 유효성 검사 실패: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Refresh Token 전용 유효성 검사
-     */
-    private boolean isValidRefreshToken(String token) {
-        try {
-            return jwtUtil.validateRefreshToken(token);
-        } catch (Exception e) {
-            log.debug("Refresh Token 유효성 검사 실패: {}", e.getMessage());
             return false;
         }
     }
@@ -133,20 +122,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      */
     private String tryRefreshTokens(HttpServletRequest request, HttpServletResponse response, String refreshToken) {
         try {
-            // Refresh Token 유효성 검증
-            if (!isValidRefreshToken(refreshToken)) {
-                log.debug("Refresh Token이 유효하지 않음");
-                clearAuthenticationCookies(response);
-                return null;
-            }
-
-            // 만료된 토큰에서도 정보 추출 가능하도록 안전하게 처리
+            // 먼저 Refresh Token에서 사용자 정보 추출 (만료되어도 추출 가능)
             String username = extractUsernameFromToken(refreshToken);
             String userType = extractUserTypeFromToken(refreshToken);
 
             if (username == null || userType == null) {
                 log.debug("Refresh Token에서 사용자 정보 추출 실패");
-                clearAuthenticationCookies(response);
                 return null;
             }
 
@@ -154,7 +135,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             String storedToken = refreshTokenService.getRefreshToken(username, userType);
             if (storedToken == null || !storedToken.equals(refreshToken)) {
                 log.warn("Redis에 저장된 토큰과 일치하지 않음 - 사용자: {}", username);
+                // 여기서도 쿠키를 삭제하지 않고 갱신만 실패 처리
+                return null;
+            }
+
+            // Refresh Token 자체의 유효성 검사 (만료 확인)
+            if (jwtUtil.isTokenExpired(refreshToken)) {
+                log.debug("Refresh Token이 만료됨 - 사용자: {}", username);
+                // 만료된 경우에만 쿠키 삭제
                 clearAuthenticationCookies(response);
+                refreshTokenService.deleteRefreshToken(username, userType);
                 return null;
             }
 
@@ -173,12 +163,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             log.debug("토큰 갱신 성공 - 사용자: {}, 타입: {}", username, userType);
 
-            // 새로 생성된 Access Token 반환
             return newAccessToken;
 
         } catch (Exception e) {
             log.error("토큰 갱신 중 오류 발생: ", e);
-            clearAuthenticationCookies(response);
+            // 여기서도 쿠키를 삭제하지 않음
             return null;
         }
     }
@@ -244,7 +233,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 인증 쿠키 초기화
+     * 인증 쿠키 초기화 (진짜 만료된 경우에만 사용)
      */
     private void clearAuthenticationCookies(HttpServletResponse response) {
         ResponseCookie expiredAccessToken = CookieUtil.createExpiredAccessTokenCookie();
