@@ -174,18 +174,6 @@ public class ProductService {
 
         Integer currentDiscountRate = getCurrentDiscountRate(savedProduct.getId());
 
-
-        // ProductIndexService를 사용하여 Elasticsearch에 인덱싱
-        try {
-            if (productIndexService != null) {
-                productIndexService.indexProduct(savedProduct);
-                log.info("Elasticsearch 인덱싱 완료");
-            }
-        } catch (Exception e) {
-            // 인덱싱 실패해도 상품 등록은 계속 진행
-            log.error("Elasticsearch 인덱싱 실패", e);
-        }
-
         // 즐겨찾기한 고객들에게 알림 전송
         try {
             if (notificationService != null) {
@@ -218,6 +206,18 @@ public class ProductService {
                             .build()
             );
             product.getProductPhotos().addAll(productPhotoList);
+            savedProduct = productRepository.save(product);
+        }
+
+        // ProductIndexService를 사용하여 Elasticsearch에 인덱싱
+        try {
+            if (productIndexService != null) {
+                productIndexService.indexProduct(savedProduct);
+                log.info("Elasticsearch 인덱싱 완료");
+            }
+        } catch (Exception e) {
+            // 인덱싱 실패해도 상품 등록은 계속 진행
+            log.error("Elasticsearch 인덱싱 실패", e);
         }
 
         return ProductDto.fromEntity(savedProduct, currentDiscountRate);

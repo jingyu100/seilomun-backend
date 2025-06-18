@@ -66,6 +66,7 @@ public class ProductDocument {
                 .categoryId(product.getProductCategory().getId())
                 .createdAt(product.getCreatedAt())
                 .expiryDate(product.getExpiryDate())
+                .thumbnailUrl(product.getProductPhotos().get(0).getPhotoUrl())
                 // averageRating은 별도로 계산 필요
                 .build();
     }
