@@ -23,7 +23,7 @@ public class ProductStatusScheduler {
     private final NotificationService notificationService;
 
     // 매일 새벽 1시에 유통기한 확인
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 * * * * ?")
     public void updatedExpiredProducts() {
         LocalDateTime now = LocalDateTime.now();
         List<Product> expiredProducts = productRepository
@@ -37,23 +37,29 @@ public class ProductStatusScheduler {
             // 알림 전송
             sendProductStatusChangeNotifications(expiredProduct, oldStatus, 'X');
         }
+        if (!expiredProducts.isEmpty()) {
+            log.info("만료된 상품 {} 개의 상태를 'X'로 업데이트했습니다.", expiredProducts.size());
+        }
     }
 
-//    // 매시간 임박 상품 확인 (예: 3일 전)
-//    @Scheduled(cron = "0 0 * * * ?")
-//    public void updateExpiringProducts() {
-//        LocalDateTime threeDaysLater = LocalDateTime.now().plusDays(3);
-//        List<Product> expiringProducts = productRepository
-//                .findByExpiryDateBeforeAndStatus(threeDaysLater, '1'); // 판매중인 상품만
-//
-//        for (Product product : expiringProducts) {
-//            product.updateStatus('T'); // 'T' = 임박특가
-//            productRepository.save(product);
-//
-//            // 알림 발생
-//            sendProductStatusChangeNotifications(product, '1', 'T');
-//        }
-//    }
+    // 매시간 임박 상품 확인 (예: 3일 전)
+    @Scheduled(cron = "0 * * * * ?")
+    public void updateExpiringProducts() {
+        LocalDateTime threeDaysLater = LocalDateTime.now().plusDays(3);
+        List<Product> expiringProducts = productRepository
+                .findByExpiryDateBeforeAndStatus(threeDaysLater, '1'); // 판매중인 상품만
+
+        for (Product product : expiringProducts) {
+            product.updateStatus('T'); // 'T' = 임박특가
+            productRepository.save(product);
+
+            // 알림 발생
+            sendProductStatusChangeNotifications(product, '1', 'T');
+        }
+        if (!expiringProducts.isEmpty()) {
+            log.info("임박 상품 {} 개의 상태를 'T'로 업데이트했습니다.", expiringProducts.size());
+        }
+    }
 
     // 상태 변경 알림 메서드
     private void sendProductStatusChangeNotifications(Product product, Character oldStatus, Character newStatus) {
