@@ -246,6 +246,7 @@ public class ProductStatusScheduler {
 
     // 상태 변경 알림 메서드
     private void sendProductStatusChangeNotifications(Product product, Character oldStatus, Character newStatus) {
+        
         try {
             // 1. 판매자에게 알림
             ProductStatusChangedEvent sellerEvent = ProductStatusChangedEvent.builder()
