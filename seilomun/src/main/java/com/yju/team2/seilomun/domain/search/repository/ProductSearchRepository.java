@@ -14,15 +14,45 @@ import java.util.List;
 @Repository
 public interface ProductSearchRepository extends ElasticsearchRepository<ProductDocument, String> {
 
-    // 이름과 설명으로 검색
-    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-            String nameKeyword, String descriptionKeyword, Pageable pageable);
+    // 기존 메서드들에 상태 조건 추가
 
-    // 새 상품 검색 ( ex : 등록 7일 이내 )
-    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCreatedAtAfter(
-            String nameKeyword, String descriptionKeyword, LocalDateTime date, Pageable pageable);
+    // === 기본 검색 (판매중인 상품만) ===
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndStatusNot(
+            String nameKeyword, String descriptionKeyword, Character excludeStatus, Pageable pageable);
 
-    // 임박 상품 검색 ( ex : 만료 7일 전 )
-    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndExpiryDateBefore(
-            String nameKeyword, String descriptionKeyword, LocalDateTime date, Pageable pageable);
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndStatusNotAndCreatedAtAfter(
+            String nameKeyword, String descriptionKeyword, Character excludeStatus, LocalDateTime date, Pageable pageable);
+
+    // === 유통기한 임박 상품 (현재시간 < 유통기한 < 7일후, 판매중인 상품만) ===
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndStatusNotAndExpiryDateAfterAndExpiryDateBefore(
+            String nameKeyword, String descriptionKeyword, Character excludeStatus,
+            LocalDateTime expiryAfter, LocalDateTime expiryBefore, Pageable pageable);
+
+    // === 카테고리 + 기본 검색 ===
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryIdAndStatusNot(
+            String nameKeyword, String descriptionKeyword, Long categoryId, Character excludeStatus, Pageable pageable);
+
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryIdAndStatusNotAndCreatedAtAfter(
+            String nameKeyword, String descriptionKeyword, Long categoryId, Character excludeStatus, LocalDateTime date, Pageable pageable);
+
+    // === 카테고리 + 유통기한 임박 ===
+    Page<ProductDocument> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndCategoryIdAndStatusNotAndExpiryDateAfterAndExpiryDateBefore(
+            String nameKeyword, String descriptionKeyword, Long categoryId, Character excludeStatus,
+            LocalDateTime expiryAfter, LocalDateTime expiryBefore, Pageable pageable);
+
+    // === 카테고리만 검색 ===
+    Page<ProductDocument> findByCategoryIdAndStatusNot(Long categoryId, Character excludeStatus, Pageable pageable);
+
+    Page<ProductDocument> findByCategoryIdAndStatusNotAndCreatedAtAfter(Long categoryId, Character excludeStatus, LocalDateTime date, Pageable pageable);
+
+    Page<ProductDocument> findByCategoryIdAndStatusNotAndExpiryDateAfterAndExpiryDateBefore(
+            Long categoryId, Character excludeStatus, LocalDateTime expiryAfter, LocalDateTime expiryBefore, Pageable pageable);
+
+    // === 전체 상품 (상태 필터만) ===
+    Page<ProductDocument> findByStatusNot(Character excludeStatus, Pageable pageable);
+
+    Page<ProductDocument> findByStatusNotAndCreatedAtAfter(Character excludeStatus, LocalDateTime date, Pageable pageable);
+
+    Page<ProductDocument> findByStatusNotAndExpiryDateAfterAndExpiryDateBefore(
+            Character excludeStatus, LocalDateTime expiryAfter, LocalDateTime expiryBefore, Pageable pageable);
 }

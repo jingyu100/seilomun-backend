@@ -28,12 +28,17 @@ public class ProductSearchController {
     private final ProductDiscountService productDiscountService;
 
     @GetMapping("/search")
-    public ResponseEntity<Page<ProductSearchDto>> searchProducts(@RequestParam(required = false, defaultValue = "") String keyword,
-                                                                @RequestParam(required = false, defaultValue = "ALL") ProductFilterType filterType,
-                                                                @RequestParam(required = false, defaultValue = "LATEST") ProductSortType sortType,
-                                                                @RequestParam(required = false, defaultValue = "0") int page,
-                                                                @RequestParam(required = false, defaultValue = "10") int size) {
-        Page<ProductDocument> results = productSearchService.searchProducts(keyword, filterType, sortType, page, size);
+    public ResponseEntity<Page<ProductSearchDto>> searchProducts(
+            @RequestParam(required = false, defaultValue = "") String keyword,
+            @RequestParam(required = false) Long categoryId, // 카테고리 필터 추가
+            @RequestParam(required = false, defaultValue = "ALL") ProductFilterType filterType,
+            @RequestParam(required = false, defaultValue = "LATEST") ProductSortType sortType,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size) {
+
+        Page<ProductDocument> results = productSearchService.searchProducts(
+                keyword, categoryId, filterType, sortType, page, size);
+
         // ProductDocument를 ProductSearchDto로 변환
         List<ProductSearchDto> dtoList = results.getContent().stream()
                 .map(productDocument -> {
@@ -46,7 +51,6 @@ public class ProductSearchController {
         Page<ProductSearchDto> returnResults = new PageImpl<>(dtoList, results.getPageable(), results.getTotalElements());
 
         return ResponseEntity.ok(returnResults);
-//        return ResponseEntity.ok(results);
     }
 
 }
