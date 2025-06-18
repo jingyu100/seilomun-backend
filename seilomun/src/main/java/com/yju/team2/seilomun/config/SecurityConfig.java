@@ -69,7 +69,8 @@ public class SecurityConfig {
                                 "/api/search/fuzzy",
                                 "/api/search/popular",
                                 "/api/products/search",
-                                "/api/sellers/search"
+                                "/api/sellers/search",
+                                "/"
                         ).permitAll()
                         // 알림 관련 엔드포인트 - 인증된 사용자만 접근 허용
                         .requestMatchers("/api/notifications/**").authenticated()
