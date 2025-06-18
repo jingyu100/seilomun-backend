@@ -63,12 +63,12 @@ public class ProductController {
     @PutMapping("/{productId}")
     public ResponseEntity<ApiResponseJson> updateProductDto(@PathVariable Long productId, @RequestPart("productDto") ProductDto productDto,
                                                             @AuthenticationPrincipal JwtUserDetails userDetail,
-                                                            @RequestPart(value= "productPhotos",required = false) List<MultipartFile> prodcutPhotos) {
+                                                            @RequestPart(value= "productPhotos",required = false) List<MultipartFile> productPhotos) {
         String sellerEmail = userDetail.getEmail();
 
         try {
             return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
-                    Map.of("Update", productService.updateProductDto(productId, productDto, sellerEmail,prodcutPhotos),
+                    Map.of("Update", productService.updateProductDto(productId, productDto, sellerEmail,productPhotos),
                             "Message", "상품이 수정 되었습니다")));
         } catch (Exception e) {
             log.error("상품 정보 업데이트 중 오류 발생 : {}",e.getMessage());

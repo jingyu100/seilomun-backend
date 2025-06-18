@@ -271,7 +271,7 @@ public class ProductService {
                 ProductPhoto productDelete = productPhotoRepository.findById(PhotoId)
                         .orElseThrow(() -> new IllegalArgumentException("존재하지 않은 상품입니다."));
 
-                if(!productDelete.getProduct().getId().equals(PhotoId)) {
+                if(!productDelete.getProduct().getId().equals(product.getId())) {
                     throw new IllegalArgumentException("상품 사진에 대한 권한이 없습니다.");
                 }
 
