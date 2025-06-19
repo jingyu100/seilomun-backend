@@ -24,6 +24,7 @@ import com.yju.team2.seilomun.util.SmsUtil;
 import com.yju.team2.seilomun.validation.ValidationUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -109,6 +110,21 @@ public class CustomerService {
                 .build();
 
         return customerRepository.save(customer);
+    }
+
+    public void validationNickname(String nickname) {
+        if (nickname == null) {
+            throw new IllegalArgumentException("닉네임은 필수입니다");
+        }
+
+        String trimmedNickname = nickname.trim();
+        if (trimmedNickname.isEmpty()) {
+            throw new IllegalArgumentException("닉네임을 입력해주세요");
+        }
+
+        if (customerRepository.existsByNickname(trimmedNickname)) {
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다");
+        }
     }
 
     public void sendValidationCode(String PhoneNumber) {

@@ -158,6 +158,14 @@ public class CustomerController {
         return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of("username", username))));
     }
 
+    // 닉네임 중복 기능
+    @PostMapping("/check-nickname")
+    public ResponseEntity<ApiResponseJson> checkNickname(@RequestParam String nickname) {
+        customerService.validationNickname(nickname);
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK,Map.of(
+             "Message","닉네임 검증이 완료되었습니다"
+        ))));
+    }
 
     // 소비자 정보 수정
     @GetMapping
