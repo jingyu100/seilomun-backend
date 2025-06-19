@@ -1,8 +1,11 @@
 package com.yju.team2.seilomun.domain.seller.service;
 
+import com.yju.team2.seilomun.domain.product.entity.ProductPhoto;
 import com.yju.team2.seilomun.domain.search.service.SellerSearchService;
 import com.yju.team2.seilomun.domain.seller.entity.Seller;
 import com.yju.team2.seilomun.domain.seller.entity.SellerDocument;
+import com.yju.team2.seilomun.domain.seller.entity.SellerPhoto;
+import com.yju.team2.seilomun.domain.seller.repository.SellerPhotoRepository;
 import com.yju.team2.seilomun.domain.seller.repository.SellerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,12 +23,19 @@ public class SellerIndexService {
 
     private final SellerRepository sellerRepository;
     private final SellerSearchService sellerSearchService;
+    private final SellerPhotoRepository sellerPhotoRepository;
 
     // 새로운 가게 정보를 인덱싱
     @Transactional(readOnly = true)
     public void indexSeller(Seller seller) {
         try {
             SellerDocument sellerDocument = SellerDocument.from(seller);
+
+            // 가게 썸네일 이미지 URL 설정 (첫 번째 사진)
+            Optional<SellerPhoto> firstPhoto = sellerPhotoRepository.findTopBySellerOrderById(seller);
+            if (firstPhoto.isPresent()) {
+                sellerDocument.setThumbnailUrl(firstPhoto.get().getPhotoUrl());
+            }
             sellerSearchService.indexSellerDocument(sellerDocument);
             log.info("가게 정보 인덱싱 완료: id={}, name={}", seller.getId(), seller.getStoreName());
         } catch (Exception e) {

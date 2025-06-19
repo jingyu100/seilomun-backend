@@ -39,6 +39,9 @@ public class SellerDocument {
     private String operatingHours;
 
     @Field(type = FieldType.Keyword)
+    private String thumbnailUrl;
+
+    @Field(type = FieldType.Keyword)
     private Character deliveryAvailable;
 
     @Field(type = FieldType.Float)
