@@ -12,6 +12,7 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
         "com.yju.team2.seilomun.domain.search.repository"})
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
+    
     @Value("${spring.elasticsearch.uris}")
     private String elasticsearchUri;
 
