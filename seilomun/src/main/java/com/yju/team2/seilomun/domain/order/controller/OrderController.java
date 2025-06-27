@@ -80,7 +80,7 @@ public class OrderController {
         PaymentSuccessDto paymentSuccessDto = orderService.tossPaymentSuccess(paymentKey, orderId, amount);
 
         // ApiResponseJson 형태로 감싸서 반환 , 나중에 프론트에서 리다이렉트하게 변경할수도 있음
-        response.sendRedirect("http://3.36.70.70:5173/");
+        response.sendRedirect("http://3.39.239.179:5173/");
     }
 
     // 결제 실패시 콜백
