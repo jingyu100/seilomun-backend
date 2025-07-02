@@ -90,6 +90,8 @@ public class ChatService {
                 .createdAt(chatRoom.getCreationAt())
                 .lastMessage(lastMessage)
                 .lastMessageTime(lastMessageTime)
+                .customerPhotoUrl(customer.getProfileImageUrl())
+                .sellerPhotoUrl(seller.getSellerPhotos().getFirst().toString())
                 .build();
     }
 
@@ -188,6 +190,8 @@ public class ChatService {
                     .lastMessage(lastMessage)
                     .lastMessageTime(lastMessageTime)
                     .unreadCount(count)
+                    .customerPhotoUrl(chatRoom.getCustomer().getProfileImageUrl())
+                    .sellerPhotoUrl(chatRoom.getSeller().getSellerPhotos().getFirst().toString())
                     .build();
 
             chatRoomDtoList.add(chatRoomDto);

@@ -20,5 +20,7 @@ public class ChatRoomDto {
     private LocalDateTime createdAt;
     private String lastMessage;
     private LocalDateTime lastMessageTime;
+    private String sellerPhotoUrl;
+    private String customerPhotoUrl;
     private int unreadCount;
 }
