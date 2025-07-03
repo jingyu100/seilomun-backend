@@ -191,7 +191,7 @@ public class ChatService {
                     .lastMessageTime(lastMessageTime)
                     .unreadCount(count)
                     .customerPhotoUrl(chatRoom.getCustomer().getProfileImageUrl())
-                    .sellerPhotoUrl(chatRoom.getSeller().getSellerPhotos().getFirst().toString())
+                    .sellerPhotoUrl(chatRoom.getSeller().getSellerPhotos().getFirst().getPhotoUrl())
                     .build();
 
             chatRoomDtoList.add(chatRoomDto);
