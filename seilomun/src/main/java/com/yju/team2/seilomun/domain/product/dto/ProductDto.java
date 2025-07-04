@@ -29,6 +29,7 @@ public class ProductDto {
     private Integer maxDiscountRate;
     private Integer currentDiscountRate;
     private LocalDateTime createdAt;
+    private Long sellerId;
     private SellerInformationDto seller;
     private Long categoryId;
     private List<String> productPhotoUrl;
@@ -57,6 +58,7 @@ public class ProductDto {
                 .maxDiscountRate(product.getMaxDiscountRate())
                 .currentDiscountRate(currentDiscountRate)
                 .createdAt(product.getCreatedAt())
+                .sellerId(product.getSeller().getId())
                 .seller(SellerInformationDto.toDto(product.getSeller()))
                 .categoryId(product.getProductCategory().getId())
                 .productPhotoUrl(productPhotos)
