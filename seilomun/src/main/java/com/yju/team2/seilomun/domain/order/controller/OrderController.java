@@ -73,14 +73,15 @@ public class OrderController {
     // 결제 성공시 콜백
     // 여기서 orderId는 결제테이블의 pk가 아닌 결제고유식별자를 의미함
     @GetMapping("/toss/success")
-    public void tossPaymentSuccess(@RequestParam String paymentKey,
-                                   @RequestParam String orderId,
-                                   @RequestParam Integer amount,
-                                   HttpServletResponse response) throws IOException {
+    public ResponseEntity<ApiResponseJson> tossPaymentSuccess(@RequestParam String paymentKey,
+                                                              @RequestParam String orderId,
+                                                              @RequestParam Integer amount) {
         PaymentSuccessDto paymentSuccessDto = orderService.tossPaymentSuccess(paymentKey, orderId, amount);
 
         // ApiResponseJson 형태로 감싸서 반환 , 나중에 프론트에서 리다이렉트하게 변경할수도 있음
-        response.sendRedirect("http://3.39.239.179:5173/");
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of("payment", paymentSuccessDto,
+                        "message", "결제가 성공적으로 완료되었습니다.")));
     }
 
     // 결제 실패시 콜백
