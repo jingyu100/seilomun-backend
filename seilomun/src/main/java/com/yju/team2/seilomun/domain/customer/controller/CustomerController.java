@@ -155,7 +155,11 @@ public class CustomerController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponseJson> getCustomer(@AuthenticationPrincipal JwtUserDetails userDetails) {
         String username = userDetails.getUsername();
-        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of("username", username))));
+        Long id = userDetails.getId();
+        String userType = userDetails.getUserType();
+        String email = userDetails.getEmail();
+        return ResponseEntity.ok((new ApiResponseJson(HttpStatus.OK, Map.of("username", username,
+                "id", id, "userType", userType, "email", email))));
     }
 
     // 닉네임 중복 기능
