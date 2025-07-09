@@ -27,6 +27,8 @@ public class SellerInformationResponseDto {
 
     private String notification;
 
+    private Float rating;
+
     @NotEmpty
     private Character deliveryAvailable;
 
@@ -90,6 +92,7 @@ public class SellerInformationResponseDto {
                 .storeName(seller.getStoreName())
                 .storeDescription(seller.getStoreDescription())
                 .notification(seller.getNotification())
+                .rating(seller.getRating())
                 .deliveryAvailable(seller.getDeliveryAvailable())
                 .minOrderAmount(seller.getMinOrderAmount())
                 .deliveryFeeDtos(deliveryFeeDto)
