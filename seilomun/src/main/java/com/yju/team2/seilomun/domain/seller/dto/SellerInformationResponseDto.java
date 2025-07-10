@@ -88,10 +88,6 @@ public class SellerInformationResponseDto {
                 .map(photo -> new SellerPhotoDto(photo.getId(), photo.getPhotoUrl()))
                 .collect(Collectors.toList());
 
-        if (sellerPhotos.isEmpty()) {
-            sellerPhotos.add(new SellerPhotoDto(null, "/image/product1.jpg"));
-        }
-
         return SellerInformationResponseDto.builder()
                 .storeName(seller.getStoreName())
                 .storeDescription(seller.getStoreDescription())
