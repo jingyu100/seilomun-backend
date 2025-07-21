@@ -44,6 +44,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         log.debug("요청 경로: {}", requestPath);
 
         String accessToken = extractTokenFromCookie(request, "access_token");
+        if (accessToken == null) {
+            accessToken = extractTokenFromAuthorizationHeader(request);
+        }
         String refreshToken = extractTokenFromCookie(request, "refresh_token");
 
         log.debug("Access Token 존재: {}, Refresh Token 존재: {}",
@@ -259,4 +262,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
         return null;
     }
+
+    private String extractTokenFromAuthorizationHeader(HttpServletRequest request) {
+    String header = request.getHeader("Authorization");
+    if (header != null && header.startsWith("Bearer ")) {
+        return header.substring(7);
+    }
+    return null;
+}
 }

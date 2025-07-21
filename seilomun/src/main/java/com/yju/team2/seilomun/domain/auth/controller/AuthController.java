@@ -66,7 +66,9 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                 .body(new ApiResponseJson(HttpStatus.OK, Map.of(
                         "message", "로그인 성공",
-                        "userType", loginRequest.getUserType()
+                        "userType", loginRequest.getUserType(),
+                        "accessToken", accessToken,
+                        "refreshToken", refreshToken
                 )));
     }
 
