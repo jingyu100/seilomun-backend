@@ -37,6 +37,7 @@ public class AuthController {
     private static final String INVALID_TOKEN_ERROR = "리프레시 토큰이 유효하지 않거나 만료되었습니다.";
     private static final String TOKEN_REFRESH_SUCCESS = "액세스 토큰이 성공적으로 갱신되었습니다.";
     private static final String LOGOUT_SUCCESS = "로그아웃이 성공적으로 처리되었습니다.";
+    private static final String REFRESH_SUCCESS = "토큰이 성공적으로 갱신되었습니다.";
 
     // 통합 로그인 메서드
     @PostMapping("/login")
@@ -70,6 +71,52 @@ public class AuthController {
                         "accessToken", accessToken,
                         "refreshToken", refreshToken
                 )));
+    }
+
+    // Refresh Token으로 Access Token 재발급 (RN/모바일 클라이언트용)
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponseJson> refresh(@RequestBody RefreshTokenRequestDto requestDto) {
+        try {
+            String refreshToken = requestDto.getRefreshToken();
+
+            if (refreshToken == null || refreshToken.trim().isEmpty()) {
+                return createErrorResponse(HttpStatus.BAD_REQUEST, "refreshToken이 필요합니다");
+            }
+
+            String username = jwtUtil.extractUsername(refreshToken);
+            String userType = jwtUtil.extractUserType(refreshToken);
+
+            if (username == null || userType == null) {
+                return createErrorResponse(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다");
+            }
+
+            String storedToken = refreshTokenService.getRefreshToken(username, userType);
+            if (storedToken == null || !storedToken.equals(refreshToken)) {
+                return createErrorResponse(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 일치하지 않습니다");
+            }
+
+            if (jwtUtil.isTokenExpired(refreshToken)) {
+                // 만료: 서버/클라이언트 모두 정리 유도
+                refreshTokenService.deleteRefreshToken(username, userType);
+                return createErrorResponse(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 만료되었습니다");
+            }
+
+            String newAccessToken = jwtUtil.generateAccessToken(username, userType);
+            String newRefreshToken = jwtUtil.generateRefreshToken(username, userType);
+
+            refreshTokenService.rotateRefreshToken(username, userType, newRefreshToken);
+
+            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, Map.of(
+                    "message", REFRESH_SUCCESS,
+                    "accessToken", newAccessToken,
+                    "refreshToken", newRefreshToken,
+                    "userType", userType,
+                    "username", username
+            )));
+        } catch (Exception e) {
+            log.error("토큰 갱신 중 오류: {}", e.getMessage(), e);
+            return createErrorResponse(HttpStatus.UNAUTHORIZED, "토큰 갱신에 실패했습니다");
+        }
     }
 
     // 사용자 로그아웃을 처리

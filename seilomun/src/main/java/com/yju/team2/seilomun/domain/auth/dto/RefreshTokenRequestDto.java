@@ -10,8 +10,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RefreshTokenRequestDto {
-
     private String username;
-    private String userType; // "SELLER" 또는 "CUSTOMER"
+    private String userType;
+    private String refreshToken;
 
 }
