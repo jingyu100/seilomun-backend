@@ -72,7 +72,6 @@ public class Customer {
 
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
     @Builder.Default
     private List<Order> orders = new ArrayList<>();
 
