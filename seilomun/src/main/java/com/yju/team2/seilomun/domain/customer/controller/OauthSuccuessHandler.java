@@ -1,6 +1,7 @@
 package com.yju.team2.seilomun.domain.customer.controller;
 
 import com.yju.team2.seilomun.domain.auth.service.UserStatusService;
+import com.yju.team2.seilomun.domain.customer.oauth.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.yju.team2.seilomun.domain.customer.service.OauthService;
 import com.yju.team2.seilomun.domain.customer.entity.Customer;
 import com.yju.team2.seilomun.domain.customer.oauth.OauthAttribute;
