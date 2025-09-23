@@ -1,6 +1,9 @@
 package com.yju.team2.seilomun.config;
 
+import com.yju.team2.seilomun.domain.auth.service.JwtUserDetailsService;
 import com.yju.team2.seilomun.domain.customer.controller.OauthSuccuessHandler;
+import com.yju.team2.seilomun.domain.customer.oauth.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.yju.team2.seilomun.domain.customer.service.OauthService;
 import com.yju.team2.seilomun.filter.JwtRequestFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -21,8 +24,11 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtRequestFilter jwtRequestFilter;
     private final OauthSuccuessHandler oauthSuccuessHandler;
+    private final JwtRequestFilter jwtRequestFilter;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+    private final OauthService oauthService;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -87,6 +93,13 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(auth -> auth
+                                .baseUri("/oauth2/authorization")
+                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
+                        )
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oauthService)
+                        )
                         .successHandler(oauthSuccuessHandler) // 로그인 성공 후 이동
                         .failureUrl("http://localhost:5173")    //로그인 실패 후 이동
                 )
