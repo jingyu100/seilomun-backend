@@ -122,7 +122,6 @@ public class Seller {
     private SellerCategoryEntity sellerCategory;
 
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
-    @Builder.Default
     private List<NotificationPhoto> notificationPhotos = new ArrayList<>();
 
 
