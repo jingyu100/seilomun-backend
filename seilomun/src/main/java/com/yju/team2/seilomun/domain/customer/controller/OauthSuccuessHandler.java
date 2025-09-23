@@ -19,14 +19,10 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.yju.team2.seilomun.domain.customer.oauth.HttpCookieOAuth2AuthorizationRequestRepository.CLIENT_TYPE_PARAM_COOKIE_NAME;
-import static com.yju.team2.seilomun.domain.customer.oauth.HttpCookieOAuth2AuthorizationRequestRepository.REDIRECT_URI_PARAM_COOKIE_NAME;
 
 @Component
 @RequiredArgsConstructor
@@ -36,7 +32,6 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
     private final OauthService oauthService;
     private final CustomerRepository customerRepository;
     private final UserStatusService userStatusService;
-    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     // properties에 있는 값
     @Value("${app.oauth.redirectUrl}")
@@ -46,9 +41,6 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         log.info("Oauth 로그인 성공 !!");
-
-        Optional<String> clientTypeCookie = CookieUtil.getCookie(request, CLIENT_TYPE_PARAM_COOKIE_NAME).map(c -> c.getValue());
-        Optional<String> redirectUriCookie = CookieUtil.getCookie(request, REDIRECT_URI_PARAM_COOKIE_NAME).map(c -> c.getValue());
 
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
         log.info("사용자 정보 : {}",oauth2User.getAttributes());
@@ -107,45 +99,20 @@ public class OauthSuccuessHandler implements AuthenticationSuccessHandler {
         // 소셜 로그인시 온라인 설정
         userStatusService.updateOnlineStatus(oauthAttr.getEmail(), "CUSTOMER");
 
-        // Clear authentication cookies
-        httpCookieOAuth2AuthorizationRequestRepository.removeAuthorizationRequestCookies(request, response);
+        // 액세스 토큰용 쿠키 설정 (2시간 만료)
+        ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(accessToken);
 
-        if (clientTypeCookie.isPresent() && "app".equalsIgnoreCase(clientTypeCookie.get())) {
-            // For App Client: Respond with HTML to post message
-            response.setContentType("text/html;charset=UTF-8");
-            String html = String.format("""
-                <!DOCTYPE html>
-                <html>
-                <head><title>Login Success</title></head>
-                <body>
-                    <script>
-                        try {
-                            const tokens = { accessToken: '%s', refreshToken: '%s' };
-                            window.ReactNativeWebView.postMessage(JSON.stringify(tokens));
-                        } catch (e) {
-                            console.error('Failed to post message to React Native WebView', e);
-                        }
-                    </script>
-                    <p>Processing login...</p>
-                </body>
-                </html>
-                """, accessToken, refreshToken);
+        // 리프레시 토큰용 쿠키 설정 (14일 만료)
+        ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken);
 
-            response.getWriter().write(html);
-            response.getWriter().flush();
-        } else {
-            // For Web Client: Set cookies and redirect
-            String targetUrl = redirectUriCookie.orElse(redirectUrl);
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-            ResponseCookie accessTokenCookie = CookieUtil.createAccessTokenCookie(accessToken);
-            ResponseCookie refreshTokenCookie = CookieUtil.createRefreshTokenCookie(refreshToken);
+        // 로그인 성공 후 리다이렉트
+        log.info("로그인 완료: {}", oauthAttr.getEmail());
+        response.sendRedirect(redirectUrl);
 
-            response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-            log.info("로그인 완료, 리다이렉트: {}", targetUrl);
-            response.sendRedirect(targetUrl);
-        }
     }
 
     // Oauth 제공자, 속성 (Naver: response , kakao : profile,account)
