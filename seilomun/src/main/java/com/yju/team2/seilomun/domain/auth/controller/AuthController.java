@@ -5,8 +5,6 @@ import com.yju.team2.seilomun.domain.auth.dto.*;
 import com.yju.team2.seilomun.domain.auth.service.*;
 import com.yju.team2.seilomun.domain.auth.JwtUserDetails;
 import com.yju.team2.seilomun.common.ApiResponseJson;
-import com.yju.team2.seilomun.domain.customer.dto.KakaoLoginRequestDto; // <-- 카카오 DTO import 추가
-import com.yju.team2.seilomun.domain.customer.service.OauthService;     // <-- OauthService import 추가
 import com.yju.team2.seilomun.util.CookieUtil;
 import com.yju.team2.seilomun.util.JwtUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,7 +32,6 @@ public class AuthController {
     private final MailService mailService;
     private final BusinessVerificationService businessVerificationService;
     private final UserStatusService userStatusService;
-    private final OauthService oauthService; // OauthService를 사용할 수 있도록 추가
 
     private static final String TOKEN_MISMATCH_ERROR = "사용자 유형이 일치하지 않습니다.";
     private static final String INVALID_TOKEN_ERROR = "리프레시 토큰이 유효하지 않거나 만료되었습니다.";
@@ -223,30 +220,7 @@ public class AuthController {
                 .body(new ApiResponseJson(status, resultMap));
     }
 
-    /**
-     * React Native 앱으로부터 카카오 로그인 요청을 받는 API 엔드포인트
-     * @param requestDto 앱이 보내준 카카오 accessToken이 담긴 객체
-     * @return 성공 시 우리 서비스의 토큰과 사용자 정보, 실패 시 에러 메시지
-     */
-    @PostMapping("/kakao/login")
-    public ResponseEntity<ApiResponseJson> kakaoLogin(@RequestBody KakaoLoginRequestDto requestDto) {
-        try {
-            // 1. OauthService에게 앱이 보내준 카카오 토큰을 넘겨주며 모든 로그인 절차를 위임합니다.
-            Map<String, Object> result = oauthService.kakaoLogin(requestDto.getAccessToken());
-            
-            // 2. OauthService가 성공적으로 일을 마치면, 그 결과를 ApiResponseJson으로 감싸서
-            //    HTTP 상태 코드 200(OK)와 함께 앱에게 응답합니다.
-            return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK, result));
-        } catch (Exception e) {
-            // 3. 만약 OauthService가 일을 처리하다가 중간에 예외(에러)를 발생시키면,
-            //    createErrorResponse 헬퍼 메소드를 사용하여 일관된 에러 응답을 보냅니다.
-            log.error("카카오 로그인 처리 중 오류: {}", e.getMessage(), e);
-            return createErrorResponse(HttpStatus.UNAUTHORIZED, "카카오 로그인에 실패했습니다.");
-        }
-    }
-
-
-    // 오류 응답 생성 (기존 코드)
+    // 오류 응답 생성
     private ResponseEntity<ApiResponseJson> createErrorResponse(HttpStatus status, String message) {
         return ResponseEntity.status(status)
                 .body(new ApiResponseJson(status, Map.of("error", message)));
