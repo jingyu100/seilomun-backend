@@ -79,6 +79,7 @@ public class SecurityConfig {
                                 "/api/search/popular",
                                 "/api/products/search",
                                 "/api/sellers/search",
+                                "/api/sellers/social-login",
                                 "/api/auth/refresh"
                         ).permitAll()
                         // 판매자만 접근 가능
