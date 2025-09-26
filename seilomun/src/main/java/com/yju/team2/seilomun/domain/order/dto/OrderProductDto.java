@@ -1,6 +1,6 @@
 package com.yju.team2.seilomun.domain.order.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,15 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderProductDto {
-    @NotNull
+    @NotBlank
     private Long productId;
-
-    @NotNull @Positive
+    @NotBlank
     private Integer quantity;
-
-    @NotNull @PositiveOrZero
     private Integer price;
-
-    @NotNull @Min(0)
     private Integer currentDiscountRate;
 }
