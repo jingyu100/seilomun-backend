@@ -179,7 +179,7 @@ public class OrderService {
                 memo(orderDto.getMemo()).
                 usedPoints(orderDto.getUsedPoints()).
                 totalAmount(totalAmount).
-                isDelivery(orderDto.getIsDelivery()).
+                isDelivery("Y".equalsIgnoreCase(orderDto.getIsDelivery()) ? 'Y' : 'N').
                 deliveryAddress(orderDto.getDeliveryAddress()).
                 deliveryStatus('N').
                 deliveryFee(deliveryFee).
