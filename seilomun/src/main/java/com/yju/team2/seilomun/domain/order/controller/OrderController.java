@@ -50,6 +50,26 @@ public class OrderController {
                 Map.of("주문페이지로 갑니다", orderService.getBuyProduct(cartItemRequestDto, customerId))));
     }
 
+    @PostMapping("/buy/app")
+    public ResponseEntity<ApiResponseJson> buyProductForApp(
+            @RequestBody OrderDto orderDto,
+            @AuthenticationPrincipal JwtUserDetails userDetail) {
+
+        Long customerId = userDetail.getId();
+        PaymentResDto paymentResDto = orderService.buyProduct(orderDto, customerId);
+
+        return ResponseEntity.ok(new ApiResponseJson(HttpStatus.OK,
+                Map.of(
+                        "amount", paymentResDto.getAmount(),
+                        "orderId", paymentResDto.getTransactionId(),  // 토스에서 쓸 주문번호
+                        "orderName", paymentResDto.getOrderName(),
+                        "customerEmail", paymentResDto.getCustomerEmail(),
+                        "customerName", paymentResDto.getCustomerName(),
+                        "dbOrderId", paymentResDto.getOrderId(),  // DB의 주문 ID 
+                        "message", "결제 정보가 생성되었습니다"
+                )));
+    }
+
     @PostMapping("/cart/buy")
     public ResponseEntity<ApiResponseJson> getBuyProducts(@RequestBody List<CartItemRequestDto> cartItemRequestDto,
                                                           @AuthenticationPrincipal JwtUserDetails userDetail) {
